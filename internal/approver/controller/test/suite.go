@@ -106,6 +106,7 @@ var _ = Context("Approval", func() {
 				Namespace:    namespace.Name,
 			},
 			Spec: cmapi.CertificateRequestSpec{
+				Request: []byte("request"),
 				IssuerRef: cmmeta.ObjectReference{
 					Name:  "not-spiffe-ca",
 					Kind:  "ClusterIssuer",
@@ -134,6 +135,7 @@ var _ = Context("Approval", func() {
 				Namespace:    namespace.Name,
 			},
 			Spec: cmapi.CertificateRequestSpec{
+				Request:   []byte("request"),
 				IssuerRef: issuerRef,
 			},
 		}
@@ -143,7 +145,7 @@ var _ = Context("Approval", func() {
 			Eventually(func() error {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
 			}).Should(BeNil())
-			return apiutil.CertificateRequestIsApproved(&cr)
+			return apiutil.CertificateRequestIsDenied(&cr)
 		}).Should(BeTrue(), "expected approval")
 	})
 
@@ -158,6 +160,7 @@ var _ = Context("Approval", func() {
 				Namespace:    namespace.Name,
 			},
 			Spec: cmapi.CertificateRequestSpec{
+				Request:   []byte("request"),
 				IssuerRef: issuerRef,
 			},
 		}
@@ -167,7 +170,7 @@ var _ = Context("Approval", func() {
 			Eventually(func() error {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
 			}).Should(BeNil())
-			return apiutil.CertificateRequestIsDenied(&cr)
+			return apiutil.CertificateRequestIsApproved(&cr)
 		}).Should(BeTrue(), "expected denial")
 	})
 })

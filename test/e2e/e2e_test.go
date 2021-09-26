@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package smoke
 
 import (
 	"os"
@@ -24,33 +24,14 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-func Test_controllers(t *testing.T) {
+// Test_Smoke runs the full suite of smoke tests against approver-policy
+func Test_e2e(t *testing.T) {
 	rootDir := os.Getenv("ROOTDIR")
 	if len(rootDir) == 0 {
 		t.Skip("Skipping test as ROOTDIR environment variable not defined")
 	}
-
-	env = &envtest.Environment{
-		AttachControlPlaneOutput: false,
-		CRDDirectoryPaths:        []string{filepath.Join(rootDir, "bin/cert-manager")},
-	}
-
-	t.Logf("starting API server...")
-	if _, err := env.Start(); err != nil {
-		t.Fatalf("failed to start control plane: %v", err)
-	}
-	t.Logf("running API server at %q", env.Config.Host)
-
-	// Register cleanup func to stop the api-server after the test has finished.
-	t.Cleanup(func() {
-		t.Log("stopping API server")
-		if err := env.Stop(); err != nil {
-			t.Fatalf("failed to shut down control plane: %v", err)
-		}
-	})
 
 	gomega.RegisterFailHandler(ginkgo.Fail)
 
@@ -61,8 +42,8 @@ func Test_controllers(t *testing.T) {
 
 	junitReporter := reporters.NewJUnitReporter(filepath.Join(
 		artifactsDir,
-		"junit-go-unit-controller.xml",
+		"junit-e2e.xml",
 	))
 
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "unit-controller", []ginkgo.Reporter{junitReporter})
+	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "e2e", []ginkgo.Reporter{junitReporter})
 }

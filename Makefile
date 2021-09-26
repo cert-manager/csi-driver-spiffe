@@ -45,20 +45,23 @@ lint:  ## Run linters against code.
 	./hack/verify-boilerplate.sh
 
 .PHONY: test
-test: depend lint vet ## test approver-policy
-	KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./pkg/...
+test: depend lint vet ## test csi-driver-spiffe
+	ARTIFACTS=$(sell pwd)/_artifacts KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./internal/...
 
 .PHONY: build
 build: ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/approver-policy ./cmd/
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/csi-driver-spiffe ./cmd/
 
 .PHONY: verify
 verify: test build ## Verify repo.
 
+# image will only build and store the image locally, targeted in OCI format.
+# To actually push an image to the public repo, replace the `--output` flag and
+# arguments to `--push`.
 .PHONY: image
-image: ## build docker image
-	GOARCH=$(ARCH) GOOS=linux CGO_ENABLED=0 go build -o ./bin/approver-policy-linux ./cmd/.
-	docker build -t quay.io/jetstack/cert-manager-approver-policy:v0.1.0 .
+image: ## build docker image targeting all supported platforms
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v0.3.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci .
+
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
@@ -70,7 +73,7 @@ smoke: demo ## create cluster, deploy approver-policy, run smoke tests
 	REPO_ROOT=$(shell pwd) ./hack/ci/delete-cluster.sh
 
 .PHONY: depend
-depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/gomarkdoc
+depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
 
 $(BINDIR):
 	mkdir -p ./bin
@@ -93,10 +96,10 @@ $(BINDIR)/kubectl:
 	chmod +x ./bin/kubectl
 
 $(BINDIR)/kubebuilder/bin/kube-apiserver:
-	curl -sSLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
+	curl -SLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
-	curl -sSLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
