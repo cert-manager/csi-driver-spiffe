@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  labels:
+{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+    spec:
+      serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+      containers:
+
+        - name: node-driver-registrar
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/cert-manager-csi-driver-spiffe /registration/cert-manager-csi-driver-spiffe-reg.sock"]
+          args:
+            - -v={{ .Values.app.logLevel }}
+            - --csi-address=/plugin/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/cert-manager-csi-driver-spiffe/csi.sock
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+            - name: registration-dir
+              mountPath: /registration
+
+        - name: cert-manager-csi-driver-spiffe
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: "{{ .Values.image.repository.driver }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args :
+            - --log-level={{ .Values.app.logLevel }}
+
+            - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
+            - --issuer-name={{ .Values.app.issuer.name }}
+            - --issuer-kind={{ .Values.app.issuer.kind }}
+            - --issuer-group={{ .Values.app.issuer.group }}
+            - --trust-domain={{ .Values.app.trustDomain }}
+
+            - --file-name-certificate={{ .Values.app.driver.volumeFileName.cert }}
+            - --file-name-key={{ .Values.app.driver.volumeFileName.key }}
+            - --file-name-ca={{ .Values.app.driver.volumeFileName.ca }}
+            - --source-ca-bundle={{ .Values.app.driver.sourceCABundle }}
+
+            - --node-id=$(NODE_ID)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --data-root=csi-data-dir
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix://plugin/csi.sock
+          volumeMounts:
+          - name: plugin-dir
+            mountPath: /plugin
+          - name: pods-mount-dir
+            mountPath: /var/lib/kubelet/pods
+            mountPropagation: "Bidirectional"
+          - name: csi-data-dir
+            mountPath: /csi-data-dir
+        {{- if .Values.app.driver.volumeMounts }}
+{{ toYaml .Values.app.driver.volumeMounts | indent 10 }}
+        {{- end }}
+          resources:
+            {{- toYaml .Values.app.driver.resources | nindent 12 }}
+
+      volumes:
+      - name: plugin-dir
+        hostPath:
+          path: /var/lib/kubelet/plugins/cert-manager-csi-driver-spiffe
+          type: DirectoryOrCreate
+      - name: pods-mount-dir
+        hostPath:
+          path: /var/lib/kubelet/pods
+          type: Directory
+      - hostPath:
+          path: /var/lib/kubelet/plugins_registry
+          type: Directory
+        name: registration-dir
+      - hostPath:
+          path: /tmp/cert-manager-csi-driver-spiffe
+          type: DirectoryOrCreate
+        name: csi-data-dir
+      {{- if .Values.app.driver.volumes }}
+{{ toYaml .Values.app.driver.volumes | indent 6 }}
+      {{- end }}

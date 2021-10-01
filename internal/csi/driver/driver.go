@@ -44,6 +44,9 @@ import (
 
 // Options holds the Options needed for the CSI driver.
 type Options struct {
+	// DriverName is the driver name as installed in Kubernetes.
+	DriverName string
+
 	// NodeID is the name of the node the driver is running on.
 	NodeID string
 
@@ -135,6 +138,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		certFileName: opts.CertificateFileName,
 		keyFileName:  opts.KeyFileName,
 		issuerRef:    opts.IssuerRef,
+		rootCAs:      opts.RootCAs,
 
 		certificateRequestDuration: opts.CertificateRequestDuration,
 	}
@@ -168,8 +172,8 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		return nil, fmt.Errorf("failed to build cert-manager client: %w", err)
 	}
 
-	d.driver, err = driver.New(opts.Endpoint, d.log, driver.Options{
-		DriverName:    "spiffe.csi.cert-manager.io",
+	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
+		DriverName:    opts.DriverName,
 		DriverVersion: "v0.1.0",
 		NodeID:        opts.NodeID,
 		Store:         d.store,
@@ -180,7 +184,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 			MaxRequestsPerVolume: 1,
 			MetadataReader:       d.store,
 			Clock:                clock.RealClock{},
-			Log:                  d.log.WithName("driver"),
+			Log:                  d.log.WithName("manager"),
 			NodeID:               opts.NodeID,
 			GeneratePrivateKey:   generatePrivateKey,
 			GenerateRequest:      d.generateRequest,
@@ -201,11 +205,6 @@ func (d *Driver) Run(ctx context.Context) error {
 		<-ctx.Done()
 		d.driver.Stop()
 	}()
-
-	// Ensure all volumes have the correct CA data if root CAs is configured.
-	if err := d.updateRootCAFilesFn(); err != nil {
-		return fmt.Errorf("failed to ensure all managed volumes have correct CA data: %w", err)
-	}
 
 	d.manageCAFiles(ctx, time.Second*5)
 	return d.driver.Run()

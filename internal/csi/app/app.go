@@ -47,11 +47,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			log := opts.Logr.WithName("main")
 
 			var rootCA rootca.Interface
-			if len(opts.Volume.CAFileName) > 0 {
-				log.Info("using CA root bundle", "filepath", opts.Volume.CAFileName)
+			if len(opts.Volume.SourceCABundleFile) > 0 {
+				log.Info("using CA root bundle", "filepath", opts.Volume.SourceCABundleFile)
 
 				var err error
-				rootCA, err = rootca.NewFile(ctx, opts.Logr, opts.Volume.CAFileName)
+				rootCA, err = rootca.NewFile(ctx, opts.Logr, opts.Volume.SourceCABundleFile)
 				if err != nil {
 					return fmt.Errorf("failed to build root CA: %w", err)
 				}
@@ -60,9 +60,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			driver, err := driver.New(opts.Logr, driver.Options{
-				NodeID:   opts.Driver.NodeID,
-				Endpoint: opts.Driver.Endpoint,
-				DataRoot: opts.Driver.DataRoot,
+				DriverName: opts.DriverName,
+				NodeID:     opts.Driver.NodeID,
+				Endpoint:   opts.Driver.Endpoint,
+				DataRoot:   opts.Driver.DataRoot,
 
 				RestConfig:                 opts.RestConfig,
 				TrustDomain:                opts.CertManager.TrustDomain,

@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sandbox
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fs-group-app
+  namespace: sandbox
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fs-group-app
+  namespace: sandbox
+rules:
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificaterequests"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fs-group-app
+  namespace: sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: fs-group-app
+subjects:
+- kind: ServiceAccount
+  name: fs-group-app
+  namespace: sandbox
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-csi-app-fs-group
+  namespace: sandbox
+  labels:
+    app: my-csi-app-fs-group
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: my-csi-app-fs-group
+  template:
+    metadata:
+      labels:
+        app: my-csi-app-fs-group
+    spec:
+      serviceAccountName: fs-group-app
+      containers:
+        - name: my-frontend
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: [ "sleep", "1000000" ]
+          volumeMounts:
+          - mountPath: "/var/run/secrets/spiffe.io"
+            name: spiffe
+      securityContext:
+        runAsUser: 123
+        runAsGroup: 456
+      volumes:
+        - name: spiffe
+          csi:
+            driver: spiffe.csi.cert-manager.io
+            readOnly: true
+            volumeAttributes:
+              spiffe.csi.cert-manager.io/fs-group: "456"

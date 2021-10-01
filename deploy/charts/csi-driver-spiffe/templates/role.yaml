@@ -1,0 +1,10 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+  labels:
+{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "update", "create"]

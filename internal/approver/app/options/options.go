@@ -26,54 +26,82 @@ import (
 	"github.com/cert-manager/csi-driver-spiffe/internal/flags"
 )
 
-// TODO
+// Options are the CSI Approver flag options.
 type Options struct {
 	*flags.Flags
 
-	// ReadyzPort if the port used to expose readiness endpoint.
-	ReadyzPort int
+	// CertManager are options specific to created cert-manager
+	// CertificateRequests.
+	CertManager OptionsCertManager
 
-	// ReadyzPath if the HTTP path used to expose readiness endpoint.
-	ReadyzPath string
+	// Controller are options specific to the controller.
+	Controller OptionsController
+}
 
-	// MetricsPort is the port for exposing Prometheus metrics on 0.0.0.0 on the
-	// path '/metrics'.
-	MetricsPort int
+// OptionsController are options specific to the Kubernetes controller.
+type OptionsController struct {
+	// ReadyzAddress is the TCP address for exposing the HTTP readiness probe
+	// which will be served on the HTTP path '/readyz'.
+	ReadyzAddress string
 
-	// TODO
+	// MetricsAddress is the TCP address for exposing HTTP Prometheus metrics
+	// which will be served on the HTTP path '/metrics'. The value "0" will
+	// disable exposing metrics.
+	MetricsAddress string
+
+	// LeaderElectionNamespace is the namespace that the approver controller will
+	// lease election in.
 	LeaderElectionNamespace string
+}
 
-	// TODO
+// OptionsCertManager are options specific to cert-manager and the evaluator.
+type OptionsCertManager struct {
+	// TrustDomain is the Trust Domain the evaluator will enforce requests request
+	// for.
 	TrustDomain string
 
-	// TODO
+	// CertificateRequestDuration is the duration the evaluator will enforce
+	// CertificateRequest request for.
 	CertificateRequestDuration time.Duration
 
-	// TODO
+	// IssuerRef is the issuer reference that will be used to match on created
+	// CertificateRequests.
 	IssuerRef cmmeta.ObjectReference
 }
 
 func New() *Options {
 	o := new(Options)
-	o.Flags = flags.New().Add("Approver", o.addApproverFlags)
+	o.Flags = flags.New().
+		Add("cert-manager", o.addCertManagerFlags).
+		Add("Controller", o.addControllerFlags)
 	return o
 }
 
-func (o *Options) addApproverFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.LeaderElectionNamespace,
+func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&o.CertManager.TrustDomain, "trust-domain", "cluster.local",
+		"The trust domain this approver ensures is present on requests.")
+
+	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
+		"The duration which is enforced for requests to have.")
+
+	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
+		"Name of issuer which is matched against to evaluate on.")
+	fs.StringVar(&o.CertManager.IssuerRef.Kind, "issuer-kind", "ClusterIssuer",
+		"Kind of issuer which is matched against to evaluate on.")
+	fs.StringVar(&o.CertManager.IssuerRef.Group, "issuer-group", "cert-manager.io",
+		"Group of issuer which is matched against to evaluate on.")
+}
+
+func (o *Options) addControllerFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&o.Controller.LeaderElectionNamespace,
 		"leader-election-namespace", "cert-manager",
 		"Namespace to use for controller leader election.")
 
-	fs.StringVar(&o.TrustDomain, "trust-domain", "cluster.local",
-		"The trust domain this approver ensures is present on requests.")
+	fs.StringVar(&o.Controller.ReadyzAddress, "readiness-probe-bind-address", ":6060",
+		"TCP address for exposing the HTTP readiness probe which will be served on "+
+			"the HTTP path '/readyz'.")
 
-	fs.DurationVar(&o.CertificateRequestDuration, "certificate-request-duration", time.Hour,
-		"The duration which is enforced for requests to have.")
-
-	fs.StringVar(&o.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
-		"Name of issuer which is matched against to evaluate on.")
-	fs.StringVar(&o.IssuerRef.Kind, "issuer-kind", "ClusterIssuer",
-		"Kind of issuer which is matched against to evaluate on.")
-	fs.StringVar(&o.IssuerRef.Group, "issuer-group", "cert-manager.io",
-		"Group of issuer which is matched against to evaluate on.")
+	fs.StringVar(&o.Controller.MetricsAddress, "metrics-bind-address", ":9402",
+		"TCP address for exposing HTTP Prometheus metrics which will be served on the "+
+			"HTTP path '/metrics'. The value \"0\" will disable exposing metrics.")
 }

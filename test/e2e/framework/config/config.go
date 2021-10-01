@@ -17,29 +17,50 @@ limitations under the License.
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var (
+	sharedConfig = &Config{}
+)
+
+func SetConfig(config *Config) {
+	sharedConfig = config
+}
+
+func GetConfig() *Config {
+	return sharedConfig
+}
+
 type Config struct {
 	kubeConfig string
 
-	TrustNamespace string
-	RestConfig     *rest.Config
+	IssuerRef             cmmeta.ObjectReference
+	IssuerSecretNamespace string
+	IssuerSecretName      string
+	RestConfig            *rest.Config
+	KubectlBinPath        string
 }
 
-func New(fs *flag.FlagSet) *Config {
-	return new(Config).addFlags(fs)
+func (c *Config) AddFlags(fs *flag.FlagSet) *Config {
+	return c.addFlags(fs)
 }
 
 func (c *Config) Complete() error {
 	if c.kubeConfig == "" {
-		return fmt.Errorf("--kubeconfig-path must be specified")
+		return errors.New("--kubeconfig-path must be specified")
+	}
+
+	if c.KubectlBinPath == "" {
+		return errors.New("--kubectl-path must be specified")
 	}
 
 	var err error
@@ -62,5 +83,11 @@ func (c *Config) addFlags(fs *flag.FlagSet) *Config {
 	}
 
 	fs.StringVar(&c.kubeConfig, "kubeconfig-path", kubeConfigFile, "Path to config containing embedded authinfo for kubernetes. Default value is from environment variable "+clientcmd.RecommendedConfigPathEnvVar)
+	fs.StringVar(&c.KubectlBinPath, "kubectl-path", "", "Path to a authenticated kubectl binary")
+	fs.StringVar(&c.IssuerRef.Name, "issuer-name", "csi-driver-spiffe-ca", "Name of issuer which has been created for the test")
+	fs.StringVar(&c.IssuerRef.Kind, "issuer-kind", "ClusterIssuer", "Kind of issuer which has been created for the test")
+	fs.StringVar(&c.IssuerRef.Group, "issuer-group", "cert-manager.io", "Group of issuer which has been created for the test")
+	fs.StringVar(&c.IssuerSecretName, "issuer-secret-name", "csi-driver-spiffe-ca", "Name of the CA certificate Secret")
+	fs.StringVar(&c.IssuerSecretNamespace, "issuer-secret-namespace", "cert-manager", "Namespace where the CA certificate Secret is stored")
 	return c
 }

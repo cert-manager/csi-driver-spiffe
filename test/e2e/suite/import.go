@@ -14,17 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package smoke
+package suite
 
 import (
-	. "github.com/onsi/ginkgo"
+	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/approval"
+	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/carotation"
+	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/fsgroup"
 )
-
-var _ = Describe("e2e", func() {
-	// TODO:
-	// Create an issuer
-	// Create a Pod
-	// Check Pod for the write cert/key
-	// Change root CA
-	// Wait for the root CA to change on file for the pod
-})

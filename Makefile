@@ -49,8 +49,15 @@ test: depend lint vet ## test csi-driver-spiffe
 	ARTIFACTS=$(sell pwd)/_artifacts KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./internal/...
 
 .PHONY: build
-build: ## Build manager binary.
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/csi-driver-spiffe ./cmd/
+build: build-driver build-approver ## Build binaries.
+
+.PHONY: build-driver
+build-driver: ## Build driver binary.
+	CGO_ENABLED=0 GO111MODULE=on go build -o bin/cert-manager-csi-driver-spiffe ./cmd/csi
+
+.PHONY: build-approver
+build-approver: ## Build approver binary.
+	CGO_ENABLED=0 GO111MODULE=on go build -o bin/cert-manager-csi-driver-spiffe-approver ./cmd/approver
 
 .PHONY: verify
 verify: test build ## Verify repo.
@@ -67,13 +74,13 @@ image: ## build docker image targeting all supported platforms
 demo: depend ## create cluster and deploy approver-policy
 	REPO_ROOT=$(shell pwd) ./hack/ci/create-cluster.sh
 
-.PHONY: smoke
-smoke: demo ## create cluster, deploy approver-policy, run smoke tests
-	REPO_ROOT=$(shell pwd) ./hack/ci/run-smoke-test.sh
+.PHONY: e2e
+e2e: demo ## create cluster, deploy csi-driver-spiffe, run e2e tests
+	REPO_ROOT=$(shell pwd) ./hack/ci/run-e2e-test.sh
 	REPO_ROOT=$(shell pwd) ./hack/ci/delete-cluster.sh
 
 .PHONY: depend
-depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml
+depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/cmctl
 
 $(BINDIR):
 	mkdir -p ./bin
@@ -99,6 +106,9 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 	curl -SLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
+
+$(BINDIR)/cmctl:
+	go build -o $(BINDIR)/cmctl github.com/jetstack/cert-manager/cmd/ctl
 
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package smoke
+package e2e
 
 import (
 	"flag"
@@ -22,14 +22,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/cert-manager/csi-driver-spiffe/test/e2e/config"
-)
-
-var (
-	cnf = config.New(flag.CommandLine)
+	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework/config"
 )
 
 var _ = BeforeSuite(func() {
 	flag.Parse()
-	Expect(cnf.Complete()).NotTo(HaveOccurred())
+	Expect(config.GetConfig().Complete()).NotTo(HaveOccurred())
+}, 60)
+
+var _ = AfterSuite(func() {
 }, 60)

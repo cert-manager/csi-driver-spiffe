@@ -14,25 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package smoke
+package e2e
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/onsi/ginkgo"
+	ginkgoconfig "github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework/config"
+	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite"
 )
 
-// Test_Smoke runs the full suite of smoke tests against approver-policy
-func Test_e2e(t *testing.T) {
-	rootDir := os.Getenv("ROOTDIR")
-	if len(rootDir) == 0 {
-		t.Skip("Skipping test as ROOTDIR environment variable not defined")
-	}
+func init() {
+	config.GetConfig().AddFlags(flag.CommandLine)
 
+	// Turn on verbose by default to get spec names
+	ginkgoconfig.DefaultReporterConfig.Verbose = true
+	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
+	ginkgoconfig.GinkgoConfig.EmitSpecProgress = true
+	// Randomize specs as well as suites
+	ginkgoconfig.GinkgoConfig.RandomizeAllSpecs = true
+
+	wait.ForeverTestTimeout = time.Second * 60
+}
+
+// Test_e2e runs the full suite of smoke tests against csi-driver-spiffe
+func Test_e2e(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
 
 	var artifactsDir string
@@ -45,5 +60,5 @@ func Test_e2e(t *testing.T) {
 		"junit-e2e.xml",
 	))
 
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "e2e", []ginkgo.Reporter{junitReporter})
+	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "cert-manager-csi-driver-spiffe e2e suite", []ginkgo.Reporter{junitReporter})
 }

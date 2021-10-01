@@ -43,6 +43,9 @@ type Flags struct {
 	// API.
 	RestConfig *rest.Config
 
+	// DriverName is the driver name as installed in Kubernetes.
+	DriverName string
+
 	// Logr is a shared logger.
 	Logr logr.Logger
 }
@@ -106,6 +109,9 @@ func (f *Flags) addFlags(cmd *cobra.Command) {
 }
 
 func (f *Flags) addAppFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&f.DriverName, "csi-driver-name", "spiffe.csi.cert-manager.io",
+		"The name of the CSI driver, as installed in Kubernetes")
+
 	fs.StringVarP(&f.logLevel,
 		"log-level", "v", "1",
 		"Log level (1-5).")
