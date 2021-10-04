@@ -17,7 +17,7 @@ These documents are:
 - automatically renewed; :heavy_check_mark:
 - private key never leaves the node's virtual memory; :heavy_check_mark:
 - each Pod's document is unique; :heavy_check_mark:
-- the document shares the same life cycle and is destroyed on Pod termination. :heavy_check_mark:
+- the document shares the same life cycle as the Pod and is destroyed on Pod termination. :heavy_check_mark:
 
 ```yaml
 ...
@@ -41,8 +41,8 @@ The project is split into two components;
 
 ##### CSI Driver
 
-The CSI driver runs as DaemonSet on the cluster which is responsible to
-generating, requesting, and mounting the certificate key pair to Pod's on the
+The CSI driver runs as DaemonSet on the cluster which is responsible for
+generating, requesting, and mounting the certificate key pair to Pods on the
 node it manages. The CSI driver creates and manages a
 [tmpfs](https://www.kernel.org/doc/html/latest/filesystems/tmpfs.html) directory
 which is used to create and mount Pod volumes from.
@@ -67,12 +67,12 @@ expiry of the signed certificate.
 
 A distinct
 [cert-manager approver](https://cert-manager.io/docs/concepts/certificaterequest/#approval)
-Deployment is responsible for managing the approval and denial condition of created
-CertificateRequests that target the configured SPIFFE Trust Domain signer. The
- approver ensures that requests have
+Deployment is responsible for managing the approval and denial condition of
+created CertificateRequests that target the configured SPIFFE Trust Domain
+signer. The approver ensures that requests have:
 
 1. the correct key type (ECDSA P-521);
-2. acceptable key usages (one of: Key Encipherment, Digital Signature, Client Auth, Server Auth);
+2. acceptable key usages (Key Encipherment, Digital Signature, Client Auth, Server Auth);
 3. the requested duration matches the enforced duration (default 1 hour);
 4. no [SANs](https://en.wikipedia.org/wiki/Subject_Alternative_Name) or other
    identifiable attributes except a single [URI SANs](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier);
@@ -111,7 +111,7 @@ been configured.
    cert-manager the ability to sign against your Trust Domain. If a namespace
    scoped Issuer is desired, then that Issuer must be created in every namespace
    that Pods will mount volumes from.
-   You must use a Issuer type which is compatible with signing URI SAN
+   You must use an Issuer type which is compatible with signing URI SAN
    certificates and the private does not need to be available to the signer, for
    example [CA](https://cert-manager.io/docs/configuration/ca/),
    [Vault](https://cert-manager.io/docs/configuration/vault/),
@@ -125,11 +125,11 @@ been configured.
    An example demo
    [ClusterIssuer](https://cert-manager.io/docs/concepts/issuer/#namespaces) can
    be found [here](deploy/example/clusterissuer.yaml). This Trust Domain's root
-   CA is self-signed by cert-manager and *private key is stored in the cluster*
+   CA is self-signed by cert-manager and *private key is stored in the cluster*.
 
 ```terminal
 $ kubectl apply -f ./deploy/example/clusterissuer.yaml
-# We must also approve the CertificateRequests since we have disabled the default approver
+# We must also approve the CertificateRequest since we have disabled the default approver
 $ kubectl cert-manager approve -n cert-manager $(kubectl get cr -n cert-manager -ojsonpath='{.items[0].metadata.name}')
 ```
 
@@ -139,7 +139,7 @@ $ kubectl cert-manager approve -n cert-manager $(kubectl get cr -n cert-manager 
    [permissions to approve referencing CertificateRequests](https://cert-manager.io/docs/concepts/certificaterequest/#rbac-syntax).
 
   - Change signer name to match your issuer type.
-  - Change name, kind, and group to kind of your issuer.
+  - Change name, kind, and group to your issuer.
 ```terminal
 $ helm upgrade -i -n cert-manager cert-manager-csi-driver-spiffe jetstack/cert-manager-csi-driver-spiffe --wait \
   --set "app.logLevel=1" \
