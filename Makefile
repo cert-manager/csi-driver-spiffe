@@ -19,7 +19,7 @@ OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.6.3
 KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
-K8S_CLUSTER_NAME ?= csi-driver-spiffe
+IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
 
@@ -67,8 +67,8 @@ verify: test build ## Verify repo.
 # arguments to `--push`.
 .PHONY: image
 image: ## build docker image targeting all supported platforms
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v0.3.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci .
-
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v0.1.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v0.1.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
