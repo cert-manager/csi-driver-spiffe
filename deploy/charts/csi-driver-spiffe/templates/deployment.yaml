@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+  labels:
+{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.app.approver.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+  template:
+    metadata:
+      labels:
+        app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+    spec:
+      serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+      containers:
+      - name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+        image: "{{ .Values.image.repository.approver }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.app.approver.metrics.port }}
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.app.approver.readinessProbe.port }}
+            path: "/readyz"
+          initialDelaySeconds: 3
+          periodSeconds: 7
+        args:
+          - --log-level={{.Values.app.logLevel}}
+          - --csi-driver-name={{.Values.app.logLevel}}
+
+          - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
+          - --issuer-name={{ .Values.app.issuer.name }}
+          - --issuer-kind={{ .Values.app.issuer.kind }}
+          - --issuer-group={{ .Values.app.issuer.group }}
+          - --trust-domain={{ .Values.app.trustDomain }}
+
+          - --leader-election-namespace={{ .Release.Namespace }}
+          - "--metrics-bind-address=:{{.Values.app.approver.metrics.port}}"
+          - "--readiness-probe-bind-address=:{{.Values.app.approver.readinessProbe.port}}"
+        resources:
+{{- toYaml .Values.app.approver.resources | nindent 12 }}

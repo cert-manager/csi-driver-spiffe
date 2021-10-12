@@ -1,0 +1,98 @@
+image:
+  # -- Target image repository.
+  repository:
+    driver: quay.io/jetstack/cert-manager-csi-driver-spiffe
+    approver: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+  # -- Target image version tag.
+  tag: v0.1.0
+  # -- Kubernetes imagePullPolicy on DaemonSet.
+  pullPolicy: IfNotPresent
+
+app:
+  # -- Verbosity of cert-manager-csi-driver logging.
+  logLevel: 1 # 1-5
+  # -- Duration requested for requested certificates.
+  certificateRequestDuration: 1h
+  # -- The Trust Domain for this driver.
+  trustDomain: cluster.local
+  # -- The name for the CSI driver installation.
+  name: spiffe.csi.cert-manager.io
+  issuer:
+    # -- Issuer name which is used to serve this Trust Domain.
+    name: spiffe-ca
+    # -- Issuer kind which is used to serve this Trust Domain.
+    kind: ClusterIssuer
+    # -- Issuer group which is used to serve this Trust Domain.
+    group: cert-manager.io
+
+  # -- Options for CSI driver
+  driver:
+    # -- Optional file containing a CA bundle that will be propagated to
+    # managed volumes.
+    sourceCABundle: # /var/run/secrets/spiffe.io/ca.pem
+    volumeFileName:
+      # -- File name which signed certificates are written to in volumes.
+      cert: tls.crt
+      # -- File name which private keys are written to in volumes.
+      key: tls.key
+      # -- File name where the CA bundles are written to, if enabled.
+      ca: ca.crt
+    # -- Optional extra volumes. Useful for mounting root CAs
+    volumes: []
+    #- name: root-cas
+    #  secret:
+    #    secretName: root-ca-bundle
+    # -- Optional extra volume mounts. Useful for mounting root CAs
+    volumeMounts: []
+    #- name: root-cas
+    #  mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
+
+    resources: {}
+    # -- Kubernetes pod resource limits for cert-manager-csi-driver-spiffe
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # -- Kubernetes pod memory resource requests for cert-manager-csi-driver-spiffe
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # -- Options for approver controller
+  approver:
+    # -- Number of replicas of the approver to run.
+    replicaCount: 1
+    # -- The signer name that csi-driver-spiffe approver will be given
+    # permission to approve and deny. CertificateRequests referencing this
+    # signer name can be processed by the SPIFFE approver. See:
+    # https://cert-manager.io/docs/concepts/certificaterequest/#approval
+    signerName: "clusterissuers.cert-manager.io/*"
+    readinessProbe:
+      # -- Container port to expose csi-driver-spiffe-approver HTTP readiness
+      # probe on default network interface.
+      port: 6060
+
+    metrics:
+      # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
+      port: 9402
+      # -- Service to expose metrics endpoint.
+      service:
+        # -- Create a Service resource to expose metrics endpoint.
+        enabled: true
+        # -- Service type to expose metrics.
+        type: ClusterIP
+        # -- ServiceMonitor resource for this Service.
+        servicemonitor:
+          enabled: false
+          prometheusInstance: default
+          interval: 10s
+          scrapeTimeout: 5s
+          labels: {}
+    resources: {}
+    # -- Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # -- Kubernetes pod memory resource requests for cert-manager-csi-driver-spiffe approver
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
