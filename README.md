@@ -203,6 +203,9 @@ certificate. csi-driver-spiffe can be optionally configured to also mount a
 statically defined CA bundle from a volume that will be written to all Pod
 volumes.
 
+If the CSI driver detects this bundle has changed (through overwrite, renewal,
+etc), the new bundle will be written to all existing volumes.
+
 The following example mounts the CA certificate used by the Trust Domain
 ClusterIssuer.
 

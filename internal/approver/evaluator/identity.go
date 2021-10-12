@@ -24,6 +24,9 @@ import (
 
 // validateIdentity validates that the SPIFFE ID contained in the X.509
 // certificate request matches that in the username.
+// The username should be the Username as it appears on the CertificateRequest.
+// This should be the ServiceAccount of the mounting Pod who has been
+// impersonated to create the request.
 func (i *internal) validateIdentity(csr *x509.CertificateRequest, username string) error {
 	split := strings.Split(username, ":")
 	if len(split) != 4 || split[0] != "system" || split[1] != "serviceaccount" {

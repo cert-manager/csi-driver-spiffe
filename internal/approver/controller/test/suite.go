@@ -146,7 +146,7 @@ var _ = Context("Approval", func() {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
 			}).Should(BeNil())
 			return apiutil.CertificateRequestIsDenied(&cr)
-		}).Should(BeTrue(), "expected approval")
+		}).Should(BeTrue(), "expected denial")
 	})
 
 	It("should approve CertificateRequest when the evaluator returns nil", func() {
@@ -171,6 +171,6 @@ var _ = Context("Approval", func() {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
 			}).Should(BeNil())
 			return apiutil.CertificateRequestIsApproved(&cr)
-		}).Should(BeTrue(), "expected denial")
+		}).Should(BeTrue(), "expected approval")
 	})
 })
