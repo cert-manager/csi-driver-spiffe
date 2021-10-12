@@ -89,8 +89,13 @@ been configured.
 
 ## Installation
 
+:warning: Requires Kubernetes version v1.21+ or v1.20 with the
+`--feature-gates=CSIServiceAccountToken=true` flag.
+
+:warning: Requires cert-manager v1.3 or higher.
+
 1. [cert-manager](https://cert-manager.io) is required to be installed with
-   csi-driver-spiffe. :warning: requires cert-manager v1.3 or higher.
+   csi-driver-spiffe.
 
 > :warning:
 >
