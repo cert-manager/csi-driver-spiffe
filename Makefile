@@ -46,7 +46,7 @@ lint:  ## Run linters against code.
 
 .PHONY: test
 test: depend lint vet ## test csi-driver-spiffe
-	ARTIFACTS=$(sell pwd)/_artifacts KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./internal/...
+	ARTIFACTS=$(shell pwd)/_artifacts KUBEBUILDER_ASSETS=$(BINDIR)/kubebuilder/bin ROOTDIR=$(CURDIR) go test -v $(TEST_ARGS) ./cmd/... ./internal/...
 
 .PHONY: build
 build: build-driver build-approver ## Build binaries.
