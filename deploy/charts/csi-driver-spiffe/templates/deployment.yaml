@@ -28,8 +28,8 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 7
         args:
-          - --log-level={{.Values.app.logLevel}}
-          - --csi-driver-name={{.Values.app.logLevel}}
+          - --log-level={{ .Values.app.logLevel }}
+          - --csi-driver-name={{ .Values.app.name }}
 
           - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
           - --issuer-name={{ .Values.app.issuer.name }}
