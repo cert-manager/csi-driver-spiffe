@@ -17,7 +17,7 @@ limitations under the License.
 package fake
 
 import (
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator"
 )

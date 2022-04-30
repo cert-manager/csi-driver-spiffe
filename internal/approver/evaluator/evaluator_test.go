@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	utilpki "github.com/jetstack/cert-manager/pkg/util/pki"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
