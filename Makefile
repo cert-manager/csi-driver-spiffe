@@ -108,8 +108,8 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
 $(BINDIR)/cmctl:
-	go build -o $(BINDIR)/cmctl github.com/jetstack/cert-manager/cmd/ctl
+	go build -o $(BINDIR)/cmctl github.com/cert-manager/cert-manager/cmd/ctl
 
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
-	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/jetstack/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/jetstack/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
