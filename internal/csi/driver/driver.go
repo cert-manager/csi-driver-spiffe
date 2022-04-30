@@ -174,7 +174,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 
 	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
-		DriverVersion: "v0.1.0",
+		DriverVersion: "v0.2.0",
 		NodeID:        opts.NodeID,
 		Store:         d.store,
 		Manager: manager.NewManagerOrDie(manager.Options{
