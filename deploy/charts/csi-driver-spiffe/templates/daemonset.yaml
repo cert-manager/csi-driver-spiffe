@@ -37,6 +37,17 @@ spec:
             - name: registration-dir
               mountPath: /registration
 
+        - name: liveness-probe
+          image: k8s.gcr.io/sig-storage/livenessprobe:v2.6.0
+          args:
+            - --csi-address=/plugin/csi.sock
+            - --probe-timeout=3s
+            - --health-port=9809
+            - -v={{ .Values.app.logLevel }}
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+
         - name: cert-manager-csi-driver-spiffe
           securityContext:
             privileged: true
@@ -77,6 +88,15 @@ spec:
             mountPropagation: "Bidirectional"
           - name: csi-data-dir
             mountPath: /csi-data-dir
+          ports:
+            - containerPort: 9809
+              name: healthz
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
         {{- if .Values.app.driver.volumeMounts }}
 {{ toYaml .Values.app.driver.volumeMounts | indent 10 }}
         {{- end }}
