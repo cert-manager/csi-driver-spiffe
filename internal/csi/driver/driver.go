@@ -272,17 +272,10 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 // writeKeypair writes the private key and certificate chain to file that will
 // be mounted into the pod.
 func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, chain []byte, _ []byte) error {
-	pemBytes, err := x509.MarshalPKCS8PrivateKey(key)
+	keyPEM, err := pemFormatPrivateKey(key)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ECDSA private key for PEM encoding: %w", err)
 	}
-
-	keyPEM := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "PRIVATE KEY",
-			Bytes: pemBytes,
-		},
-	)
 
 	// Calculate the next issuance time before we write any data to file, so in
 	// the cases where this errors, we are not left in a bad state.
@@ -311,4 +304,18 @@ func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, cha
 	}
 
 	return nil
+}
+
+func pemFormatPrivateKey(key crypto.PrivateKey) ([]byte, error) {
+	pemBytes, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: pemBytes,
+		},
+	), nil
 }
