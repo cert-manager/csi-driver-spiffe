@@ -19,7 +19,6 @@ package driver
 import (
 	"context"
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -273,14 +272,14 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 // writeKeypair writes the private key and certificate chain to file that will
 // be mounted into the pod.
 func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, chain []byte, _ []byte) error {
-	pemBytes, err := x509.MarshalECPrivateKey(key.(*ecdsa.PrivateKey))
+	pemBytes, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ECDSA private key for PEM encoding: %w", err)
 	}
 
 	keyPEM := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "EC PRIVATE KEY",
+			Type:  "PRIVATE KEY",
 			Bytes: pemBytes,
 		},
 	)
