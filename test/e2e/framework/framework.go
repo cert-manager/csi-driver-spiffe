@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/jetstack/cert-manager/pkg/api"
+	"github.com/cert-manager/cert-manager/pkg/api"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"

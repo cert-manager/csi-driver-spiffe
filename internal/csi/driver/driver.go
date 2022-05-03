@@ -26,15 +26,15 @@ import (
 	"net/url"
 	"time"
 
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/cert-manager/csi-lib/driver"
 	"github.com/cert-manager/csi-lib/manager"
 	"github.com/cert-manager/csi-lib/manager/util"
 	"github.com/cert-manager/csi-lib/metadata"
 	"github.com/cert-manager/csi-lib/storage"
 	"github.com/go-logr/logr"
-	cmapi "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	cmclient "github.com/jetstack/cert-manager/pkg/client/clientset/versioned"
 	"gopkg.in/square/go-jose.v2/jwt"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
@@ -172,6 +172,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		return nil, fmt.Errorf("failed to build cert-manager client: %w", err)
 	}
 
+	mngrLog := d.log.WithName("manager")
 	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
 		DriverVersion: "v0.1.0",
@@ -184,7 +185,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 			MaxRequestsPerVolume: 1,
 			MetadataReader:       d.store,
 			Clock:                clock.RealClock{},
-			Log:                  d.log.WithName("manager"),
+			Log:                  &mngrLog,
 			NodeID:               opts.NodeID,
 			GeneratePrivateKey:   generatePrivateKey,
 			GenerateRequest:      d.generateRequest,

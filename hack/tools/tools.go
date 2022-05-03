@@ -7,7 +7,7 @@
 package bin
 
 import (
-	_ "github.com/jetstack/cert-manager/cmd/ctl"
+	_ "github.com/cert-manager/cert-manager/cmd/ctl"
 	_ "github.com/onsi/ginkgo/ginkgo"
 	_ "sigs.k8s.io/kind"
 )

@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jetstack/cert-manager/pkg/api"
+	"github.com/cert-manager/cert-manager/pkg/api"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
