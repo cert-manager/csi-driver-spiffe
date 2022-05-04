@@ -19,11 +19,11 @@ package driver
 import (
 	"context"
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"net/url"
+	"sync"
 	"time"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -123,11 +123,11 @@ type Driver struct {
 	driver *driver.Driver
 
 	// store is the csi-lib implementation of a cert-manager CSI storage manager.
-	store *storage.Filesystem
+	store storage.Interface
 
-	// updateRootCAFiles is a func to update all managed volumes with the current
-	// root CA certificates PEM. Used for testing.
-	updateRootCAFilesFn func() error
+	// camanager is used to update all managed volumes with the current root CA
+	// certificates PEM.
+	camanager *camanager
 }
 
 // New constructs a new Driver instance.
@@ -156,16 +156,19 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 	if d.certificateRequestDuration == 0 {
 		d.certificateRequestDuration = time.Hour
 	}
-	d.updateRootCAFilesFn = d.updateRootCAFiles
 
 	var err error
-	d.store, err = storage.NewFilesystem(d.log, opts.DataRoot)
+	store, err := storage.NewFilesystem(d.log, opts.DataRoot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup filesystem: %w", err)
 	}
 	// Used by clients to set the stored file's file-system group before
 	// mounting.
-	d.store.FSGroupVolumeAttributeKey = "spiffe.csi.cert-manager.io/fs-group"
+	store.FSGroupVolumeAttributeKey = "spiffe.csi.cert-manager.io/fs-group"
+
+	d.store = store
+	d.camanager = newCAManager(log, store, opts.RootCAs,
+		opts.CertificateFileName, opts.KeyFileName, opts.CAFileName)
 
 	cmclient, err := cmclient.NewForConfig(opts.RestConfig)
 	if err != nil {
@@ -202,13 +205,28 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 
 // Run is a blocking func that run the CSI driver.
 func (d *Driver) Run(ctx context.Context) error {
+	var wg sync.WaitGroup
+
 	go func() {
 		<-ctx.Done()
 		d.driver.Stop()
 	}()
 
-	d.manageCAFiles(ctx, time.Second*5)
-	return d.driver.Run()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		d.camanager.run(ctx, time.Second*5)
+	}()
+
+	wg.Add(1)
+	var err error
+	go func() {
+		defer wg.Done()
+		err = d.driver.Run()
+	}()
+
+	wg.Wait()
+	return err
 }
 
 // generateRequest will generate a SPIFFE manager.CertificateRequestBundle
@@ -274,14 +292,14 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 // writeKeypair writes the private key and certificate chain to file that will
 // be mounted into the pod.
 func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, chain []byte, _ []byte) error {
-	pemBytes, err := x509.MarshalECPrivateKey(key.(*ecdsa.PrivateKey))
+	pemBytes, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ECDSA private key for PEM encoding: %w", err)
 	}
 
 	keyPEM := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "EC PRIVATE KEY",
+			Type:  "PRIVATE KEY",
 			Bytes: pemBytes,
 		},
 	)
