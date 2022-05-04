@@ -1,6 +1,6 @@
 # cert-manager-csi-driver-spiffe
 
-![Version: v0.1.0](https://img.shields.io/badge/Version-v0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.1.0](https://img.shields.io/badge/AppVersion-v0.1.0-informational?style=flat-square)
+![Version: v0.2.0](https://img.shields.io/badge/Version-v0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.2.0](https://img.shields.io/badge/AppVersion-v0.2.0-informational?style=flat-square)
 
 A Helm chart for cert-manager-csi-driver-spiffe
 
@@ -52,5 +52,5 @@ A Helm chart for cert-manager-csi-driver-spiffe
 | app.trustDomain | string | `"cluster.local"` | The Trust Domain for this driver. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on DaemonSet. |
 | image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
-| image.tag | string | `"v0.1.0"` | Target image version tag. |
+| image.tag | string | `"v0.2.0"` | Target image version tag. |
 
