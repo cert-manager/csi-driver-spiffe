@@ -36,15 +36,17 @@ func Test_manageCAFiles(t *testing.T) {
 
 	t.Log("starting manageCAFiles()")
 	rootCAsChan := make(chan []byte)
-	d := &Driver{
+	c := &camanager{
 		log:     klogr.New(),
 		rootCAs: rootca.NewMemory(ctx, rootCAsChan),
 	}
-	d.manageCAFiles(ctx, time.Millisecond*5)
+	go func() {
+		c.run(ctx, time.Millisecond*5)
+	}()
 
 	t.Log("if root CAs update happens, expect updateRootCAFilesFn() to be called")
 	calledCtx, calledCancel := context.WithCancel(context.TODO())
-	d.updateRootCAFilesFn = func() error {
+	c.updateRootCAFilesFn = func() error {
 		t.Log("updateRootCAFilesFn() called")
 		calledCancel()
 		return nil
@@ -63,7 +65,7 @@ func Test_manageCAFiles(t *testing.T) {
 	t.Log("should call updateRootCAFilesFn() again if it fails")
 	var i int
 	calledTwiceChan := make(chan struct{})
-	d.updateRootCAFilesFn = func() error {
+	c.updateRootCAFilesFn = func() error {
 		if i == 0 {
 			i++
 			t.Log("returning error from updateRootCAFilesFn()")
