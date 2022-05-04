@@ -41,8 +41,12 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint:  ## Run linters against code.
+lint: helm-docs ## Run linters against code.
 	./hack/verify-boilerplate.sh
+
+.PHONY: helm-docs
+helm-docs: depend # verify helm-docs
+	./hack/verify-helm-docs.sh
 
 .PHONY: test
 test: depend lint vet ## test csi-driver-spiffe
@@ -80,7 +84,7 @@ e2e: demo ## create cluster, deploy csi-driver-spiffe, run e2e tests
 	REPO_ROOT=$(shell pwd) ./hack/ci/delete-cluster.sh
 
 .PHONY: depend
-depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/cmctl
+depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/cmctl $(BINDIR)/helm-docs
 
 $(BINDIR):
 	mkdir -p ./bin
@@ -113,3 +117,6 @@ $(BINDIR)/cmctl:
 $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
+
+$(BINDIR)/helm-docs:
+	go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
