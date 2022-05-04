@@ -52,11 +52,18 @@ type camanager struct {
 
 // newCAManager constructs a new camanager which distributes new trust bundles
 // to mounted pods, as they are changed.
-func newCAManager(log logr.Logger, store *storage.Filesystem, rootCAs rootca.Interface) *camanager {
+func newCAManager(log logr.Logger,
+	store *storage.Filesystem,
+	rootCAs rootca.Interface,
+	certFileName, keyFileName, caFileName string,
+) *camanager {
 	c := &camanager{
-		log:     log.WithName("ca-manager"),
-		store:   store,
-		rootCAs: rootCAs,
+		log:          log.WithName("ca-manager"),
+		store:        store,
+		rootCAs:      rootCAs,
+		certFileName: certFileName,
+		keyFileName:  keyFileName,
+		caFileName:   caFileName,
 	}
 	c.updateRootCAFilesFn = c.updateRootCAFiles
 	return c

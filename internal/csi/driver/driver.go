@@ -167,7 +167,8 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 	store.FSGroupVolumeAttributeKey = "spiffe.csi.cert-manager.io/fs-group"
 
 	d.store = store
-	d.camanager = newCAManager(log, store, opts.RootCAs)
+	d.camanager = newCAManager(log, store, opts.RootCAs,
+		opts.CertificateFileName, opts.KeyFileName, opts.CAFileName)
 
 	cmclient, err := cmclient.NewForConfig(opts.RestConfig)
 	if err != nil {
