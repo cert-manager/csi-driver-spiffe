@@ -30,7 +30,14 @@ A Helm chart for cert-manager-csi-driver-spiffe
 | app.approver.replicaCount | int | `1` | Number of replicas of the approver to run. |
 | app.approver.signerName | string | `"clusterissuers.cert-manager.io/*"` | The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval |
 | app.certificateRequestDuration | string | `"1h"` | Duration requested for requested certificates. |
-| app.driver | object | `{"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
+| app.driver | object | `{"livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"k8s.gcr.io/sig-storage/livenessprobe","tag":"v2.6.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"k8s.gcr.io/sig-storage/csi-node-driver-registrar","tag":"v2.5.0"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
+| app.driver.livenessProbe.port | int | `9809` | The port that will expose the liveness of the csi-driver |
+| app.driver.livenessProbeImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on liveness probe. |
+| app.driver.livenessProbeImage.repository | string | `"k8s.gcr.io/sig-storage/livenessprobe"` | Target image repository. |
+| app.driver.livenessProbeImage.tag | string | `"v2.6.0"` | Target image version tag. |
+| app.driver.nodeDriverRegistrarImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on node-driver. |
+| app.driver.nodeDriverRegistrarImage.repository | string | `"k8s.gcr.io/sig-storage/csi-node-driver-registrar"` | Target image repository. |
+| app.driver.nodeDriverRegistrarImage.tag | string | `"v2.5.0"` | Target image version tag. |
 | app.driver.sourceCABundle | string | `nil` | Optional file containing a CA bundle that will be propagated to managed volumes. |
 | app.driver.volumeFileName.ca | string | `"ca.crt"` | File name where the CA bundles are written to, if enabled. |
 | app.driver.volumeFileName.cert | string | `"tls.crt"` | File name which signed certificates are written to in volumes. |
