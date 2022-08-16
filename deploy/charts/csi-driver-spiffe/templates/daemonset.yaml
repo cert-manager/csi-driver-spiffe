@@ -19,10 +19,6 @@ spec:
         - name: node-driver-registrar
           image: "{{ .Values.app.driver.nodeDriverRegistrarImage.repository }}:{{ .Values.app.driver.nodeDriverRegistrarImage.tag }}"
           imagePullPolicy: {{ .Values.app.driver.nodeDriverRegistrarImage.pullPolicy }}
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/cert-manager-csi-driver-spiffe /registration/cert-manager-csi-driver-spiffe-reg.sock"]
           args:
             - -v={{ .Values.app.logLevel }}
             - --csi-address=/plugin/csi.sock
