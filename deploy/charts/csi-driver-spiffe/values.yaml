@@ -8,6 +8,10 @@ image:
   # -- Kubernetes imagePullPolicy on DaemonSet.
   pullPolicy: IfNotPresent
 
+# -- Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
+imagePullSecrets: []
+#- name: Secret with Registry credentials
+
 app:
   # -- Verbosity of cert-manager-csi-driver logging.
   logLevel: 1 # 1-5
