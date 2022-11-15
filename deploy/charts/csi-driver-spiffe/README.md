@@ -54,4 +54,5 @@ A Helm chart for cert-manager-csi-driver-spiffe
 | image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
 | image.tag | string | `"v0.2.0"` | Target image version tag. |
 | imagePullSecrets | list | `[]` | Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images |
+| priorityClassName | string | `""` | Optional priority class to be used for the csi-driver pods. |
 
