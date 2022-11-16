@@ -42,3 +42,6 @@ spec:
           - "--readiness-probe-bind-address=:{{.Values.app.approver.readinessProbe.port}}"
         resources:
 {{- toYaml .Values.app.approver.resources | nindent 12 }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
