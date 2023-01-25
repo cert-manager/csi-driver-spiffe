@@ -8,18 +8,20 @@
 # csi-driver-spiffe
 
 csi-driver-spiffe is a Container Storage Interface (CSI) driver plugin for
-Kubernetes to work along [cert-manager](https://cert-manager.io/). This CSI driver
-transparently delivers [SPIFFE](https://spiffe.io/)
-[SVIDs](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/#spiffe-verifiable-identity-document-svid)
-in the form of X.509 certificate key pairs to mounting Kubernetes Pods.
+Kubernetes, designed to work alongside [cert-manager](https://cert-manager.io/).
 
-The end result is all and any Pod running in Kubernetes can securely request
-their SPIFFE identity document from a Trust Domain with minimal configuration.
-These documents are:
-- automatically renewed; :heavy_check_mark:
-- private key never leaves the node's virtual memory; :heavy_check_mark:
-- each Pod's document is unique; :heavy_check_mark:
-- the document shares the same life cycle as the Pod and is destroyed on Pod termination. :heavy_check_mark:
+It transparently delivers [SPIFFE](https://spiffe.io/) [SVIDs](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/#spiffe-verifiable-identity-document-svid)
+(in the form of X.509 certificate key pairs) to mounting Kubernetes Pods.
+
+The end result is that any and all Pods running in Kubernetes can securely request
+a SPIFFE identity document from a Trust Domain with minimal configuration.
+
+These documents in turn have the following properties:
+
+- automatically renewed ✔️
+- private key never leaves the node's virtual memory ✔️
+- each Pod's document is unique ✔️
+- the document shares the same life cycle as the Pod and is destroyed on Pod termination ✔️
 
 ```yaml
 ...
@@ -33,11 +35,9 @@ These documents are:
             readOnly: true
 ```
 
-SPIFFE documents can be used for mutual TLS (mTLS) or authentication by Pod's
-within its Trust Domain.
+SPIFFE documents can then be used by Pods for mutual TLS (mTLS) or other authentication within their Trust Domain.
 
 ## Documentation
 
-Please follow the documentation at
-[cert-manager.io](https://cert-manager.io/docs/projects/csi-driver-spiffe/) for
-installing and using csi-driver-spiffe.
+Please follow the documentation at [cert-manager.io](https://cert-manager.io/docs/projects/csi-driver-spiffe/)
+for installing and using csi-driver-spiffe.
