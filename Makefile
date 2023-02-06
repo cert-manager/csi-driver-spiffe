@@ -17,7 +17,7 @@ BINDIR ?= $(CURDIR)/bin
 ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
-HELM_VERSION ?= 3.6.3
+HELM_VERSION ?= 3.10.3
 KUBEBUILDER_TOOLS_VERISON ?= 1.22.0
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
@@ -83,11 +83,15 @@ e2e: demo ## create cluster, deploy csi-driver-spiffe, run e2e tests
 	REPO_ROOT=$(shell pwd) ./hack/ci/run-e2e-test.sh
 	REPO_ROOT=$(shell pwd) ./hack/ci/delete-cluster.sh
 
+.PHONY: chart
+chart: | $(BINDIR)/helm $(BINDIR)/chart
+	$(BINDIR)/helm package --app-version=$(RELEASE_VERSION) --version=$(RELEASE_VERSION) --destination "$(BINDIR)/chart" ./deploy/charts/csi-driver-spiffe
+
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/cmctl $(BINDIR)/helm-docs
 
-$(BINDIR):
-	mkdir -p ./bin
+$(BINDIR) $(BINDIR)/chart:
+	mkdir -p $@
 
 $(BINDIR)/ginkgo:
 	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
@@ -95,12 +99,12 @@ $(BINDIR)/ginkgo:
 $(BINDIR)/kind:
 	go build -o $(BINDIR)/kind sigs.k8s.io/kind
 
-$(BINDIR)/helm:
-	curl -o $(BINDIR)/helm.tar.gz -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
-	tar -C $(BINDIR) -xzf $(BINDIR)/helm.tar.gz
-	cp $(BINDIR)/$(OS)-$(ARCH)/helm $(BINDIR)/helm
-	rm -r $(BINDIR)/$(OS)-$(ARCH) $(BINDIR)/helm.tar.gz
-	$(BINDIR)/helm repo add jetstack https://charts.jetstack.io --force-update
+$(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
+	tar xfO $< $(OS)-$(ARCH)/helm > $@
+	chmod +x $@
+
+$(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz: | $(BINDIR)
+	curl -o $@ -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
 
 $(BINDIR)/kubectl:
 	curl -o ./bin/kubectl -LO "https://storage.googleapis.com/kubernetes-release/release/$(shell curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/$(OS)/$(ARCH)/kubectl"
