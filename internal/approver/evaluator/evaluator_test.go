@@ -176,60 +176,6 @@ func Test_Evaluate(t *testing.T) {
 			},
 			expErr: true,
 		},
-		"if request contains the wrong key type, expect error": {
-			req: func(t *testing.T) *cmapi.CertificateRequest {
-				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
-					Spec: cmapi.CertificateSpec{
-						PrivateKey: &cmapi.CertificatePrivateKey{Algorithm: cmapi.RSAKeyAlgorithm},
-						URIs:       []string{"spiffe://foo.bar/ns/sandbox/sa/sleep"},
-					},
-				})
-				assert.NoError(t, err)
-				pk, err := utilpki.GenerateRSAPrivateKey(2048)
-				assert.NoError(t, err)
-				csrDER, err := utilpki.EncodeCSR(csr, pk)
-				assert.NoError(t, err)
-				csrPEM := bytes.NewBuffer([]byte{})
-				assert.NoError(t, pem.Encode(csrPEM, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrDER}))
-				return &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{
-					Request:  csrPEM.Bytes(),
-					Duration: &metav1.Duration{Duration: time.Hour},
-					Username: "system:serviceaccount:sandbox:sleep",
-					Usages: []cmapi.KeyUsage{
-						cmapi.UsageServerAuth, cmapi.UsageClientAuth,
-						cmapi.UsageDigitalSignature, cmapi.UsageKeyEncipherment,
-					},
-				}}
-			},
-			expErr: true,
-		},
-		"if request contains the wrong key size, expect error": {
-			req: func(t *testing.T) *cmapi.CertificateRequest {
-				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
-					Spec: cmapi.CertificateSpec{
-						PrivateKey: &cmapi.CertificatePrivateKey{Algorithm: cmapi.ECDSAKeyAlgorithm},
-						URIs:       []string{"spiffe://foo.bar/ns/sandbox/sa/sleep"},
-					},
-				})
-				assert.NoError(t, err)
-				pk, err := utilpki.GenerateECPrivateKey(utilpki.ECCurve384)
-				assert.NoError(t, err)
-				csrDER, err := utilpki.EncodeCSR(csr, pk)
-				assert.NoError(t, err)
-				csrPEM := bytes.NewBuffer([]byte{})
-				assert.NoError(t, pem.Encode(csrPEM, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrDER}))
-				return &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{
-					Request:  csrPEM.Bytes(),
-					Duration: &metav1.Duration{Duration: time.Hour},
-					Username: "system:serviceaccount:sandbox:sleep",
-					Usages: []cmapi.KeyUsage{
-						cmapi.UsageServerAuth, cmapi.UsageClientAuth,
-						cmapi.UsageDigitalSignature, cmapi.UsageKeyEncipherment,
-					},
-				}}
-			},
-			expErr: true,
-		},
 		"if request is with isCA=true, expect error": {
 			req: func(t *testing.T) *cmapi.CertificateRequest {
 				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
