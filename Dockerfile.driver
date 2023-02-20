@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Build the istio-csr binary
-FROM docker.io/library/golang:1.18 as builder
+FROM docker.io/library/golang:1.19 as builder
 
 WORKDIR /workspace
+
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -29,7 +29,7 @@ COPY internal/flags internal/flags
 # Build
 RUN make build-driver
 
-FROM alpine:3.14
+FROM alpine:3.17
 LABEL description="cert-manager CSI Driver SPIFFE"
 
 WORKDIR /
