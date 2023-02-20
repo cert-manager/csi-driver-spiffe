@@ -29,18 +29,18 @@ import (
 	"github.com/cert-manager/csi-lib/metadata"
 )
 
-// generatePrivateKey generates an ECDSA private key.
+// generatePrivateKey generates an ECDSA private key, which is the only currently supported type
 func generatePrivateKey(_ metadata.Metadata) (crypto.PrivateKey, error) {
-	return ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 }
 
-// signRequest will sign a given X.509 certificate signing request with the
-// given key.
+// signRequest will sign a given X.509 certificate signing request with the given key.
 func signRequest(_ metadata.Metadata, key crypto.PrivateKey, request *x509.CertificateRequest) ([]byte, error) {
 	csrDer, err := x509.CreateCertificateRequest(rand.Reader, request, key)
 	if err != nil {
 		return nil, err
 	}
+
 	return pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE REQUEST",
 		Bytes: csrDer,
@@ -48,10 +48,10 @@ func signRequest(_ metadata.Metadata, key crypto.PrivateKey, request *x509.Certi
 }
 
 // calculateNextIssuanceTime returns the time when the certificate should be
-// renewed. This will be 2/3rds the duration of the leaf certificate's validity
-// period.
+// renewed. This will be 2/3rds the duration of the leaf certificate's validity period.
 func calculateNextIssuanceTime(chain []byte) (time.Time, error) {
 	block, _ := pem.Decode(chain)
+
 	crt, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("parsing issued certificate: %w", err)
@@ -59,6 +59,7 @@ func calculateNextIssuanceTime(chain []byte) (time.Time, error) {
 
 	// Renew once a certificate is 2/3rds of the way through its actual lifetime.
 	actualDuration := crt.NotAfter.Sub(crt.NotBefore)
+
 	renewBeforeNotAfter := actualDuration / 3
 
 	return crt.NotAfter.Add(-renewBeforeNotAfter), nil

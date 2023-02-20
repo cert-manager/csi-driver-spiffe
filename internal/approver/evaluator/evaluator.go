@@ -17,8 +17,6 @@ limitations under the License.
 package evaluator
 
 import (
-	"crypto/ecdsa"
-	"errors"
 	"fmt"
 	"time"
 
@@ -98,16 +96,12 @@ func (i *internal) Evaluate(req *cmapi.CertificateRequest) error {
 			csr.DNSNames, csr.IPAddresses, csr.Subject.CommonName, csr.EmailAddresses)
 	}
 
-	if ecdsapub, ok := csr.PublicKey.(*ecdsa.PublicKey); !ok || ecdsapub.Curve.Params().BitSize != 521 {
-		return errors.New("forbidden key used by requestor, expecting ECDSA P521")
-	}
-
 	if err := validateCSRExtentions(csr); err != nil {
 		return err
 	}
 
 	if req.Spec.IsCA {
-		return errors.New("request contains spec.isCA=true")
+		return fmt.Errorf("request contains spec.isCA=true")
 	}
 
 	if !util.EqualKeyUsagesUnsorted(req.Spec.Usages, requiedUsages) {

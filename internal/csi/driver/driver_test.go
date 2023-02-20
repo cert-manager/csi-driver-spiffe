@@ -40,22 +40,25 @@ func Test_writeKeyPair(t *testing.T) {
 		cancel()
 	})
 
-	capk, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	capk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
+
 	caTmpl, err := utilpki.GenerateTemplate(&cmapi.Certificate{Spec: cmapi.CertificateSpec{CommonName: "my-ca"}})
 	require.NoError(t, err)
+
 	caPEM, ca, err := utilpki.SignCertificate(caTmpl, caTmpl, capk.Public(), capk)
 	require.NoError(t, err)
 
-	leafpk, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	leafpk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
+
 	leafTmpl, err := utilpki.GenerateTemplate(
 		&cmapi.Certificate{
 			Spec: cmapi.CertificateSpec{URIs: []string{"spiffe://cert-manager.io/ns/sandbox/sa/default"}},
 		},
 	)
-
 	require.NoError(t, err)
+
 	leafPEM, _, err := utilpki.SignCertificate(leafTmpl, ca, leafpk.Public(), capk)
 	require.NoError(t, err)
 
@@ -73,9 +76,12 @@ func Test_writeKeyPair(t *testing.T) {
 	}
 
 	meta := metadata.Metadata{VolumeID: "vol-id"}
+
 	_, err = store.RegisterMetadata(meta)
 	require.NoError(t, err)
-	require.NoError(t, d.writeKeypair(meta, leafpk, leafPEM, nil))
+
+	err = d.writeKeypair(meta, leafpk, leafPEM, nil)
+	require.NoError(t, err)
 
 	files, err := store.ReadFiles("vol-id")
 	require.NoError(t, err)
