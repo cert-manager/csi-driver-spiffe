@@ -1,10 +1,8 @@
 apiVersion: v1
-
 name: cert-manager-csi-driver-spiffe
 type: application
-description: A Helm chart for cert-manager-csi-driver-spiffe
-
-home: https://github.com/cert-manager/csi-driver-spiffe
+description: cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparently delivers X.509 SPIFFE SVIDs to pods which mount it.
+home: https://cert-manager.io/docs/projects/csi-driver-spiffe/
 maintainers:
   - name: cert-manager-maintainers
     email: cert-manager-maintainers@googlegroups.com
