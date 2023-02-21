@@ -68,13 +68,19 @@ build-approver: ## Build approver binary.
 .PHONY: verify
 verify: test build ## Verify repo.
 
-# image will only build and store the image locally, targeted in OCI format.
-# To actually push an image to the public repo, replace the `--output` flag and
-# arguments to `--push`.
 .PHONY: image
 image: ## build docker image targeting all supported platforms
 	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
 	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
+
+# TODO: ideally we should ensure that image and image-push are identical save for the different output location (or we should use ko instead)
+# for now, we copy+paste the build steps to avoid the need for a manual edit to the Makefile in order to do a release
+# This allows us to release from a non-dirty checkout of a tag.
+
+.PHONY: image-push
+image-push: ## build docker images for all supported platforms and push to the remote registry
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v$(RELEASE_VERSION) --push -f Dockerfile.driver .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v$(RELEASE_VERSION) --push -f Dockerfile.approver .
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
