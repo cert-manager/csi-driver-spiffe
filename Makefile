@@ -23,6 +23,8 @@ IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
 
+RELEASE_VERSION ?= 0.3.0
+
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -71,8 +73,8 @@ verify: test build ## Verify repo.
 # arguments to `--push`.
 .PHONY: image
 image: ## build docker image targeting all supported platforms
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v0.2.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v0.2.0 --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:v$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
 
 .PHONY: demo
 demo: depend ## create cluster and deploy approver-policy
