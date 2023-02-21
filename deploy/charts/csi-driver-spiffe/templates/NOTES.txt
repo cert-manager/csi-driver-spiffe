@@ -1,0 +1,6 @@
+csi-driver-spiffe {{ .Chart.AppVersion }} has been deployed successfully!
+
+For usage instructions and a guide to getting started, check out the csi-driver-spiffe
+page on the cert-manager website:
+
+https://cert-manager.io/docs/projects/csi-driver-spiffe/
