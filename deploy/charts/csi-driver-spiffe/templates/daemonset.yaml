@@ -61,6 +61,8 @@ spec:
           args :
             - --log-level={{ .Values.app.logLevel }}
 
+            - --csi-driver-name={{ .Values.app.name }}
+
             - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
             - --issuer-name={{ .Values.app.issuer.name }}
             - --issuer-kind={{ .Values.app.issuer.kind }}
