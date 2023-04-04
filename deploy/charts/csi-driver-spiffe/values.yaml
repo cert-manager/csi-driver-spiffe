@@ -51,6 +51,9 @@ app:
     #- name: root-cas
     #  mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
 
+    # -- Configures the hostPath directory that the driver will write and mount volumes from.
+    csiDataDir: /tmp/cert-manager-csi-driver
+
     resources: {}
     # -- Kubernetes pod resource limits for cert-manager-csi-driver-spiffe
     # limits:
