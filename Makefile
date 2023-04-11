@@ -18,6 +18,7 @@ ARCH   ?= $(shell go env GOARCH)
 OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.11.1
+HELM_DOCS_VERSION ?= 1.11.0
 KUBEBUILDER_TOOLS_VERISON ?= 1.26.0
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
@@ -48,7 +49,7 @@ lint: helm-docs ## Run linters against code.
 	./hack/verify-boilerplate.sh
 
 .PHONY: helm-docs
-helm-docs: depend # verify helm-docs
+helm-docs: depend ## Verify helm-docs
 	./hack/verify-helm-docs.sh
 
 .PHONY: test
@@ -131,5 +132,8 @@ $(BINDIR)/cert-manager/crds.yaml:
 	mkdir -p $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
-$(BINDIR)/helm-docs:
-	go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+$(BINDIR)/helm-docs: $(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)/helm-docs
+	ln -fs $< $@
+
+$(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)/helm-docs:
+	GOBIN=$(dir $@) go install github.com/norwoodj/helm-docs/cmd/helm-docs@v$(HELM_DOCS_VERSION)
