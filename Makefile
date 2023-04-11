@@ -19,7 +19,7 @@ OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.11.1
 HELM_DOCS_VERSION ?= 1.11.0
-KUBEBUILDER_TOOLS_VERISON ?= 1.26.0
+KUBEBUILDER_TOOLS_VERISON ?= 1.26.1
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
