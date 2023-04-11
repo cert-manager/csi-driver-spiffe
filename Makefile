@@ -19,6 +19,7 @@ OS     ?= $(shell go env GOOS)
 
 HELM_VERSION ?= 3.11.1
 HELM_DOCS_VERSION ?= 1.11.0
+KIND_VERSION ?= 0.18.0
 KUBEBUILDER_TOOLS_VERISON ?= 1.26.1
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
@@ -106,8 +107,11 @@ $(BINDIR) $(BINDIR)/chart:
 $(BINDIR)/ginkgo:
 	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
 
-$(BINDIR)/kind:
-	go build -o $(BINDIR)/kind sigs.k8s.io/kind
+$(BINDIR)/kind: $(BINDIR)/kind-$(KIND_VERSION)/kind
+	ln -fs $< $@
+
+$(BINDIR)/kind-$(KIND_VERSION)/kind:
+	GOBIN=$(dir $@) go install sigs.k8s.io/kind@v$(KIND_VERSION)
 
 $(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
 	tar xfO $< $(OS)-$(ARCH)/helm > $@
