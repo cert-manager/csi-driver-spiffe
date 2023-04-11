@@ -20,7 +20,9 @@ OS     ?= $(shell go env GOOS)
 HELM_VERSION ?= 3.11.1
 HELM_DOCS_VERSION ?= 1.11.0
 KIND_VERSION ?= 0.18.0
+CMCTL_VERSION ?= 1.11.0
 KUBEBUILDER_TOOLS_VERISON ?= 1.26.1
+GINKGO_VERSION ?= $(shell awk '/onsi\/ginkgo/ {print $$2}' go.mod)
 IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
@@ -101,16 +103,16 @@ chart: | $(BINDIR)/helm $(BINDIR)/chart
 .PHONY: depend
 depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/helm $(BINDIR)/kubebuilder/bin/kube-apiserver $(BINDIR)/cert-manager/crds.yaml $(BINDIR)/cmctl $(BINDIR)/helm-docs
 
-$(BINDIR) $(BINDIR)/chart:
-	mkdir -p $@
+$(BINDIR)/ginkgo: $(BINDIR)/ginkgo-$(GINKGO_VERSION)/ginkgo
+	ln -fs $< $@
 
-$(BINDIR)/ginkgo:
-	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+$(BINDIR)/ginkgo-$(GINKGO_VERSION)/ginkgo: | $(BINDIR)/ginkgo-$(GINKGO_VERSION)
+	GOBIN=$(dir $@) go install github.com/onsi/ginkgo/ginkgo@$(GINKGO_VERSION)
 
 $(BINDIR)/kind: $(BINDIR)/kind-$(KIND_VERSION)/kind
 	ln -fs $< $@
 
-$(BINDIR)/kind-$(KIND_VERSION)/kind:
+$(BINDIR)/kind-$(KIND_VERSION)/kind: | $(BINDIR)/kind-$(KIND_VERSION)
 	GOBIN=$(dir $@) go install sigs.k8s.io/kind@v$(KIND_VERSION)
 
 $(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
@@ -129,15 +131,26 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver:
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
-$(BINDIR)/cmctl:
-	go build -o $(BINDIR)/cmctl github.com/cert-manager/cert-manager/cmd/ctl
+$(BINDIR)/envtest-bins-$(KUBEBUILDER_TOOLS_VERISON).tar.gz :
+	curl -SLo $@ "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
 
-$(BINDIR)/cert-manager/crds.yaml:
-	mkdir -p $(BINDIR)/cert-manager
+$(BINDIR)/cmctl: $(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)/cmctl
+	ln -fs $< $@
+
+$(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)/cmctl: $(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)/cmctl.tar.gz | $(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)
+	tar xfO $< cmctl > $@ && chmod +x $@
+
+$(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)/cmctl.tar.gz: | $(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH)
+	curl -SLo $@ https://github.com/cert-manager/cert-manager/releases/download/v$(CMCTL_VERSION)/cmctl-$(OS)-$(ARCH).tar.gz
+
+$(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
 $(BINDIR)/helm-docs: $(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)/helm-docs
 	ln -fs $< $@
 
-$(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)/helm-docs:
+$(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)/helm-docs: | $(BINDIR)/helm-docs-$(HELM_DOCS_VERSION)
 	GOBIN=$(dir $@) go install github.com/norwoodj/helm-docs/cmd/helm-docs@v$(HELM_DOCS_VERSION)
+
+$(BINDIR) $(BINDIR)/chart $(BINDIR)/kind-$(KIND_VERSION) $(BINDIR)/ginkgo-$(GINKGO_VERSION) $(BINDIR)/cert-manager $(BINDIR)/cmctl-$(CMCTL_VERSION)-$(OS)-$(ARCH) $(BINDIR)/helm-docs-$(HELM_DOCS_VERSION):
+	mkdir -p $@
