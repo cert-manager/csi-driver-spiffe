@@ -30,6 +30,8 @@ $HELM_DOCS_BIN ${KUBE_ROOT}/deploy/charts/csi-driver-spiffe -d -l error > ${TEMP
 if ! cmp -s "${KUBE_ROOT}/deploy/charts/csi-driver-spiffe/README.md" "${TEMP_FILE}"; then
   echo "Helm chart README.md is out of date."
   echo "Please run './hack/update-helm-docs.sh'."
+  echo "diff:"
+  diff --color "${KUBE_ROOT}/deploy/charts/csi-driver-spiffe/README.md" "${TEMP_FILE}"
   exit 1
 fi
 
