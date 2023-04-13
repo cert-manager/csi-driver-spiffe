@@ -555,6 +555,8 @@ github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/norwoodj/helm-docs v1.9.1 h1:Ui83f38UYLiexRDdz4CPzBeYlREmqkRhnf3ONiIMwHM=
 github.com/norwoodj/helm-docs v1.9.1/go.mod h1:TD/foEn16xVJWjgdFZLErRnxyLPCo4HM5t98/R0860I=
+github.com/norwoodj/helm-docs v1.11.0 h1:y6pakrWOPTfe1Mpt0UyR4KrDzIV3V7EDTu5NW4a2BS8=
+github.com/norwoodj/helm-docs v1.11.0/go.mod h1:rLqec59NO7YF57Rq9VlubQHMp7wcRTJhzpkcgs4lOG4=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
