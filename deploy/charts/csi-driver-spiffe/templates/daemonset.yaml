@@ -125,7 +125,7 @@ spec:
           type: Directory
         name: registration-dir
       - hostPath:
-          path: /tmp/cert-manager-csi-driver-spiffe
+          path: {{ .Values.app.driver.csiDataDir }}
           type: DirectoryOrCreate
         name: csi-data-dir
       {{- if .Values.app.driver.volumes }}
