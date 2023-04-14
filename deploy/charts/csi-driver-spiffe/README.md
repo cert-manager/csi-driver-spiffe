@@ -1,6 +1,6 @@
 # cert-manager-csi-driver-spiffe
 
-![Version: v0.3.1](https://img.shields.io/badge/Version-v0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.3.1](https://img.shields.io/badge/AppVersion-v0.3.1-informational?style=flat-square)
+![Version: v0.3.0](https://img.shields.io/badge/Version-v0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.3.0](https://img.shields.io/badge/AppVersion-v0.3.0-informational?style=flat-square)
 
 cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparently delivers X.509 SPIFFE SVIDs to pods which mount it.
 
@@ -20,6 +20,8 @@ cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparentl
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| app.approver | object | `{"metrics":{"port":9402,"service":{"enabled":true,"servicemonitor":{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"},"type":"ClusterIP"}},"readinessProbe":{"port":6060},"replicaCount":1,"resources":{},"signerName":"clusterissuers.cert-manager.io/*"}` | Options for approver controller |
+| app.approver.metrics.port | int | `9402` | Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'. |
 | app.approver.metrics.service | object | `{"enabled":true,"servicemonitor":{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"},"type":"ClusterIP"}` | Service to expose metrics endpoint. |
 | app.approver.metrics.service.enabled | bool | `true` | Create a Service resource to expose metrics endpoint. |
 | app.approver.metrics.service.servicemonitor | object | `{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"}` | ServiceMonitor resource for this Service. |
@@ -28,7 +30,7 @@ cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparentl
 | app.approver.replicaCount | int | `1` | Number of replicas of the approver to run. |
 | app.approver.signerName | string | `"clusterissuers.cert-manager.io/*"` | The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval |
 | app.certificateRequestDuration | string | `"1h"` | Duration requested for requested certificates. |
-| app.driver | object | `{"csiDataDir":"/tmp/cert-manager-csi-driver", "livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/livenessprobe","tag":"v2.9.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/csi-node-driver-registrar","tag":"v2.7.0"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
+| app.driver | object | `{"csiDataDir":"/tmp/cert-manager-csi-driver","livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/livenessprobe","tag":"v2.9.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/csi-node-driver-registrar","tag":"v2.7.0"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
 | app.driver.csiDataDir | string | `"/tmp/cert-manager-csi-driver"` | Configures the hostPath directory that the driver will write and mount volumes from. |
 | app.driver.livenessProbe.port | int | `9809` | The port that will expose the liveness of the csi-driver |
 | app.driver.livenessProbeImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on liveness probe. |
@@ -51,7 +53,7 @@ cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparentl
 | app.trustDomain | string | `"cluster.local"` | The Trust Domain for this driver. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on DaemonSet. |
 | image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
-| image.tag | string | `"v0.3.1"` | Target image version tag. |
+| image.tag | string | `"v0.3.0"` | Target image version tag. |
 | imagePullSecrets | list | `[]` | Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images |
 | priorityClassName | string | `""` | Optional priority class to be used for the csi-driver pods. |
 
