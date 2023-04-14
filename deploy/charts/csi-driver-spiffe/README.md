@@ -1,6 +1,6 @@
 # cert-manager-csi-driver-spiffe
 
-![Version: v0.3.0](https://img.shields.io/badge/Version-v0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.3.0](https://img.shields.io/badge/AppVersion-v0.3.0-informational?style=flat-square)
+![Version: v0.4.0](https://img.shields.io/badge/Version-v0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)
 
 cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparently delivers X.509 SPIFFE SVIDs to pods which mount it.
 
@@ -53,7 +53,7 @@ cert-manager csi-driver-spiffe is a CSI plugin for Kubernetes which transparentl
 | app.trustDomain | string | `"cluster.local"` | The Trust Domain for this driver. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on DaemonSet. |
 | image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
-| image.tag | string | `"v0.3.0"` | Target image version tag. |
+| image.tag | string | `"v0.4.0"` | Target image version tag. |
 | imagePullSecrets | list | `[]` | Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images |
 | priorityClassName | string | `""` | Optional priority class to be used for the csi-driver pods. |
 

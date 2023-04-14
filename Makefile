@@ -23,7 +23,7 @@ IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
 
-RELEASE_VERSION ?= v0.3.0
+RELEASE_VERSION ?= v0.4.0
 
 .PHONY: help
 help: ## Display this help.
