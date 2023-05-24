@@ -29,7 +29,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2/klogr"
 	fakeclock "k8s.io/utils/clock/testing"
@@ -49,21 +48,21 @@ func Test_Reconcile(t *testing.T) {
 	)
 
 	tests := map[string]struct {
-		existingObjects []runtime.Object
-		evaluator       evaluator.Interface
-		expResult       ctrl.Result
-		expError        bool
-		expObjects      []runtime.Object
+		existingCRObjects []client.Object
+		evaluator         evaluator.Interface
+		expResult         ctrl.Result
+		expError          bool
+		expObjects        []client.Object
 	}{
 		"if CertificateRequest doesn't exist, ignore": {
-			existingObjects: []runtime.Object{},
-			expResult:       ctrl.Result{},
-			expError:        false,
-			evaluator:       nil,
-			expObjects:      []runtime.Object{},
+			existingCRObjects: []client.Object{},
+			expResult:         ctrl.Result{},
+			expError:          false,
+			evaluator:         nil,
+			expObjects:        []client.Object{},
 		},
 		"if evaluator returns error, update Denied with error": {
-			existingObjects: []runtime.Object{
+			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
@@ -74,7 +73,7 @@ func Test_Reconcile(t *testing.T) {
 				return errors.New("this is an error")
 			}),
 			expError: false,
-			expObjects: []runtime.Object{
+			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
@@ -93,7 +92,7 @@ func Test_Reconcile(t *testing.T) {
 			},
 		},
 		"if evaluator doesn't return error, update Approved": {
-			existingObjects: []runtime.Object{
+			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
@@ -104,7 +103,7 @@ func Test_Reconcile(t *testing.T) {
 				return nil
 			}),
 			expError: false,
-			expObjects: []runtime.Object{
+			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
@@ -130,7 +129,8 @@ func Test_Reconcile(t *testing.T) {
 
 			fakeclient := fakeclient.NewClientBuilder().
 				WithScheme(api.Scheme).
-				WithRuntimeObjects(test.existingObjects...).
+				WithObjects(test.existingCRObjects...).
+				WithStatusSubresource(test.existingCRObjects...).
 				Build()
 
 			a := &approver{
