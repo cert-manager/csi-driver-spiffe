@@ -1,6 +1,6 @@
 module github.com/cert-manager/csi-driver-spiffe
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cert-manager/cert-manager v1.12.0
