@@ -2,6 +2,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+  namespace: {{ .Release.Namespace }}
   labels:
 {{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
 roleRef:
