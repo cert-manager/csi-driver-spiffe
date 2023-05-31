@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver-metrics
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
 {{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
