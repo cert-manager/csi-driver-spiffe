@@ -59,20 +59,20 @@ test: depend lint vet ## test csi-driver-spiffe
 build: build-driver build-approver ## Build binaries.
 
 .PHONY: build-driver
-build-driver: ## Build driver binary.
+build-driver: | $(BINDIR) ## Build driver binary.
 	CGO_ENABLED=0 GO111MODULE=on go build -o bin/cert-manager-csi-driver-spiffe ./cmd/csi
 
 .PHONY: build-approver
-build-approver: ## Build approver binary.
+build-approver: | $(BINDIR) ## Build approver binary.
 	CGO_ENABLED=0 GO111MODULE=on go build -o bin/cert-manager-csi-driver-spiffe-approver ./cmd/approver
 
 .PHONY: verify
 verify: test build ## Verify repo.
 
 .PHONY: image
-image: ## build docker image targeting all supported platforms
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
-	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:$(RELEASE_VERSION) --output type=oci,dest=./bin/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
+image: | $(BINDIR) ## build docker image targeting all supported platforms
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe:$(RELEASE_VERSION) --output type=oci,dest=$(BINDIR)/cert-manager-csi-driver-spiffe-oci -f Dockerfile.driver .
+	docker buildx build --platform=$(IMAGE_PLATFORMS) -t quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:$(RELEASE_VERSION) --output type=oci,dest=$(BINDIR)/cert-manager-csi-driver-spiffe-approver-oci -f Dockerfile.approver .
 
 # TODO: ideally we should ensure that image and image-push are identical save for the different output location (or we should use ko instead)
 # for now, we copy+paste the build steps to avoid the need for a manual edit to the Makefile in order to do a release
@@ -102,10 +102,10 @@ depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/he
 $(BINDIR) $(BINDIR)/chart:
 	mkdir -p $@
 
-$(BINDIR)/ginkgo:
+$(BINDIR)/ginkgo: | $(BINDIR)
 	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
 
-$(BINDIR)/kind:
+$(BINDIR)/kind: | $(BINDIR)
 	go build -o $(BINDIR)/kind sigs.k8s.io/kind
 
 $(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
@@ -115,21 +115,21 @@ $(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
 $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz: | $(BINDIR)
 	curl -o $@ -LO "https://get.helm.sh/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz"
 
-$(BINDIR)/kubectl:
+$(BINDIR)/kubectl: | $(BINDIR)
 	curl -o ./bin/kubectl -LO "https://storage.googleapis.com/kubernetes-release/release/$(shell curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/$(OS)/$(ARCH)/kubectl"
 	chmod +x ./bin/kubectl
 
-$(BINDIR)/kubebuilder/bin/kube-apiserver:
+$(BINDIR)/kubebuilder/bin/kube-apiserver: | $(BINDIR)
 	curl -SLo $(BINDIR)/envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(KUBEBUILDER_TOOLS_VERISON)-$(OS)-$(ARCH).tar.gz"
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
-$(BINDIR)/cmctl:
+$(BINDIR)/cmctl: | $(BINDIR)
 	go build -o $(BINDIR)/cmctl github.com/cert-manager/cert-manager/cmd/ctl
 
-$(BINDIR)/cert-manager/crds.yaml:
+$(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
 	mkdir -p $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
-$(BINDIR)/helm-docs:
+$(BINDIR)/helm-docs: | $(BINDIR)
 	go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
