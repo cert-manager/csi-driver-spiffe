@@ -23,7 +23,7 @@ IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
 
-RELEASE_VERSION ?= v0.4.0
+RELEASE_VERSION ?= v0.4.1
 
 .PHONY: help
 help: ## Display this help.
@@ -131,5 +131,5 @@ $(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
 	mkdir -p $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
-$(BINDIR)/helm-docs: | $(BINDIR)
-	go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+$(BINDIR)/helm-docs:
+	GOBIN=$(BINDIR) go install github.com/norwoodj/helm-docs/cmd/helm-docs
