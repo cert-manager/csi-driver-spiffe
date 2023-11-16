@@ -33,6 +33,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
@@ -231,8 +232,9 @@ var _ = framework.CasesDescribe("Approval", func() {
 func genCSRPEM(pk crypto.Signer, alg cmapi.PrivateKeyAlgorithm, uri string) []byte {
 	csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
 		Spec: cmapi.CertificateSpec{
-			PrivateKey: &cmapi.CertificatePrivateKey{Algorithm: alg},
-			URIs:       []string{uri},
+			PrivateKey:            &cmapi.CertificatePrivateKey{Algorithm: alg},
+			URIs:                  []string{uri},
+			EncodeUsagesInRequest: ptr.To(false),
 		},
 	})
 	Expect(err).NotTo(HaveOccurred())
