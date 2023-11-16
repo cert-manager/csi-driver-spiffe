@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/library/golang:1.20 as builder
+FROM docker.io/library/golang:1.21 as builder
 
 WORKDIR /workspace
 
@@ -31,8 +31,8 @@ RUN make build-approver
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-#
-FROM gcr.io/distroless/static@sha256:c3c3d0230d487c0ad3a0d87ad03ee02ea2ff0b3dcce91ca06a1019e07de05f12
+
+FROM gcr.io/distroless/static-debian12@sha256:0c3d36f317d6335831765546ece49b60ad35933250dc14f43f0fd1402450532e
 LABEL description="cert-manager CSI Driver SPIFFE Approver"
 
 WORKDIR /

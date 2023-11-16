@@ -23,7 +23,7 @@ IMAGE_PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
 
 GOMARKDOC_FLAGS=--format github --repository.url "https://github.com/cert-manager/csi-driver-spiffe" --repository.default-branch master --repository.path /
 
-RELEASE_VERSION ?= v0.4.0
+RELEASE_VERSION ?= v0.4.1
 
 .PHONY: help
 help: ## Display this help.
@@ -102,11 +102,11 @@ depend: $(BINDIR) $(BINDIR)/ginkgo $(BINDIR)/kubectl $(BINDIR)/kind $(BINDIR)/he
 $(BINDIR) $(BINDIR)/chart:
 	mkdir -p $@
 
-$(BINDIR)/ginkgo: | $(BINDIR)
-	go build -o $(BINDIR)/ginkgo github.com/onsi/ginkgo/ginkgo
+$(BINDIR)/ginkgo:
+	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/ginkgo
 
-$(BINDIR)/kind: | $(BINDIR)
-	go build -o $(BINDIR)/kind sigs.k8s.io/kind
+$(BINDIR)/kind:
+	GOBIN=$(BINDIR) go install sigs.k8s.io/kind
 
 $(BINDIR)/helm: $(BINDIR)/helm-v$(HELM_VERSION)-$(OS)-$(ARCH).tar.gz | $(BINDIR)
 	tar xfO $< $(OS)-$(ARCH)/helm > $@
@@ -124,12 +124,12 @@ $(BINDIR)/kubebuilder/bin/kube-apiserver: | $(BINDIR)
 	mkdir -p $(BINDIR)/kubebuilder
 	tar -C $(BINDIR)/kubebuilder --strip-components=1 -zvxf $(BINDIR)/envtest-bins.tar.gz
 
-$(BINDIR)/cmctl: | $(BINDIR)
-	go build -o $(BINDIR)/cmctl github.com/cert-manager/cert-manager/cmd/ctl
+$(BINDIR)/cmctl:
+	GOBIN=$(BINDIR) go install github.com/cert-manager/cert-manager/cmd/ctl && mv $(BINDIR)/ctl $@
 
 $(BINDIR)/cert-manager/crds.yaml: | $(BINDIR)
 	mkdir -p $(BINDIR)/cert-manager
 	curl -SLo $(BINDIR)/cert-manager/crds.yaml https://github.com/cert-manager/cert-manager/releases/download/$(shell curl --silent "https://api.github.com/repos/cert-manager/cert-manager/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/cert-manager.crds.yaml
 
-$(BINDIR)/helm-docs: | $(BINDIR)
-	go build -o $(BINDIR)/helm-docs github.com/norwoodj/helm-docs/cmd/helm-docs
+$(BINDIR)/helm-docs:
+	GOBIN=$(BINDIR) go install github.com/norwoodj/helm-docs/cmd/helm-docs
