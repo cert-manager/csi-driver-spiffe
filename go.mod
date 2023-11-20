@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/api v0.27.2
-	k8s.io/apimachinery v0.27.2
+	k8s.io/apimachinery v0.28.4
 	k8s.io/cli-runtime v0.27.2
 	k8s.io/client-go v0.27.2
 	k8s.io/component-base v0.27.2
@@ -76,6 +76,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
+	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -173,7 +174,7 @@ require (
 	k8s.io/apiserver v0.27.2 // indirect
 	k8s.io/helm v2.14.3+incompatible // indirect
 	k8s.io/kube-aggregator v0.27.2 // indirect
-	k8s.io/kube-openapi v0.0.0-20230523194449-df37dd07aa00 // indirect
+	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/kubectl v0.27.1 // indirect
 	k8s.io/mount-utils v0.27.2 // indirect
 	oras.land/oras-go v1.2.2 // indirect
