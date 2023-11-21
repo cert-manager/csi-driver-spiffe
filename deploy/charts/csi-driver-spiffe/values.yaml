@@ -68,7 +68,7 @@ app:
       # -- Target image repository.
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
       # -- Target image version tag.
-      tag: v2.7.0
+      tag: v2.9.1
       # -- Kubernetes imagePullPolicy on node-driver.
       pullPolicy: IfNotPresent
 
@@ -76,7 +76,7 @@ app:
       # -- Target image repository.
       repository: registry.k8s.io/sig-storage/livenessprobe
       # -- Target image version tag.
-      tag: v2.9.0
+      tag: v2.11.0
       # -- Kubernetes imagePullPolicy on liveness probe.
       pullPolicy: IfNotPresent
 
