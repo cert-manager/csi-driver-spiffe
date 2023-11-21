@@ -31,6 +31,7 @@ import (
 	"k8s.io/klog/v2/klogr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/controller"
 	evaluatorfake "github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator/fake"
@@ -68,9 +69,11 @@ var _ = Context("Approval", func() {
 
 		log := klogr.New().WithName("testing")
 		mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
-			Scheme:                        api.Scheme,
-			LeaderElection:                true,
-			MetricsBindAddress:            "0",
+			Scheme:         api.Scheme,
+			LeaderElection: true,
+			Metrics: server.Options{
+				BindAddress: "0",
+			},
 			LeaderElectionNamespace:       namespace.Name,
 			LeaderElectionID:              "cert-manager-csi-driver-spiffe-approver",
 			LeaderElectionReleaseOnCancel: true,
