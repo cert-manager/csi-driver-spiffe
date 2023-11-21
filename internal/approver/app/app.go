@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/scale/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/app/options"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/controller"
@@ -67,8 +68,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				LeaderElectionResourceLock:    "leases",
 				ReadinessEndpointName:         "/readyz",
 				HealthProbeBindAddress:        opts.Controller.ReadyzAddress,
-				MetricsBindAddress:            opts.Controller.MetricsAddress,
-				Logger:                        opts.Logr.WithName("manager"),
+				Metrics: server.Options{
+					BindAddress: opts.Controller.MetricsAddress,
+				},
+				Logger: opts.Logr.WithName("manager"),
 			})
 			if err != nil {
 				return fmt.Errorf("failed to create manager: %w", err)
