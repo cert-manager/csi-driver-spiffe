@@ -65,7 +65,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				if strings.Contains(annotation, "=") {
 					keyValue := strings.Split(annotation, "=")
 					if len(keyValue) != 2 {
-						return fmt.Errorf("Certificate request annotations malformed on %v: expected 2 values got %v", annotation, len(keyValue))
+						return fmt.Errorf("certificaterequest annotation malformed on %s: expecting key value pair using '=' delimiter", annotation)
 					}
 					annotations[keyValue[0]] = keyValue[1]
 				}

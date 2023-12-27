@@ -117,8 +117,8 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration that created CertificateRequests will use.")
 
-	fs.StringSliceVar(&o.CertManager.CertificateRequestAnnotations, "certificate-request-annotations", []string{},
-		"The annotations added to certificate requests. e.g '--certificate-request-annotation=\"hello=world\",\"test=annotation\"'")
+	fs.StringSliceVar(&o.CertManager.CertificateRequestAnnotations, "extra-certificate-request-annotations", []string{},
+		"Extra annotations added to certificate requests. e.g '--extra-certificate-request-annotation=\"hello=world\",\"test=annotation\"'")
 
 	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
 		"Name of the issuer that CertificateRequests will be created for.")

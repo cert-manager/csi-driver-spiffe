@@ -277,9 +277,7 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 	if err != nil {
 		return nil, fmt.Errorf("internal error crafting X.509 URI, this is a bug, please report on GitHub: %w", err)
 	}
-	//instantiate an annotations map with the SVID
 	annotations := map[string]string{"spiffe.csi.cert-manager.io/identity": spiffeID}
-	// add the driver Annotations too
 	for key, value := range d.certificateRequestAnnotations {
 		annotations[key] = value
 	}
