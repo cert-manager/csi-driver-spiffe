@@ -59,6 +59,9 @@ type OptionsCertManager struct {
 	// appear in signed certificate's URI SANs.
 	TrustDomain string
 
+	// CertificateRequestAnnotations are annotations that are to be added to certificate requests created by the driver
+	CertificateRequestAnnotations []string
+
 	// CertificateRequestDuration is the duration CertificateRequests will be
 	// requested with.
 	CertificateRequestDuration time.Duration
@@ -113,6 +116,9 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 		"The trust domain that will be requested for on created CertificateRequests.")
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration that created CertificateRequests will use.")
+
+	fs.StringSliceVar(&o.CertManager.CertificateRequestAnnotations, "certificate-request-annotations", []string{},
+		"The annotations added to certificate requests. e.g '--certificate-request-annotation=\"hello=world\",\"test=annotation\"'")
 
 	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
 		"Name of the issuer that CertificateRequests will be created for.")

@@ -19,6 +19,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -59,16 +60,28 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				log.Info("propagating root CA bundle disabled")
 			}
 
+			annotations := map[string]string{}
+			for _, annotation := range opts.CertManager.CertificateRequestAnnotations {
+				if strings.Contains(annotation, "=") {
+					keyValue := strings.Split(annotation, "=")
+					if len(keyValue) != 2 {
+						return fmt.Errorf("Certificate request annotations malformed on %v: expected 2 values got %v", annotation, len(keyValue))
+					}
+					annotations[keyValue[0]] = keyValue[1]
+				}
+			}
+
 			driver, err := driver.New(opts.Logr, driver.Options{
 				DriverName: opts.DriverName,
 				NodeID:     opts.Driver.NodeID,
 				Endpoint:   opts.Driver.Endpoint,
 				DataRoot:   opts.Driver.DataRoot,
 
-				RestConfig:                 opts.RestConfig,
-				TrustDomain:                opts.CertManager.TrustDomain,
-				CertificateRequestDuration: opts.CertManager.CertificateRequestDuration,
-				IssuerRef:                  opts.CertManager.IssuerRef,
+				RestConfig:                    opts.RestConfig,
+				TrustDomain:                   opts.CertManager.TrustDomain,
+				CertificateRequestAnnotations: annotations,
+				CertificateRequestDuration:    opts.CertManager.CertificateRequestDuration,
+				IssuerRef:                     opts.CertManager.IssuerRef,
 
 				CertificateFileName: opts.Volume.CertificateFileName,
 				KeyFileName:         opts.Volume.KeyFileName,
