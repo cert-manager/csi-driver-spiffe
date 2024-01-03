@@ -44,6 +44,7 @@ A Helm chart for cert-manager-csi-driver-spiffe
 | app.driver.volumeFileName.key | string | `"tls.key"` | File name which private keys are written to in volumes. |
 | app.driver.volumeMounts | list | `[]` | Optional extra volume mounts. Useful for mounting root CAs |
 | app.driver.volumes | list | `[]` | Optional extra volumes. Useful for mounting root CAs |
+| app.extraCertificateRequestAnnotations | string | `nil` | List of annotations to add to certificate requests |
 | app.issuer.group | string | `"cert-manager.io"` | Issuer group which is used to serve this Trust Domain. |
 | app.issuer.kind | string | `"ClusterIssuer"` | Issuer kind which is used to serve this Trust Domain. |
 | app.issuer.name | string | `"spiffe-ca"` | Issuer name which is used to serve this Trust Domain. |
