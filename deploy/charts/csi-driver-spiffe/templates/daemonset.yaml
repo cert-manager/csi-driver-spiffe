@@ -76,16 +76,7 @@ spec:
             - --endpoint=$(CSI_ENDPOINT)
             - --data-root=csi-data-dir
           {{- if .Values.app.extraCertificateRequestAnnotations }}
-          {{- $str := "" }}
-          {{- range $index, $element := .Values.app.extraCertificateRequestAnnotations }}
-          {{- range $key, $val := $element }}
-          {{- $str = print $str "\"" $key "=" $val "\"" }}
-          {{- end }}
-          {{- if lt (add $index 1) (len $.Values.app.extraCertificateRequestAnnotations) }}
-          {{- $str = print $str "," }}
-          {{- end }}
-          {{- end }}
-            - --extra-certificate-request-annotations={{ $str }}
+            - --extra-certificate-request-annotations='{{ .Values.app.extraCertificateRequestAnnotations }}'
           {{- end }}
           env:
             - name: NODE_ID
