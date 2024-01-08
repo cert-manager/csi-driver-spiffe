@@ -61,16 +61,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			}
 
 			annotations := map[string]string{}
-			for _, annotation := range opts.CertManager.CertificateRequestAnnotations {
-				keyValue := strings.Split(annotation, "=")
-				if len(keyValue) != 2 {
-					return fmt.Errorf("certificaterequest annotation malformed on %s: expecting key value pair using '=' delimiter", annotation)
-				}
-
-				if strings.HasPrefix(keyValue[0], "spiffe.csi.cert-manager.io") {
-					log.Error(nil, "custom annotations must not begin with spiffe.csi.cert-manager.io, skipping %s", keyValue[0])
+			for key, value := range opts.CertManager.CertificateRequestAnnotations {
+				if strings.HasPrefix(key, "spiffe.csi.cert-manager.io") {
+					log.Error(nil, "custom annotations must not begin with spiffe.csi.cert-manager.io, skipping %s", key)
 				} else {
-					annotations[keyValue[0]] = keyValue[1]
+					annotations[key] = value
 				}
 			}
 

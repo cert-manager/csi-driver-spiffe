@@ -19,7 +19,7 @@ app:
   certificateRequestDuration: 1h
   # -- List of annotations to add to certificate requests
   extraCertificateRequestAnnotations:
-    # -- extraCertificateRequestAnnotations: "'app: csi-driver-spiffe', 'foo:bar'"
+    # -- extraCertificateRequestAnnotations: app=csi-driver-spiffe,foo=bar
   # -- The Trust Domain for this driver.
   trustDomain: cluster.local
   # -- The name for the CSI driver installation.
