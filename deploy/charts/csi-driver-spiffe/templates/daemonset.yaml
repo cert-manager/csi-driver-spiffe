@@ -78,6 +78,9 @@ spec:
             - --node-id=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --data-root=csi-data-dir
+          {{- if .Values.app.extraCertificateRequestAnnotations }}
+            - --extra-certificate-request-annotations={{ .Values.app.extraCertificateRequestAnnotations }}
+          {{- end }}
           env:
             - name: NODE_ID
               valueFrom:

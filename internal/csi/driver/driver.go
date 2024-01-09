@@ -60,6 +60,9 @@ type Options struct {
 	// appear in signed certificate's URI SANs.
 	TrustDomain string
 
+	// CertificateRequestAnnotations are annotations that are to be added to certificate requests created by the driver
+	CertificateRequestAnnotations map[string]string
+
 	// CertificateRequestDuration is the duration CertificateRequests will be
 	// requested with.
 	// Defaults to 1 hour if empty.
@@ -103,6 +106,9 @@ type Driver struct {
 	// trustDomain is the trust domain that will form pod identities.
 	trustDomain string
 
+	// certificateRequestAnnotations are annotations that are to be added to certificate requests created by the driver
+	certificateRequestAnnotations map[string]string
+
 	// certificateRequestDuration is the duration which will be set of all
 	// created CertificateRequests.
 	certificateRequestDuration time.Duration
@@ -140,7 +146,8 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		issuerRef:    opts.IssuerRef,
 		rootCAs:      opts.RootCAs,
 
-		certificateRequestDuration: opts.CertificateRequestDuration,
+		certificateRequestDuration:    opts.CertificateRequestDuration,
+		certificateRequestAnnotations: opts.CertificateRequestAnnotations,
 	}
 
 	// Set sane defaults.
@@ -270,6 +277,10 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 	if err != nil {
 		return nil, fmt.Errorf("internal error crafting X.509 URI, this is a bug, please report on GitHub: %w", err)
 	}
+	annotations := map[string]string{"spiffe.csi.cert-manager.io/identity": spiffeID}
+	for key, value := range d.certificateRequestAnnotations {
+		annotations[key] = value
+	}
 
 	return &manager.CertificateRequestBundle{
 		Request: &x509.CertificateRequest{
@@ -285,7 +296,7 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 			cmapi.UsageClientAuth,
 		},
 		IssuerRef:   d.issuerRef,
-		Annotations: map[string]string{"spiffe.csi.cert-manager.io/identity": spiffeID},
+		Annotations: annotations,
 	}, nil
 }
 
