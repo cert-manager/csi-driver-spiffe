@@ -19,29 +19,14 @@ package test
 import (
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	ginkgoconfig "github.com/onsi/ginkgo/config"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
 func init() {
-	// Turn on verbose by default to get spec names
-	ginkgoconfig.DefaultReporterConfig.Verbose = true
-	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
-	ginkgoconfig.GinkgoConfig.EmitSpecProgress = true
-	// Randomize specs as well as suites
-	ginkgoconfig.GinkgoConfig.RandomizeAllSpecs = true
-
 	wait.ForeverTestTimeout = time.Second * 60
 }
 
 var (
 	env *envtest.Environment
 )
-
-var _ = BeforeSuite(func() {
-}, 60)
-
-var _ = AfterSuite(func() {
-}, 60)

@@ -18,14 +18,10 @@ package e2e
 
 import (
 	"flag"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/onsi/ginkgo"
-	ginkgoconfig "github.com/onsi/ginkgo/config"
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -36,29 +32,26 @@ import (
 func init() {
 	config.GetConfig().AddFlags(flag.CommandLine)
 
-	// Turn on verbose by default to get spec names
-	ginkgoconfig.DefaultReporterConfig.Verbose = true
-	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
-	ginkgoconfig.GinkgoConfig.EmitSpecProgress = true
-	// Randomize specs as well as suites
-	ginkgoconfig.GinkgoConfig.RandomizeAllSpecs = true
-
 	wait.ForeverTestTimeout = time.Second * 60
 }
 
 // Test_e2e runs the full suite of smoke tests against csi-driver-spiffe
 func Test_e2e(t *testing.T) {
-	gomega.RegisterFailHandler(ginkgo.Fail)
-
-	var artifactsDir string
-	if path := os.Getenv("ARTIFACTS"); len(path) > 0 {
-		artifactsDir = path
+	flag.Parse()
+	if err := config.GetConfig().Complete(); err != nil {
+		t.Fatal(err)
 	}
 
-	junitReporter := reporters.NewJUnitReporter(filepath.Join(
-		artifactsDir,
-		"junit-e2e.xml",
-	))
+	gomega.RegisterFailHandler(ginkgo.Fail)
 
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "cert-manager-csi-driver-spiffe e2e suite", []ginkgo.Reporter{junitReporter})
+	suiteConfig, reporterConfig := ginkgo.GinkgoConfiguration()
+
+	// Turn on verbose by default to get spec names
+	reporterConfig.Verbose = true
+	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
+	suiteConfig.EmitSpecProgress = true
+	// Randomize specs as well as suites
+	suiteConfig.RandomizeAllSpecs = true
+
+	ginkgo.RunSpecs(t, "cert-manager-csi-driver-spiffe e2e suite", suiteConfig, reporterConfig)
 }

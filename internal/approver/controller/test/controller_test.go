@@ -21,8 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
@@ -54,15 +53,14 @@ func Test_controllers(t *testing.T) {
 
 	gomega.RegisterFailHandler(ginkgo.Fail)
 
-	var artifactsDir string
-	if path := os.Getenv("ARTIFACTS"); len(path) > 0 {
-		artifactsDir = path
-	}
+	suiteConfig, reporterConfig := ginkgo.GinkgoConfiguration()
 
-	junitReporter := reporters.NewJUnitReporter(filepath.Join(
-		artifactsDir,
-		"junit-go-unit-controller.xml",
-	))
+	// Turn on verbose by default to get spec names
+	reporterConfig.Verbose = true
+	// Turn on EmitSpecProgress to get spec progress (especially on interrupt)
+	suiteConfig.EmitSpecProgress = true
+	// Randomize specs as well as suites
+	suiteConfig.RandomizeAllSpecs = true
 
-	ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "unit-controller", []ginkgo.Reporter{junitReporter})
+	ginkgo.RunSpecs(t, "unit-controller", suiteConfig, reporterConfig)
 }
