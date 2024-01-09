@@ -103,7 +103,7 @@ $(BINDIR) $(BINDIR)/chart:
 	mkdir -p $@
 
 $(BINDIR)/ginkgo:
-	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/ginkgo
+	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/v2/ginkgo
 
 $(BINDIR)/kind:
 	GOBIN=$(BINDIR) go install sigs.k8s.io/kind

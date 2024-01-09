@@ -9,6 +9,6 @@ package bin
 import (
 	_ "github.com/cert-manager/cert-manager/cmd/ctl"
 	_ "github.com/norwoodj/helm-docs/cmd/helm-docs"
-	_ "github.com/onsi/ginkgo/ginkgo"
+	_ "github.com/onsi/ginkgo/v2/ginkgo"
 	_ "sigs.k8s.io/kind"
 )
