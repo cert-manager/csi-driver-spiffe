@@ -18,7 +18,6 @@ package test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/onsi/ginkgo/v2"
@@ -27,14 +26,14 @@ import (
 )
 
 func Test_controllers(t *testing.T) {
-	rootDir := os.Getenv("ROOTDIR")
-	if len(rootDir) == 0 {
-		t.Skip("Skipping test as ROOTDIR environment variable not defined")
+	certManagerCrds := os.Getenv("CERT_MANAGER_CRDS")
+	if len(certManagerCrds) == 0 {
+		t.Fatal("CERT_MANAGER_CRDS must be set to the path of the cert-manager CRDs")
 	}
 
 	env = &envtest.Environment{
 		AttachControlPlaneOutput: false,
-		CRDDirectoryPaths:        []string{filepath.Join(rootDir, "bin/cert-manager")},
+		CRDDirectoryPaths:        []string{certManagerCrds},
 	}
 
 	t.Logf("starting API server...")
