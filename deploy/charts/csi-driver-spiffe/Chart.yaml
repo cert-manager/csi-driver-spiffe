@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 name: cert-manager-csi-driver-spiffe
 type: application
 description: csi-driver-spiffe is a Kubernetes CSI plugin which transparently delivers X.509 SPIFFE SVIDs to pods via cert-manager
