@@ -63,9 +63,10 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 				},
 				Containers: []corev1.Container{
 					corev1.Container{
-						Name:    "my-container",
-						Image:   "busybox",
-						Command: []string{"sleep", "10000"},
+						Name:            "my-container",
+						Image:           "docker.io/library/busybox:latest",
+						ImagePullPolicy: corev1.PullNever,
+						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
 							corev1.VolumeMount{
 								Name:      "csi-driver-spiffe",

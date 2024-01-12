@@ -53,10 +53,12 @@ spec:
 
         - name: cert-manager-csi-driver-spiffe
           securityContext:
+            readOnlyRootFilesystem: true
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
+            runAsUser: 0
           image: "{{ .Values.image.repository.driver }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args :
