@@ -30,15 +30,15 @@ csi-driver-spiffe is a Kubernetes CSI plugin which transparently delivers X.509 
 | app.approver.replicaCount | int | `1` | Number of replicas of the approver to run. |
 | app.approver.signerName | string | `"clusterissuers.cert-manager.io/*"` | The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval |
 | app.certificateRequestDuration | string | `"1h"` | Duration requested for requested certificates. |
-| app.driver | object | `{"csiDataDir":"/tmp/cert-manager-csi-driver","livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/livenessprobe","tag":"v2.11.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/csi-node-driver-registrar","tag":"v2.9.1"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
+| app.driver | object | `{"csiDataDir":"/tmp/cert-manager-csi-driver","livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/livenessprobe","tag":"v2.12.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/csi-node-driver-registrar","tag":"v2.10.0"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
 | app.driver.csiDataDir | string | `"/tmp/cert-manager-csi-driver"` | Configures the hostPath directory that the driver will write and mount volumes from. |
 | app.driver.livenessProbe.port | int | `9809` | The port that will expose the liveness of the csi-driver |
 | app.driver.livenessProbeImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on liveness probe. |
 | app.driver.livenessProbeImage.repository | string | `"registry.k8s.io/sig-storage/livenessprobe"` | Target image repository. |
-| app.driver.livenessProbeImage.tag | string | `"v2.11.0"` | Target image version tag. |
+| app.driver.livenessProbeImage.tag | string | `"v2.12.0"` | Target image version tag. |
 | app.driver.nodeDriverRegistrarImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on node-driver. |
 | app.driver.nodeDriverRegistrarImage.repository | string | `"registry.k8s.io/sig-storage/csi-node-driver-registrar"` | Target image repository. |
-| app.driver.nodeDriverRegistrarImage.tag | string | `"v2.9.1"` | Target image version tag. |
+| app.driver.nodeDriverRegistrarImage.tag | string | `"v2.10.0"` | Target image version tag. |
 | app.driver.sourceCABundle | string | `nil` | Optional file containing a CA bundle that will be propagated to managed volumes. |
 | app.driver.volumeFileName.ca | string | `"ca.crt"` | File name where the CA bundles are written to, if enabled. |
 | app.driver.volumeFileName.cert | string | `"tls.crt"` | File name which signed certificates are written to in volumes. |
@@ -54,7 +54,7 @@ csi-driver-spiffe is a Kubernetes CSI plugin which transparently delivers X.509 
 | app.trustDomain | string | `"cluster.local"` | The Trust Domain for this driver. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on DaemonSet. |
 | image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
-| image.tag | string | `"v0.4.1"` | Target image version tag. |
+| image.tag | string | `"v0.0.0"` | Target image version tag. |
 | imagePullSecrets | list | `[]` | Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images |
 | priorityClassName | string | `""` | Optional priority class to be used for the csi-driver pods. |
 
