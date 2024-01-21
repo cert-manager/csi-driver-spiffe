@@ -56,5 +56,5 @@ endef
 mages_amd64 ?=
 images_arm64 ?=
 
-images_amd64 += docker.io/library/busybox:latest@sha256:cca7bbfb3cd4dc1022f00cee78c51aa46ecc3141188f0dd520978a620697e7ad
-images_arm64 += docker.io/library/busybox:latest@sha256:a4ca727b12c67a0d6a0e8aa578b00eff94a2c092352e24db577aada1536f6c91
+images_amd64 += docker.io/library/busybox:1.36.1-musl@sha256:d4707523ce6e12afdbe9a3be5ad69027150a834870ca0933baf7516dd1fe0f56
+images_arm64 += docker.io/library/busybox:1.36.1-musl@sha256:fed6b26ea319254ef0d6bae87482b5ab58b85250a7cc46d14c533e1f5c2556db
