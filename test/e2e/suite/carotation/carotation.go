@@ -95,7 +95,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 				Containers: []corev1.Container{
 					corev1.Container{
 						Name:            "my-container",
-						Image:           "docker.io/library/busybox:latest",
+						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
