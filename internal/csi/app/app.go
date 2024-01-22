@@ -26,6 +26,7 @@ import (
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/app/options"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/driver"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
+	"github.com/cert-manager/csi-driver-spiffe/internal/version"
 )
 
 const (
@@ -46,6 +47,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log := opts.Logr.WithName("main")
+			log.Info("Version", "info", version.VersionInfo())
 
 			var rootCA rootca.Interface
 			if len(opts.Volume.SourceCABundleFile) > 0 {
