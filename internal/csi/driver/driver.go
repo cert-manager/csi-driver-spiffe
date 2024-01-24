@@ -40,6 +40,7 @@ import (
 	"k8s.io/utils/clock"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
+	"github.com/cert-manager/csi-driver-spiffe/internal/version"
 )
 
 // Options holds the Options needed for the CSI driver.
@@ -185,7 +186,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 	mngrLog := d.log.WithName("manager")
 	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
-		DriverVersion: "v0.2.0",
+		DriverVersion: version.AppVersion,
 		NodeID:        opts.NodeID,
 		Store:         d.store,
 		Manager: manager.NewManagerOrDie(manager.Options{

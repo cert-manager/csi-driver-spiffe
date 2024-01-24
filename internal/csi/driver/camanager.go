@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
+	"github.com/cert-manager/csi-driver-spiffe/internal/version"
 	"github.com/cert-manager/csi-lib/storage"
 	"github.com/go-logr/logr"
 )
@@ -131,6 +132,7 @@ func (c *camanager) updateRootCAFiles() error {
 	}
 
 	log := c.log.WithName("ca-updater")
+	log.Info("Version", "info", version.VersionInfo())
 
 	volumeIDs, err := c.store.ListVolumes()
 	if err != nil {
