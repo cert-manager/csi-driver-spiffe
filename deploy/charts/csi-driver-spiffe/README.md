@@ -1,10 +1,10 @@
 # cert-manager-csi-driver-spiffe
 
-![Version: v0.4.1](https://img.shields.io/badge/Version-v0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.4.1](https://img.shields.io/badge/AppVersion-v0.4.1-informational?style=flat-square)
+![Version: v0.0.0](https://img.shields.io/badge/Version-v0.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.0.0](https://img.shields.io/badge/AppVersion-v0.0.0-informational?style=flat-square)
 
 csi-driver-spiffe is a Kubernetes CSI plugin which transparently delivers X.509 SPIFFE SVIDs to pods via cert-manager
 
-**Homepage:** <https://cert-manager.io/docs/projects/csi-driver-spiffe/>
+**Homepage:** <https://cert-manager.io/docs/usage/csi-driver-spiffe>
 
 ## Maintainers
 
