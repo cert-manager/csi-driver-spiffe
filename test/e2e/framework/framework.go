@@ -20,11 +20,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/cert-manager/cert-manager/pkg/api"
+	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework/config"
@@ -60,9 +62,14 @@ func NewFramework(baseName string, config *config.Config) *Framework {
 func (f *Framework) BeforeEach() {
 	f.ctx, f.cancel = context.WithTimeout(context.Background(), time.Second*600)
 
+	scheme := runtime.NewScheme()
+	Expect(corev1.AddToScheme(scheme)).NotTo(HaveOccurred())
+	Expect(rbacv1.AddToScheme(scheme)).NotTo(HaveOccurred())
+	Expect(cmapi.AddToScheme(scheme)).NotTo(HaveOccurred())
+
 	var err error
 	By("Creating a Kubernetes client")
-	f.client, err = client.New(f.config.RestConfig, client.Options{Scheme: api.Scheme})
+	f.client, err = client.New(f.config.RestConfig, client.Options{Scheme: scheme})
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Creating test Namespace")

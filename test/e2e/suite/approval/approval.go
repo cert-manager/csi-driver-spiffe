@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cert-manager/cert-manager/pkg/api"
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
@@ -94,7 +93,7 @@ var _ = framework.CasesDescribe("Approval", func() {
 
 		impersonateRestConfig := *f.Config().RestConfig
 		impersonateRestConfig.Impersonate = rest.ImpersonationConfig{UserName: fmt.Sprintf("system:serviceaccount:%s:%s", f.Namespace.Name, serviceAccount.Name)}
-		cl, err = client.New(&impersonateRestConfig, client.Options{Scheme: api.Scheme})
+		cl, err = client.New(&impersonateRestConfig, client.Options{Scheme: f.Client().Scheme()})
 		Expect(err).NotTo(HaveOccurred())
 	})
 
