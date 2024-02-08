@@ -1,131 +1,153 @@
 image:
-  # -- Target image repository.
+  # Target image repository.
   repository:
     driver: quay.io/jetstack/cert-manager-csi-driver-spiffe
     approver: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
-  # -- Target image version tag.
+  # Target image version tag.
   tag: v0.0.0
-  # -- Kubernetes imagePullPolicy on DaemonSet.
+  # Kubernetes imagePullPolicy on DaemonSet.
   pullPolicy: IfNotPresent
 
-# -- Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
+# Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
+#
+# For example:
+#  imagePullSecrets:
+#  - name: secret-name
 imagePullSecrets: []
-#- name: Secret with Registry credentials
 
 app:
-  # -- Verbosity of cert-manager-csi-driver logging.
+  # Verbosity of cert-manager-csi-driver logging.
   logLevel: 1 # 1-5
-  # -- Duration requested for requested certificates.
+  # Duration requested for requested certificates.
   certificateRequestDuration: 1h
-  # -- List of annotations to add to certificate requests
+  # List of annotations to add to certificate requests
+  #
+  # For example:
+  #  extraCertificateRequestAnnotations: app=csi-driver-spiffe,foo=bar
   extraCertificateRequestAnnotations:
-    # -- extraCertificateRequestAnnotations: app=csi-driver-spiffe,foo=bar
-  # -- The Trust Domain for this driver.
+  # The Trust Domain for this driver.
   trustDomain: cluster.local
-  # -- The name for the CSI driver installation.
+  # The name for the CSI driver installation.
   name: spiffe.csi.cert-manager.io
   issuer:
-    # -- Issuer name which is used to serve this Trust Domain.
+    # Issuer name which is used to serve this Trust Domain.
     name: spiffe-ca
-    # -- Issuer kind which is used to serve this Trust Domain.
+    # Issuer kind which is used to serve this Trust Domain.
     kind: ClusterIssuer
-    # -- Issuer group which is used to serve this Trust Domain.
+    # Issuer group which is used to serve this Trust Domain.
     group: cert-manager.io
 
-  # -- Options for CSI driver
+  # Options for CSI driver
   driver:
-    # -- Optional file containing a CA bundle that will be propagated to
+    # Optional file containing a CA bundle that will be propagated to
     # managed volumes.
     sourceCABundle: # /var/run/secrets/spiffe.io/ca.pem
     volumeFileName:
-      # -- File name which signed certificates are written to in volumes.
+      # File name which signed certificates are written to in volumes.
       cert: tls.crt
-      # -- File name which private keys are written to in volumes.
+      # File name which private keys are written to in volumes.
       key: tls.key
-      # -- File name where the CA bundles are written to, if enabled.
+      # File name where the CA bundles are written to, if enabled.
       ca: ca.crt
-    # -- Optional extra volumes. Useful for mounting root CAs
+    # Optional extra volumes. Useful for mounting root CAs
+    #
+    # For example:
+    #  volumes:
+    #  - name: root-cas
+    #    secret:
+    #      secretName: root-ca-bundle
     volumes: []
-    #- name: root-cas
-    #  secret:
-    #    secretName: root-ca-bundle
-    # -- Optional extra volume mounts. Useful for mounting root CAs
+    # Optional extra volume mounts. Useful for mounting root CAs
+    #
+    # For example:
+    #  volumeMounts:
+    #  - name: root-cas
+    #    mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
     volumeMounts: []
-    #- name: root-cas
-    #  mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
 
-    # -- Configures the hostPath directory that the driver will write and mount volumes from.
+    # Configures the hostPath directory that the driver will write and mount volumes from.
     csiDataDir: /tmp/cert-manager-csi-driver
 
+    # Kubernetes pod resource limits for cert-manager-csi-driver-spiffe
+    #
+    # For example:
+    #  resources:
+    #    limits:
+    #      cpu: 100m
+    #      memory: 128Mi
+    #    requests:
+    #      cpu: 100m
+    #      memory: 128Mi
     resources: {}
-    # -- Kubernetes pod resource limits for cert-manager-csi-driver-spiffe
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # -- Kubernetes pod memory resource requests for cert-manager-csi-driver-spiffe
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
 
     nodeDriverRegistrarImage:
-      # -- Target image repository.
+      # Target image repository.
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
-      # -- Target image version tag.
+      # Target image version tag.
       tag: v2.10.0
-      # -- Kubernetes imagePullPolicy on node-driver.
+      # Kubernetes imagePullPolicy on node-driver.
       pullPolicy: IfNotPresent
 
     livenessProbeImage:
-      # -- Target image repository.
+      # Target image repository.
       repository: registry.k8s.io/sig-storage/livenessprobe
-      # -- Target image version tag.
+      # Target image version tag.
       tag: v2.12.0
-      # -- Kubernetes imagePullPolicy on liveness probe.
+      # Kubernetes imagePullPolicy on liveness probe.
       pullPolicy: IfNotPresent
 
     livenessProbe:
-      # -- The port that will expose the liveness of the csi-driver
+      # The port that will expose the liveness of the csi-driver
       port: 9809
 
-  # -- Options for approver controller
+  # Options for approver controller
   approver:
-    # -- Number of replicas of the approver to run.
+    # Number of replicas of the approver to run.
     replicaCount: 1
-    # -- The signer name that csi-driver-spiffe approver will be given
+    # The signer name that csi-driver-spiffe approver will be given
     # permission to approve and deny. CertificateRequests referencing this
     # signer name can be processed by the SPIFFE approver. See:
     # https://cert-manager.io/docs/concepts/certificaterequest/#approval
     signerName: "clusterissuers.cert-manager.io/*"
     readinessProbe:
-      # -- Container port to expose csi-driver-spiffe-approver HTTP readiness
+      # Container port to expose csi-driver-spiffe-approver HTTP readiness
       # probe on default network interface.
       port: 6060
 
     metrics:
-      # -- Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
+      # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
       port: 9402
-      # -- Service to expose metrics endpoint.
+      # Service to expose metrics endpoint.
       service:
-        # -- Create a Service resource to expose metrics endpoint.
+        # Create a Service resource to expose metrics endpoint.
         enabled: true
-        # -- Service type to expose metrics.
+        # Service type to expose metrics.
         type: ClusterIP
-        # -- ServiceMonitor resource for this Service.
+        # ServiceMonitor resource for this Service.
         servicemonitor:
+          # Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
           enabled: false
+          # The value for the "prometheus" label on the ServiceMonitor. This allows
+          # for multiple Prometheus instances selecting difference ServiceMonitors 
+          # using label selectors.
           prometheusInstance: default
+          # The interval that the Prometheus will scrape for metrics.
           interval: 10s
+          # The timeout on each metric probe request.
           scrapeTimeout: 5s
+          # Additional labels to give the ServiceMonitor resource.
           labels: {}
+    # Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver
+    #
+    # For example:
+    #  resources:
+    #    limits:
+    #      cpu: 100m
+    #      memory: 128Mi
+    #    requests:
+    #      cpu: 100m
+    #      memory: 128Mi
     resources: {}
-    # -- Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # -- Kubernetes pod memory resource requests for cert-manager-csi-driver-spiffe approver
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
 
-# -- Optional priority class to be used for the csi-driver pods.
+# Optional priority class to be used for the csi-driver pods.
 priorityClassName: ""

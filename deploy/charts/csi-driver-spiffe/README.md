@@ -1,60 +1,347 @@
-# cert-manager-csi-driver-spiffe
+# cert-manager csi-driver-spiffe
 
-![Version: v0.0.0](https://img.shields.io/badge/Version-v0.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.0.0](https://img.shields.io/badge/AppVersion-v0.0.0-informational?style=flat-square)
+<!-- see https://artifacthub.io/packages/helm/cert-manager/cert-manager-csi-driver-spiffe for the rendered version -->
 
-csi-driver-spiffe is a Kubernetes CSI plugin which transparently delivers X.509 SPIFFE SVIDs to pods via cert-manager
+## Helm Values
 
-**Homepage:** <https://cert-manager.io/docs/usage/csi-driver-spiffe>
+<!-- AUTO-GENERATED -->
 
-## Maintainers
+#### **image.repository.driver** ~ `string`
+> Default value:
+> ```yaml
+> quay.io/jetstack/cert-manager-csi-driver-spiffe
+> ```
+#### **image.repository.approver** ~ `string`
+> Default value:
+> ```yaml
+> quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+> ```
+#### **image.tag** ~ `string`
+> Default value:
+> ```yaml
+> v0.0.0
+> ```
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| cert-manager-maintainers | <cert-manager-maintainers@googlegroups.com> | <https://cert-manager.io> |
+Target image version tag.
+#### **image.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
 
-## Source Code
+Kubernetes imagePullPolicy on DaemonSet.
+#### **imagePullSecrets** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
 
-* <https://github.com/cert-manager/csi-driver-spiffe>
+Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images  
+  
+For example:
 
-## Values
+```yaml
+imagePullSecrets:
+- name: secret-name
+```
+#### **app.logLevel** ~ `number`
+> Default value:
+> ```yaml
+> 1
+> ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| app.approver | object | `{"metrics":{"port":9402,"service":{"enabled":true,"servicemonitor":{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"},"type":"ClusterIP"}},"readinessProbe":{"port":6060},"replicaCount":1,"resources":{},"signerName":"clusterissuers.cert-manager.io/*"}` | Options for approver controller |
-| app.approver.metrics.port | int | `9402` | Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'. |
-| app.approver.metrics.service | object | `{"enabled":true,"servicemonitor":{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"},"type":"ClusterIP"}` | Service to expose metrics endpoint. |
-| app.approver.metrics.service.enabled | bool | `true` | Create a Service resource to expose metrics endpoint. |
-| app.approver.metrics.service.servicemonitor | object | `{"enabled":false,"interval":"10s","labels":{},"prometheusInstance":"default","scrapeTimeout":"5s"}` | ServiceMonitor resource for this Service. |
-| app.approver.metrics.service.type | string | `"ClusterIP"` | Service type to expose metrics. |
-| app.approver.readinessProbe.port | int | `6060` | Container port to expose csi-driver-spiffe-approver HTTP readiness probe on default network interface. |
-| app.approver.replicaCount | int | `1` | Number of replicas of the approver to run. |
-| app.approver.signerName | string | `"clusterissuers.cert-manager.io/*"` | The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval |
-| app.certificateRequestDuration | string | `"1h"` | Duration requested for requested certificates. |
-| app.driver | object | `{"csiDataDir":"/tmp/cert-manager-csi-driver","livenessProbe":{"port":9809},"livenessProbeImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/livenessprobe","tag":"v2.12.0"},"nodeDriverRegistrarImage":{"pullPolicy":"IfNotPresent","repository":"registry.k8s.io/sig-storage/csi-node-driver-registrar","tag":"v2.10.0"},"resources":{},"sourceCABundle":null,"volumeFileName":{"ca":"ca.crt","cert":"tls.crt","key":"tls.key"},"volumeMounts":[],"volumes":[]}` | Options for CSI driver |
-| app.driver.csiDataDir | string | `"/tmp/cert-manager-csi-driver"` | Configures the hostPath directory that the driver will write and mount volumes from. |
-| app.driver.livenessProbe.port | int | `9809` | The port that will expose the liveness of the csi-driver |
-| app.driver.livenessProbeImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on liveness probe. |
-| app.driver.livenessProbeImage.repository | string | `"registry.k8s.io/sig-storage/livenessprobe"` | Target image repository. |
-| app.driver.livenessProbeImage.tag | string | `"v2.12.0"` | Target image version tag. |
-| app.driver.nodeDriverRegistrarImage.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on node-driver. |
-| app.driver.nodeDriverRegistrarImage.repository | string | `"registry.k8s.io/sig-storage/csi-node-driver-registrar"` | Target image repository. |
-| app.driver.nodeDriverRegistrarImage.tag | string | `"v2.10.0"` | Target image version tag. |
-| app.driver.sourceCABundle | string | `nil` | Optional file containing a CA bundle that will be propagated to managed volumes. |
-| app.driver.volumeFileName.ca | string | `"ca.crt"` | File name where the CA bundles are written to, if enabled. |
-| app.driver.volumeFileName.cert | string | `"tls.crt"` | File name which signed certificates are written to in volumes. |
-| app.driver.volumeFileName.key | string | `"tls.key"` | File name which private keys are written to in volumes. |
-| app.driver.volumeMounts | list | `[]` | Optional extra volume mounts. Useful for mounting root CAs |
-| app.driver.volumes | list | `[]` | Optional extra volumes. Useful for mounting root CAs |
-| app.extraCertificateRequestAnnotations | string | `nil` | List of annotations to add to certificate requests |
-| app.issuer.group | string | `"cert-manager.io"` | Issuer group which is used to serve this Trust Domain. |
-| app.issuer.kind | string | `"ClusterIssuer"` | Issuer kind which is used to serve this Trust Domain. |
-| app.issuer.name | string | `"spiffe-ca"` | Issuer name which is used to serve this Trust Domain. |
-| app.logLevel | int | `1` | Verbosity of cert-manager-csi-driver logging. |
-| app.name | string | `"spiffe.csi.cert-manager.io"` | The name for the CSI driver installation. |
-| app.trustDomain | string | `"cluster.local"` | The Trust Domain for this driver. |
-| image.pullPolicy | string | `"IfNotPresent"` | Kubernetes imagePullPolicy on DaemonSet. |
-| image.repository | object | `{"approver":"quay.io/jetstack/cert-manager-csi-driver-spiffe-approver","driver":"quay.io/jetstack/cert-manager-csi-driver-spiffe"}` | Target image repository. |
-| image.tag | string | `"v0.0.0"` | Target image version tag. |
-| imagePullSecrets | list | `[]` | Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images |
-| priorityClassName | string | `""` | Optional priority class to be used for the csi-driver pods. |
+Verbosity of cert-manager-csi-driver logging.
+#### **app.certificateRequestDuration** ~ `string`
+> Default value:
+> ```yaml
+> 1h
+> ```
 
+Duration requested for requested certificates.
+#### **app.extraCertificateRequestAnnotations** ~ `unknown`
+> Default value:
+> ```yaml
+> null
+> ```
+
+List of annotations to add to certificate requests  
+  
+For example:
+
+```yaml
+extraCertificateRequestAnnotations: app=csi-driver-spiffe,foo=bar
+```
+#### **app.trustDomain** ~ `string`
+> Default value:
+> ```yaml
+> cluster.local
+> ```
+
+The Trust Domain for this driver.
+#### **app.name** ~ `string`
+> Default value:
+> ```yaml
+> spiffe.csi.cert-manager.io
+> ```
+
+The name for the CSI driver installation.
+#### **app.issuer.name** ~ `string`
+> Default value:
+> ```yaml
+> spiffe-ca
+> ```
+
+Issuer name which is used to serve this Trust Domain.
+#### **app.issuer.kind** ~ `string`
+> Default value:
+> ```yaml
+> ClusterIssuer
+> ```
+
+Issuer kind which is used to serve this Trust Domain.
+#### **app.issuer.group** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager.io
+> ```
+
+Issuer group which is used to serve this Trust Domain.
+#### **app.driver.sourceCABundle** ~ `unknown`
+> Default value:
+> ```yaml
+> null
+> ```
+
+Optional file containing a CA bundle that will be propagated to managed volumes.
+#### **app.driver.volumeFileName.cert** ~ `string`
+> Default value:
+> ```yaml
+> tls.crt
+> ```
+
+File name which signed certificates are written to in volumes.
+#### **app.driver.volumeFileName.key** ~ `string`
+> Default value:
+> ```yaml
+> tls.key
+> ```
+
+File name which private keys are written to in volumes.
+#### **app.driver.volumeFileName.ca** ~ `string`
+> Default value:
+> ```yaml
+> ca.crt
+> ```
+
+File name where the CA bundles are written to, if enabled.
+#### **app.driver.volumes** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+Optional extra volumes. Useful for mounting root CAs  
+  
+For example:
+
+```yaml
+volumes:
+- name: root-cas
+  secret:
+    secretName: root-ca-bundle
+```
+#### **app.driver.volumeMounts** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+Optional extra volume mounts. Useful for mounting root CAs  
+  
+For example:
+
+```yaml
+volumeMounts:
+- name: root-cas
+  mountPath: /var/run/secrets/cert-manager-csi-driver-spiffe
+```
+#### **app.driver.csiDataDir** ~ `string`
+> Default value:
+> ```yaml
+> /tmp/cert-manager-csi-driver
+> ```
+
+Configures the hostPath directory that the driver will write and mount volumes from.
+#### **app.driver.resources** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Kubernetes pod resource limits for cert-manager-csi-driver-spiffe  
+  
+For example:
+
+```yaml
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+```
+#### **app.driver.nodeDriverRegistrarImage.repository** ~ `string`
+> Default value:
+> ```yaml
+> registry.k8s.io/sig-storage/csi-node-driver-registrar
+> ```
+
+Target image repository.
+#### **app.driver.nodeDriverRegistrarImage.tag** ~ `string`
+> Default value:
+> ```yaml
+> v2.10.0
+> ```
+
+Target image version tag.
+#### **app.driver.nodeDriverRegistrarImage.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
+
+Kubernetes imagePullPolicy on node-driver.
+#### **app.driver.livenessProbeImage.repository** ~ `string`
+> Default value:
+> ```yaml
+> registry.k8s.io/sig-storage/livenessprobe
+> ```
+
+Target image repository.
+#### **app.driver.livenessProbeImage.tag** ~ `string`
+> Default value:
+> ```yaml
+> v2.12.0
+> ```
+
+Target image version tag.
+#### **app.driver.livenessProbeImage.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
+
+Kubernetes imagePullPolicy on liveness probe.
+#### **app.driver.livenessProbe.port** ~ `number`
+> Default value:
+> ```yaml
+> 9809
+> ```
+
+The port that will expose the liveness of the csi-driver
+#### **app.approver.replicaCount** ~ `number`
+> Default value:
+> ```yaml
+> 1
+> ```
+
+Number of replicas of the approver to run.
+#### **app.approver.signerName** ~ `string`
+> Default value:
+> ```yaml
+> clusterissuers.cert-manager.io/*
+> ```
+
+The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval
+#### **app.approver.readinessProbe.port** ~ `number`
+> Default value:
+> ```yaml
+> 6060
+> ```
+
+Container port to expose csi-driver-spiffe-approver HTTP readiness probe on default network interface.
+#### **app.approver.metrics.port** ~ `number`
+> Default value:
+> ```yaml
+> 9402
+> ```
+
+Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
+#### **app.approver.metrics.service.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Create a Service resource to expose metrics endpoint.
+#### **app.approver.metrics.service.type** ~ `string`
+> Default value:
+> ```yaml
+> ClusterIP
+> ```
+
+Service type to expose metrics.
+#### **app.approver.metrics.service.servicemonitor.enabled** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
+
+Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
+#### **app.approver.metrics.service.servicemonitor.prometheusInstance** ~ `string`
+> Default value:
+> ```yaml
+> default
+> ```
+
+The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
+#### **app.approver.metrics.service.servicemonitor.interval** ~ `string`
+> Default value:
+> ```yaml
+> 10s
+> ```
+
+The interval that the Prometheus will scrape for metrics.
+#### **app.approver.metrics.service.servicemonitor.scrapeTimeout** ~ `string`
+> Default value:
+> ```yaml
+> 5s
+> ```
+
+The timeout on each metric probe request.
+#### **app.approver.metrics.service.servicemonitor.labels** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Additional labels to give the ServiceMonitor resource.
+#### **app.approver.resources** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver  
+  
+For example:
+
+```yaml
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+```
+#### **priorityClassName** ~ `string`
+> Default value:
+> ```yaml
+> ""
+> ```
+
+Optional priority class to be used for the csi-driver pods.
+
+<!-- /AUTO-GENERATED -->
