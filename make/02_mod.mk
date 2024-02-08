@@ -24,10 +24,12 @@ include make/test-unit.mk
 ## Publish all release artifacts (image + helm chart)
 ## @category [shared] Release
 release: $(helm_chart_archive)
-	$(MAKE) oci-push-manager
+	$(MAKE) oci-push-manager oci-push-approver
 
 	@echo "RELEASE_OCI_MANAGER_IMAGE=$(oci_manager_image_name)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_OCI_MANAGER_TAG=$(oci_manager_image_tag)" >> "$(GITHUB_OUTPUT)"
+	@echo "RELEASE_OCI_APPROVER_IMAGE=$(oci_manager_image_name)" >> "$(GITHUB_OUTPUT)"
+	@echo "RELEASE_OCI_APPROVER_TAG=$(oci_manager_image_tag)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_HELM_CHART_NAME=$(helm_chart_name)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_HELM_CHART_VERSION=$(helm_chart_version)" >> "$(GITHUB_OUTPUT)"
 	@echo "RELEASE_HELM_CHART_TAR=$(helm_chart_archive)" >> "$(GITHUB_OUTPUT)"
