@@ -47,6 +47,8 @@ api_docs_branch := main
 helm_chart_source_dir := deploy/charts/csi-driver-spiffe
 helm_chart_name := cert-manager-csi-driver-spiffe
 helm_chart_version := $(VERSION)
+helm_docs_use_helm_tool := 1
+
 define helm_values_mutation_function
 $(YQ) \
 	'( .image.repository.driver = "$(oci_manager_image_name)" ) | \
