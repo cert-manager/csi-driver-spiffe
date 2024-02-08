@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cert-manager/cert-manager/pkg/api"
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
@@ -28,6 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2/klogr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -56,8 +56,12 @@ var _ = Context("Approval", func() {
 	JustBeforeEach(func() {
 		ctx, cancel = context.WithCancel(context.TODO())
 
+		scheme := runtime.NewScheme()
+		Expect(corev1.AddToScheme(scheme)).NotTo(HaveOccurred())
+		Expect(cmapi.AddToScheme(scheme)).NotTo(HaveOccurred())
+
 		var err error
-		cl, err = client.New(env.Config, client.Options{Scheme: api.Scheme})
+		cl, err = client.New(env.Config, client.Options{Scheme: scheme})
 		Expect(err).NotTo(HaveOccurred())
 
 		namespace = corev1.Namespace{
@@ -69,7 +73,7 @@ var _ = Context("Approval", func() {
 
 		log := klogr.New().WithName("testing")
 		mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
-			Scheme:         api.Scheme,
+			Scheme:         scheme,
 			LeaderElection: true,
 			Metrics: server.Options{
 				BindAddress: "0",
