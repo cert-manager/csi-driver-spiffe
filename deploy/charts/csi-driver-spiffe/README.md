@@ -287,26 +287,36 @@ Service type to expose metrics.
 > ```yaml
 > false
 > ```
+
+Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
 #### **app.approver.metrics.service.servicemonitor.prometheusInstance** ~ `string`
 > Default value:
 > ```yaml
 > default
 > ```
+
+The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
 #### **app.approver.metrics.service.servicemonitor.interval** ~ `string`
 > Default value:
 > ```yaml
 > 10s
 > ```
+
+The interval that the Prometheus will scrape for metrics.
 #### **app.approver.metrics.service.servicemonitor.scrapeTimeout** ~ `string`
 > Default value:
 > ```yaml
 > 5s
 > ```
+
+The timeout on each metric probe request.
 #### **app.approver.metrics.service.servicemonitor.labels** ~ `object`
 > Default value:
 > ```yaml
 > {}
 > ```
+
+Additional labels to give the ServiceMonitor resource.
 #### **app.approver.resources** ~ `object`
 > Default value:
 > ```yaml
