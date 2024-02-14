@@ -246,8 +246,14 @@
     "helm-values.app.driver.livenessProbeImage": {
       "additionalProperties": false,
       "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.app.driver.livenessProbeImage.digest"
+        },
         "pullPolicy": {
           "$ref": "#/$defs/helm-values.app.driver.livenessProbeImage.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.app.driver.livenessProbeImage.registry"
         },
         "repository": {
           "$ref": "#/$defs/helm-values.app.driver.livenessProbeImage.repository"
@@ -258,9 +264,17 @@
       },
       "type": "object"
     },
+    "helm-values.app.driver.livenessProbeImage.digest": {
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
     "helm-values.app.driver.livenessProbeImage.pullPolicy": {
       "default": "IfNotPresent",
       "description": "Kubernetes imagePullPolicy on liveness probe.",
+      "type": "string"
+    },
+    "helm-values.app.driver.livenessProbeImage.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: registry.k8s.io\nrepository: sig-storage/livenessprobe",
       "type": "string"
     },
     "helm-values.app.driver.livenessProbeImage.repository": {
@@ -270,14 +284,20 @@
     },
     "helm-values.app.driver.livenessProbeImage.tag": {
       "default": "v2.12.0",
-      "description": "Target image version tag.",
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
       "type": "string"
     },
     "helm-values.app.driver.nodeDriverRegistrarImage": {
       "additionalProperties": false,
       "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.app.driver.nodeDriverRegistrarImage.digest"
+        },
         "pullPolicy": {
           "$ref": "#/$defs/helm-values.app.driver.nodeDriverRegistrarImage.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.app.driver.nodeDriverRegistrarImage.registry"
         },
         "repository": {
           "$ref": "#/$defs/helm-values.app.driver.nodeDriverRegistrarImage.repository"
@@ -288,9 +308,17 @@
       },
       "type": "object"
     },
+    "helm-values.app.driver.nodeDriverRegistrarImage.digest": {
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
     "helm-values.app.driver.nodeDriverRegistrarImage.pullPolicy": {
       "default": "IfNotPresent",
       "description": "Kubernetes imagePullPolicy on node-driver.",
+      "type": "string"
+    },
+    "helm-values.app.driver.nodeDriverRegistrarImage.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: registry.k8s.io\nrepository: sig-storage/csi-node-driver-registrar",
       "type": "string"
     },
     "helm-values.app.driver.nodeDriverRegistrarImage.repository": {
@@ -300,7 +328,7 @@
     },
     "helm-values.app.driver.nodeDriverRegistrarImage.tag": {
       "default": "v2.10.0",
-      "description": "Target image version tag.",
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
       "type": "string"
     },
     "helm-values.app.driver.resources": {
@@ -404,8 +432,14 @@
     "helm-values.image": {
       "additionalProperties": false,
       "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.image.digest"
+        },
         "pullPolicy": {
           "$ref": "#/$defs/helm-values.image.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.image.registry"
         },
         "repository": {
           "$ref": "#/$defs/helm-values.image.repository"
@@ -416,9 +450,34 @@
       },
       "type": "object"
     },
+    "helm-values.image.digest": {
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "approver": {
+          "$ref": "#/$defs/helm-values.image.digest.approver"
+        },
+        "driver": {
+          "$ref": "#/$defs/helm-values.image.digest.driver"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.image.digest.approver": {
+      "description": "Target csi-driver approver digest. Override any tag, if set.\nFor example:\napprover: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
+    "helm-values.image.digest.driver": {
+      "description": "Target csi-driver driver digest. Override any tag, if set.\nFor example:\ndriver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
     "helm-values.image.pullPolicy": {
       "default": "IfNotPresent",
       "description": "Kubernetes imagePullPolicy on DaemonSet.",
+      "type": "string"
+    },
+    "helm-values.image.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository:\n  driver: jetstack/cert-manager-csi-driver-spiffe\n  approver: jetstack/cert-manager-csi-driver-spiffe-approver",
       "type": "string"
     },
     "helm-values.image.repository": {
@@ -435,15 +494,16 @@
     },
     "helm-values.image.repository.approver": {
       "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe-approver",
+      "description": "Target image repository for the csi-driver approver Deployment.",
       "type": "string"
     },
     "helm-values.image.repository.driver": {
       "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe",
+      "description": "Target image repository for the csi-driver driver DaemonSet.",
       "type": "string"
     },
     "helm-values.image.tag": {
-      "default": "v0.0.0",
-      "description": "Target image version tag.",
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
       "type": "string"
     },
     "helm-values.imagePullSecrets": {
