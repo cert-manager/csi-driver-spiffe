@@ -22,7 +22,7 @@ spec:
       containers:
 
         - name: node-driver-registrar
-          image: "{{ .Values.app.driver.nodeDriverRegistrarImage.repository }}:{{ .Values.app.driver.nodeDriverRegistrarImage.tag }}"
+          image: "{{ template "image" (tuple .Values.app.driver.nodeDriverRegistrarImage $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.app.driver.nodeDriverRegistrarImage.pullPolicy }}
           args:
             - -v={{ .Values.app.logLevel }}
@@ -40,13 +40,13 @@ spec:
               mountPath: /registration
 
         - name: liveness-probe
-          image: "{{ .Values.app.driver.livenessProbeImage.repository }}:{{ .Values.app.driver.livenessProbeImage.tag }}"
+          image: "{{ template "image" (tuple .Values.app.driver.livenessProbeImage $.Chart.AppVersion) }}"
+          imagePullPolicy: {{ .Values.app.driver.livenessProbeImage.pullPolicy }}
           args:
             - --csi-address=/plugin/csi.sock
             - --probe-timeout=3s
             - --health-port={{.Values.app.driver.livenessProbe.port}}
             - -v={{ .Values.app.logLevel }}
-          imagePullPolicy: {{ .Values.app.driver.livenessProbeImage.pullPolicy }}
           volumeMounts:
             - name: plugin-dir
               mountPath: /plugin
@@ -59,7 +59,7 @@ spec:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
             runAsUser: 0
-          image: "{{ .Values.image.repository.driver }}:{{ .Values.image.tag }}"
+          image: "{{ template "image-driver" (tuple .Values.image $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args :
             - --log-level={{ .Values.app.logLevel }}
