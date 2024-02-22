@@ -95,7 +95,7 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 			// CertificateRequests on start.
 			if err != nil {
 				a.log.Error(err, "failed to list all CertificateRequests, exiting error")
-				os.Exit(-1)
+				os.Exit(1)
 			}
 
 			// Ignore requests that already have an Approved or Denied condition.
