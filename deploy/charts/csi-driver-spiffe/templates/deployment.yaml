@@ -4,7 +4,7 @@ metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   namespace: {{ .Release.Namespace }}
   labels:
-{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.app.approver.replicaCount }}
   selector:
@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+        {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
       containers:

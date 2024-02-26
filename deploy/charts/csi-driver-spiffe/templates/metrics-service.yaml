@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.app.approver.metrics.service.type }}
   ports:

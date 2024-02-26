@@ -5,7 +5,7 @@ metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   labels:
     app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
     prometheus: {{ .Values.app.approver.metrics.service.servicemonitor.prometheusInstance }}
 {{- if .Values.app.approver.metrics.service.servicemonitor.labels }}
 {{ toYaml .Values.app.approver.metrics.service.servicemonitor.labels | indent 4}}
