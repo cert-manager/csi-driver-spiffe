@@ -212,3 +212,6 @@ app:
 
 # Optional priority class to be used for the csi-driver pods.
 priorityClassName: ""
+
+# Labels to apply to all resources
+commonLabels: {}

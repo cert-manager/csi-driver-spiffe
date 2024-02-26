@@ -419,5 +419,12 @@ resources:
 > ```
 
 Optional priority class to be used for the csi-driver pods.
+#### **commonLabels** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Labels to apply to all resources
 
 <!-- /AUTO-GENERATED -->
