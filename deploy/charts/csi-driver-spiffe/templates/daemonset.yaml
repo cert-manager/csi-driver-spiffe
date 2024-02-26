@@ -4,7 +4,7 @@ metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{ include "cert-manager-csi-driver-spiffe.labels" . | indent 4 }}
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+        {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
