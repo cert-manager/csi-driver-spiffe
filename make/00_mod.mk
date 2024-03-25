@@ -17,25 +17,15 @@ repo_name := github.com/cert-manager/csi-driver-spiffe
 kind_cluster_name := csi-driver-spiffe
 kind_cluster_config := $(bin_dir)/scratch/kind_cluster.yaml
 
-oci_platforms := linux/amd64,linux/arm64
+build_names := manager
 
-build_names := manager approver
-
-go_manager_main_dir := ./cmd/csi
+go_manager_main_dir := ./cmd
 go_manager_mod_dir := .
 go_manager_ldflags := -X $(repo_name)/internal/version.AppVersion=$(VERSION) -X $(repo_name)/internal/version.GitCommit=$(GITCOMMIT)
 oci_manager_base_image_flavor := csi-static
 oci_manager_image_name := quay.io/jetstack/cert-manager-csi-driver-spiffe
 oci_manager_image_tag := $(VERSION)
 oci_manager_image_name_development := cert-manager.local/cert-manager-csi-driver-spiffe
-
-go_approver_main_dir := ./cmd/approver
-go_approver_mod_dir := .
-go_approver_ldflags := -X $(repo_name)/internal/version.AppVersion=$(VERSION) -X $(repo_name)/internal/version.GitCommit=$(GITCOMMIT)
-oci_approver_base_image_flavor := static
-oci_approver_image_name := quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
-oci_approver_image_tag := $(VERSION)
-oci_approver_image_name_development := cert-manager.local/cert-manager-csi-driver-spiffe-approver
 
 deploy_name := csi-driver-spiffe
 deploy_namespace := cert-manager
@@ -55,7 +45,6 @@ helm_verify_values := 1
 define helm_values_mutation_function
 $(YQ) \
 	'( .image.repository.driver = "$(oci_manager_image_name)" ) | \
-	( .image.repository.approver = "$(oci_approver_image_name)" ) | \
 	( .image.tag = "$(oci_manager_image_tag)" )' \
 	$1 --inplace
 endef

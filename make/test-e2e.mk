@@ -22,7 +22,6 @@ e2e-setup-cert-manager: | kind-cluster $(NEEDS_HELM) $(NEEDS_KUBECTL)
 		--namespace cert-manager \
 		--repo https://charts.jetstack.io \
 		--set installCRDs=true \
-		--set extraArgs={--controllers='*\,-certificaterequests-approver'} \
 		--set image.repository=$(quay.io/jetstack/cert-manager-controller.REPO) \
 		--set image.tag=$(quay.io/jetstack/cert-manager-controller.TAG) \
 		--set image.pullPolicy=Never \
@@ -40,16 +39,6 @@ e2e-setup-cert-manager: | kind-cluster $(NEEDS_HELM) $(NEEDS_KUBECTL)
 .PHONY: e2e-setup-example
 e2e-setup-example: | e2e-setup-cert-manager kind-cluster $(NEEDS_KUBECTL)
 	$(KUBECTL) apply --server-side -f ./deploy/example/clusterissuer.yaml
-
-	sleep 3
-
-	cr_name=$$($(KUBECTL) get cr -n cert-manager --no-headers -o custom-columns=":metadata.name") && \
-	$(KUBECTL) patch cr $$cr_name \
-		-n cert-manager \
-		--subresource status \
-		--type merge \
-		--patch '{"status": {"conditions": [{"type": "Approved", "status": "True", "reason": "manual"}]}}'
-
 	$(KUBECTL) wait --for=condition=ready clusterissuer csi-driver-spiffe-ca
 
 # The "install" target can be run on its own with any currently active cluster,
@@ -57,15 +46,13 @@ e2e-setup-example: | e2e-setup-cert-manager kind-cluster $(NEEDS_KUBECTL)
 # When a "test-e2e" target is run, the currently active cluster must be the kind
 # cluster created by the "kind-cluster" target.
 ifeq ($(findstring test-e2e,$(MAKECMDGOALS)),test-e2e)
-install: e2e-setup-example kind-cluster oci-load-manager oci-load-approver
+install: e2e-setup-example kind-cluster oci-load-manager
 endif
 
 test-e2e-deps: INSTALL_OPTIONS :=
-test-e2e-deps: INSTALL_OPTIONS += --set image.repository.driver=$(oci_manager_image_name_development)
-test-e2e-deps: INSTALL_OPTIONS += --set image.repository.approver=$(oci_approver_image_name_development)
+test-e2e-deps: INSTALL_OPTIONS += --set image.repository=$(oci_manager_image_name_development)
 test-e2e-deps: INSTALL_OPTIONS += --set image.pullPolicy=Never
 test-e2e-deps: INSTALL_OPTIONS += --set app.trustDomain=foo.bar
-test-e2e-deps: INSTALL_OPTIONS += --set app.approver.signerName=clusterissuers.cert-manager.io/csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.issuer.name=csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].name=root-cas
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].secret.secretName=csi-driver-spiffe-ca

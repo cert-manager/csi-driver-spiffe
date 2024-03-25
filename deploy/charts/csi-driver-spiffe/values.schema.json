@@ -27,9 +27,6 @@
     "helm-values.app": {
       "additionalProperties": false,
       "properties": {
-        "approver": {
-          "$ref": "#/$defs/helm-values.app.approver"
-        },
         "certificateRequestDuration": {
           "$ref": "#/$defs/helm-values.app.certificateRequestDuration"
         },
@@ -53,144 +50,6 @@
         }
       },
       "type": "object"
-    },
-    "helm-values.app.approver": {
-      "additionalProperties": false,
-      "properties": {
-        "metrics": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics"
-        },
-        "readinessProbe": {
-          "$ref": "#/$defs/helm-values.app.approver.readinessProbe"
-        },
-        "replicaCount": {
-          "$ref": "#/$defs/helm-values.app.approver.replicaCount"
-        },
-        "resources": {
-          "$ref": "#/$defs/helm-values.app.approver.resources"
-        },
-        "signerName": {
-          "$ref": "#/$defs/helm-values.app.approver.signerName"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.app.approver.metrics": {
-      "additionalProperties": false,
-      "properties": {
-        "port": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.port"
-        },
-        "service": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.app.approver.metrics.port": {
-      "default": 9402,
-      "description": "Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.",
-      "type": "number"
-    },
-    "helm-values.app.approver.metrics.service": {
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.enabled"
-        },
-        "servicemonitor": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor"
-        },
-        "type": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.type"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.app.approver.metrics.service.enabled": {
-      "default": true,
-      "description": "Create a Service resource to expose metrics endpoint.",
-      "type": "boolean"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor": {
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor.enabled"
-        },
-        "interval": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor.interval"
-        },
-        "labels": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor.labels"
-        },
-        "prometheusInstance": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor.prometheusInstance"
-        },
-        "scrapeTimeout": {
-          "$ref": "#/$defs/helm-values.app.approver.metrics.service.servicemonitor.scrapeTimeout"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor.enabled": {
-      "default": false,
-      "description": "Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.",
-      "type": "boolean"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor.interval": {
-      "default": "10s",
-      "description": "The interval that the Prometheus will scrape for metrics.",
-      "type": "string"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor.labels": {
-      "default": {},
-      "description": "Additional labels to give the ServiceMonitor resource.",
-      "type": "object"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor.prometheusInstance": {
-      "default": "default",
-      "description": "The value for the \"prometheus\" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.",
-      "type": "string"
-    },
-    "helm-values.app.approver.metrics.service.servicemonitor.scrapeTimeout": {
-      "default": "5s",
-      "description": "The timeout on each metric probe request.",
-      "type": "string"
-    },
-    "helm-values.app.approver.metrics.service.type": {
-      "default": "ClusterIP",
-      "description": "Service type to expose metrics.",
-      "type": "string"
-    },
-    "helm-values.app.approver.readinessProbe": {
-      "additionalProperties": false,
-      "properties": {
-        "port": {
-          "$ref": "#/$defs/helm-values.app.approver.readinessProbe.port"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.app.approver.readinessProbe.port": {
-      "default": 6060,
-      "description": "Container port to expose csi-driver-spiffe-approver HTTP readiness probe on default network interface.",
-      "type": "number"
-    },
-    "helm-values.app.approver.replicaCount": {
-      "default": 1,
-      "description": "Number of replicas of the approver to run.",
-      "type": "number"
-    },
-    "helm-values.app.approver.resources": {
-      "default": {},
-      "description": "Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver\n\nFor example:\nresources:\n  limits:\n    cpu: 100m\n    memory: 128Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi",
-      "type": "object"
-    },
-    "helm-values.app.approver.signerName": {
-      "default": "clusterissuers.cert-manager.io/*",
-      "description": "The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval",
-      "type": "string"
     },
     "helm-values.app.certificateRequestDuration": {
       "default": "1h",
@@ -465,55 +324,21 @@
       "type": "object"
     },
     "helm-values.image.digest": {
-      "additionalProperties": false,
-      "default": {},
-      "properties": {
-        "approver": {
-          "$ref": "#/$defs/helm-values.image.digest.approver"
-        },
-        "driver": {
-          "$ref": "#/$defs/helm-values.image.digest.driver"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.image.digest.approver": {
-      "description": "Target csi-driver approver digest. Override any tag, if set.\nFor example:\napprover: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
-      "type": "string"
-    },
-    "helm-values.image.digest.driver": {
-      "description": "Target csi-driver driver digest. Override any tag, if set.\nFor example:\ndriver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
       "type": "string"
     },
     "helm-values.image.pullPolicy": {
       "default": "IfNotPresent",
-      "description": "Kubernetes imagePullPolicy on DaemonSet.",
+      "description": "Kubernetes imagePullPolicy on Deployment.",
       "type": "string"
     },
     "helm-values.image.registry": {
-      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository:\n  driver: jetstack/cert-manager-csi-driver-spiffe\n  approver: jetstack/cert-manager-csi-driver-spiffe-approver",
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository: jetstack/cert-manager-csi-driver-spiffe",
       "type": "string"
     },
     "helm-values.image.repository": {
-      "additionalProperties": false,
-      "properties": {
-        "approver": {
-          "$ref": "#/$defs/helm-values.image.repository.approver"
-        },
-        "driver": {
-          "$ref": "#/$defs/helm-values.image.repository.driver"
-        }
-      },
-      "type": "object"
-    },
-    "helm-values.image.repository.approver": {
-      "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe-approver",
-      "description": "Target image repository for the csi-driver approver Deployment.",
-      "type": "string"
-    },
-    "helm-values.image.repository.driver": {
       "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe",
-      "description": "Target image repository for the csi-driver driver DaemonSet.",
+      "description": "Target image repository.",
       "type": "string"
     },
     "helm-values.image.tag": {
@@ -522,7 +347,7 @@
     },
     "helm-values.imagePullSecrets": {
       "default": [],
-      "description": "Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images\n\nFor example:\nimagePullSecrets:\n- name: secret-name",
+      "description": "Optional secrets used for pulling the csi-driver-spiffe container image\n\nFor example:\nimagePullSecrets:\n- name: secret-name",
       "items": {},
       "type": "array"
     },

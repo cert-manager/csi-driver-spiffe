@@ -13,50 +13,27 @@ For example:
 
 ```yaml
 registry: quay.io
-repository:
-  driver: jetstack/cert-manager-csi-driver-spiffe
-  approver: jetstack/cert-manager-csi-driver-spiffe-approver
+repository: jetstack/cert-manager-csi-driver-spiffe
 ```
 
-#### **image.repository.driver** ~ `string`
+#### **image.repository** ~ `string`
 > Default value:
 > ```yaml
 > quay.io/jetstack/cert-manager-csi-driver-spiffe
 > ```
 
-Target image repository for the csi-driver driver DaemonSet.
-#### **image.repository.approver** ~ `string`
-> Default value:
-> ```yaml
-> quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
-> ```
-
-Target image repository for the csi-driver approver Deployment.
+Target image repository.
 #### **image.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
 
-#### **image.digest** ~ `object`
-> Default value:
-> ```yaml
-> {}
-> ```
-#### **image.digest.driver** ~ `string`
+#### **image.digest** ~ `string`
 
-Target csi-driver driver digest. Override any tag, if set.  
+Target image digest. Override any tag, if set.  
 For example:
 
 ```yaml
-driver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-```
-
-#### **image.digest.approver** ~ `string`
-
-Target csi-driver approver digest. Override any tag, if set.  
-For example:
-
-```yaml
-approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
 ```
 
 #### **image.pullPolicy** ~ `string`
@@ -65,14 +42,14 @@ approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb2
 > IfNotPresent
 > ```
 
-Kubernetes imagePullPolicy on DaemonSet.
+Kubernetes imagePullPolicy on Deployment.
 #### **imagePullSecrets** ~ `array`
 > Default value:
 > ```yaml
 > []
 > ```
 
-Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images  
+Optional secrets used for pulling the csi-driver-spiffe container image  
   
 For example:
 
@@ -316,102 +293,6 @@ Kubernetes imagePullPolicy on liveness probe.
 > ```
 
 The port that will expose the liveness of the csi-driver
-#### **app.approver.replicaCount** ~ `number`
-> Default value:
-> ```yaml
-> 1
-> ```
-
-Number of replicas of the approver to run.
-#### **app.approver.signerName** ~ `string`
-> Default value:
-> ```yaml
-> clusterissuers.cert-manager.io/*
-> ```
-
-The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval
-#### **app.approver.readinessProbe.port** ~ `number`
-> Default value:
-> ```yaml
-> 6060
-> ```
-
-Container port to expose csi-driver-spiffe-approver HTTP readiness probe on default network interface.
-#### **app.approver.metrics.port** ~ `number`
-> Default value:
-> ```yaml
-> 9402
-> ```
-
-Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
-#### **app.approver.metrics.service.enabled** ~ `bool`
-> Default value:
-> ```yaml
-> true
-> ```
-
-Create a Service resource to expose metrics endpoint.
-#### **app.approver.metrics.service.type** ~ `string`
-> Default value:
-> ```yaml
-> ClusterIP
-> ```
-
-Service type to expose metrics.
-#### **app.approver.metrics.service.servicemonitor.enabled** ~ `bool`
-> Default value:
-> ```yaml
-> false
-> ```
-
-Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
-#### **app.approver.metrics.service.servicemonitor.prometheusInstance** ~ `string`
-> Default value:
-> ```yaml
-> default
-> ```
-
-The value for the "prometheus" label on the ServiceMonitor. This allows for multiple Prometheus instances selecting difference ServiceMonitors using label selectors.
-#### **app.approver.metrics.service.servicemonitor.interval** ~ `string`
-> Default value:
-> ```yaml
-> 10s
-> ```
-
-The interval that the Prometheus will scrape for metrics.
-#### **app.approver.metrics.service.servicemonitor.scrapeTimeout** ~ `string`
-> Default value:
-> ```yaml
-> 5s
-> ```
-
-The timeout on each metric probe request.
-#### **app.approver.metrics.service.servicemonitor.labels** ~ `object`
-> Default value:
-> ```yaml
-> {}
-> ```
-
-Additional labels to give the ServiceMonitor resource.
-#### **app.approver.resources** ~ `object`
-> Default value:
-> ```yaml
-> {}
-> ```
-
-Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver  
-  
-For example:
-
-```yaml
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-```
 #### **priorityClassName** ~ `string`
 > Default value:
 > ```yaml

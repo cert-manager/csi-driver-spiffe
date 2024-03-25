@@ -2,40 +2,28 @@ image:
   # Target image registry. This value is prepended to the target image repository, if set.
   # For example:
   #   registry: quay.io
-  #   repository:
-  #     driver: jetstack/cert-manager-csi-driver-spiffe
-  #     approver: jetstack/cert-manager-csi-driver-spiffe-approver
+  #   repository: jetstack/cert-manager-csi-driver-spiffe
   # +docs:property
   # registry: quay.io
 
-  repository:
-    # Target image repository for the csi-driver driver DaemonSet.
-    driver: quay.io/jetstack/cert-manager-csi-driver-spiffe
-    # Target image repository for the csi-driver approver Deployment.
-    approver: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+  # Target image repository.
+  repository: quay.io/jetstack/cert-manager-csi-driver-spiffe
 
   # Override the image tag to deploy by setting this variable.
   # If no value is set, the chart's appVersion is used.
   # +docs:property
   # tag: vX.Y.Z
 
-  digest: {}
-    # Target csi-driver driver digest. Override any tag, if set.
-    # For example:
-    #   driver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-    # +docs:property=image.digest.driver
-    # driver: sha256:...
-    
-    # Target csi-driver approver digest. Override any tag, if set.
-    # For example:
-    #   approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-    # +docs:property=image.digest.approver
-    # approver: sha256:...
+  # Target image digest. Override any tag, if set.
+  # For example:
+  #   digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+  # +docs:property
+  # digest: sha256:...
 
-  # Kubernetes imagePullPolicy on DaemonSet.
+  # Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
-# Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images
+# Optional secrets used for pulling the csi-driver-spiffe container image
 #
 # For example:
 #  imagePullSecrets:
@@ -160,55 +148,6 @@ app:
     livenessProbe:
       # The port that will expose the liveness of the csi-driver
       port: 9809
-
-  # Options for approver controller
-  approver:
-    # Number of replicas of the approver to run.
-    replicaCount: 1
-    # The signer name that csi-driver-spiffe approver will be given
-    # permission to approve and deny. CertificateRequests referencing this
-    # signer name can be processed by the SPIFFE approver. See:
-    # https://cert-manager.io/docs/concepts/certificaterequest/#approval
-    signerName: "clusterissuers.cert-manager.io/*"
-    readinessProbe:
-      # Container port to expose csi-driver-spiffe-approver HTTP readiness
-      # probe on default network interface.
-      port: 6060
-
-    metrics:
-      # Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.
-      port: 9402
-      # Service to expose metrics endpoint.
-      service:
-        # Create a Service resource to expose metrics endpoint.
-        enabled: true
-        # Service type to expose metrics.
-        type: ClusterIP
-        # ServiceMonitor resource for this Service.
-        servicemonitor:
-          # Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
-          enabled: false
-          # The value for the "prometheus" label on the ServiceMonitor. This allows
-          # for multiple Prometheus instances selecting difference ServiceMonitors 
-          # using label selectors.
-          prometheusInstance: default
-          # The interval that the Prometheus will scrape for metrics.
-          interval: 10s
-          # The timeout on each metric probe request.
-          scrapeTimeout: 5s
-          # Additional labels to give the ServiceMonitor resource.
-          labels: {}
-    # Kubernetes pod resource limits for cert-manager-csi-driver-spiffe approver
-    #
-    # For example:
-    #  resources:
-    #    limits:
-    #      cpu: 100m
-    #      memory: 128Mi
-    #    requests:
-    #      cpu: 100m
-    #      memory: 128Mi
-    resources: {}
 
 # Optional priority class to be used for the csi-driver pods.
 priorityClassName: ""
