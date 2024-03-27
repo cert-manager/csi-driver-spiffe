@@ -60,7 +60,7 @@ spec:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
             runAsUser: 0
-          image: "{{ template "image-driver" (tuple .Values.image $.Chart.AppVersion) }}"
+          image: "{{ template "image" (tuple .Values.image $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args :
             - --log-level={{ .Values.app.logLevel }}

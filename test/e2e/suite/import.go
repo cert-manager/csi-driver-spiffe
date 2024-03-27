@@ -17,7 +17,6 @@ limitations under the License.
 package suite
 
 import (
-	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/approval"
 	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/carotation"
 	_ "github.com/cert-manager/csi-driver-spiffe/test/e2e/suite/fsgroup"
 )
