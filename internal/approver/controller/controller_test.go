@@ -30,7 +30,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -136,7 +136,7 @@ func Test_Reconcile(t *testing.T) {
 			a := &approver{
 				client:    fakeclient,
 				lister:    fakeclient,
-				log:       klogr.New(),
+				log:       ktesting.NewLogger(t, ktesting.DefaultConfig),
 				evaluator: test.evaluator,
 			}
 

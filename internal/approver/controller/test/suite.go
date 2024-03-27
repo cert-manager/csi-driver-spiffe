@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/klog/v2/klogr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -72,7 +71,7 @@ var _ = Context("Approval", func() {
 		}
 		Expect(cl.Create(ctx, &namespace)).NotTo(HaveOccurred())
 
-		log := klogr.New().WithName("testing")
+		log := GinkgoLogr
 		mgr, err := ctrl.NewManager(env.Config, ctrl.Options{
 			Scheme:         scheme,
 			LeaderElection: true,

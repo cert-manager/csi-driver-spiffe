@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
@@ -51,7 +51,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
 							Driver:   "spiffe.csi.cert-manager.io",
-							ReadOnly: pointer.Bool(true),
+							ReadOnly: ptr.To(true),
 							VolumeAttributes: map[string]string{
 								"spiffe.csi.cert-manager.io/fs-group": "1541",
 							},
@@ -59,8 +59,8 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 					},
 				}},
 				SecurityContext: &corev1.PodSecurityContext{
-					RunAsUser:  pointer.Int64(1321),
-					RunAsGroup: pointer.Int64(1541),
+					RunAsUser:  ptr.To(int64(1321)),
+					RunAsGroup: ptr.To(int64(1541)),
 				},
 				Containers: []corev1.Container{
 					{
@@ -165,7 +165,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		badPod := *podTemplate.DeepCopy()
 		badPod.Namespace = f.Namespace.Name
 		badPod.Spec.ServiceAccountName = serviceAccount.Name
-		badPod.Spec.SecurityContext.RunAsGroup = pointer.Int64(123)
+		badPod.Spec.SecurityContext.RunAsGroup = ptr.To(int64(123))
 		Expect(f.Client().Create(f.Context(), &badPod)).NotTo(HaveOccurred())
 
 		By("Waiting for pod to become ready")

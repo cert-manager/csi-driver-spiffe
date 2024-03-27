@@ -24,14 +24,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 )
 
 func Test_NewFile(t *testing.T) {
 	filepath := filepath.Join(t.TempDir(), "test-file.pem")
 
 	t.Log("if no file exists, expect NewFile to error")
-	_, err := NewFile(context.TODO(), klogr.New(), filepath)
+	_, err := NewFile(context.TODO(), ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
 	assert.Error(t, err, "expect file to not exist")
 
 	t.Log("should return the contents of the file with CertificatesPEM()")
@@ -43,7 +43,7 @@ func Test_NewFile(t *testing.T) {
 		cancel()
 	})
 
-	f, err := NewFile(ctx, klogr.New(), filepath)
+	f, err := NewFile(ctx, ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []byte("test data"), f.CertificatesPEM())

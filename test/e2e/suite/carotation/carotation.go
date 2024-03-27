@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
@@ -88,7 +88,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
 							Driver:   "spiffe.csi.cert-manager.io",
-							ReadOnly: pointer.Bool(true),
+							ReadOnly: ptr.To(true),
 						},
 					},
 				}},
