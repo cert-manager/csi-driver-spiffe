@@ -65,7 +65,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			annotations := map[string]string{}
 			for key, value := range opts.CertManager.CertificateRequestAnnotations {
 				if strings.HasPrefix(key, "spiffe.csi.cert-manager.io") {
-					log.Error(nil, "custom annotations must not begin with spiffe.csi.cert-manager.io, skipping %s", key)
+					log.Error(nil, "custom annotations must not begin with spiffe.csi.cert-manager.io", "annotation-key", key)
 				} else {
 					annotations[key] = value
 				}

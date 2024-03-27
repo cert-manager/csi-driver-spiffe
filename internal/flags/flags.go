@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/rest"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/klog/v2/klogr"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
@@ -69,8 +68,10 @@ func (f *Flags) Prepare(cmd *cobra.Command) *Flags {
 
 func (f *Flags) Complete() error {
 	klog.InitFlags(nil)
-	f.Logr = klogr.New()
-	flag.Set("v", f.logLevel)
+	f.Logr = klog.TODO()
+	if err := flag.Set("v", f.logLevel); err != nil {
+		return fmt.Errorf("failed to set log level: %s", err)
+	}
 
 	var err error
 	f.RestConfig, err = f.kubeConfigFlags.ToRESTConfig()

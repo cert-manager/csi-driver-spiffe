@@ -43,7 +43,7 @@ func Test_writeKeyPair(t *testing.T) {
 	capk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
 
-	caTmpl, err := utilpki.GenerateTemplate(&cmapi.Certificate{Spec: cmapi.CertificateSpec{CommonName: "my-ca"}})
+	caTmpl, err := utilpki.CertificateTemplateFromCertificate(&cmapi.Certificate{Spec: cmapi.CertificateSpec{CommonName: "my-ca"}})
 	require.NoError(t, err)
 
 	caPEM, ca, err := utilpki.SignCertificate(caTmpl, caTmpl, capk.Public(), capk)
@@ -52,7 +52,7 @@ func Test_writeKeyPair(t *testing.T) {
 	leafpk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
 
-	leafTmpl, err := utilpki.GenerateTemplate(
+	leafTmpl, err := utilpki.CertificateTemplateFromCertificate(
 		&cmapi.Certificate{
 			Spec: cmapi.CertificateSpec{URIs: []string{"spiffe://cert-manager.io/ns/sandbox/sa/default"}},
 		},
