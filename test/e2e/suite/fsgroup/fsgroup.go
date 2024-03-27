@@ -153,7 +153,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, pod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).ToNot(HaveOccurred())
 
 			Expect(buf.Bytes()).NotTo(BeEmpty(), "expected the file to have a non-zero entry")
 		}
@@ -185,7 +185,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, badPod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).To(HaveOccurred())
 
 			Expect(buf.Bytes()).To(BeEmpty(), "expected the file to have a zero entry")
 		}

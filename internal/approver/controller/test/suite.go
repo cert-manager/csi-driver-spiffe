@@ -93,7 +93,9 @@ var _ = Context("Approval", func() {
 		})).NotTo(HaveOccurred())
 
 		By("Running Approver controller")
-		go mgr.Start(ctx)
+		go func() {
+			Expect(mgr.Start(ctx)).NotTo(HaveOccurred())
+		}()
 
 		By("Waiting for Leader Election")
 		<-mgr.Elected()

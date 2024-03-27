@@ -142,7 +142,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).ToNot(HaveOccurred())
 
 			Expect(caData).To(Equal(buf.Bytes()), "expected the Issuer CA bundle to equal the CA mounted to the pod file")
 		}

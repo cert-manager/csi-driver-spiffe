@@ -70,7 +70,9 @@ func (f *Flags) Prepare(cmd *cobra.Command) *Flags {
 func (f *Flags) Complete() error {
 	klog.InitFlags(nil)
 	f.Logr = klogr.New()
-	flag.Set("v", f.logLevel)
+	if err := flag.Set("v", f.logLevel); err != nil {
+		return fmt.Errorf("failed to set log level: %s", err)
+	}
 
 	var err error
 	f.RestConfig, err = f.kubeConfigFlags.ToRESTConfig()
