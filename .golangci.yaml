@@ -6,7 +6,6 @@ issues:
         - staticcheck
         - prealloc
         - errorlint
-        - loggercheck
         - containedctx
       text: ".*"
 linters:
