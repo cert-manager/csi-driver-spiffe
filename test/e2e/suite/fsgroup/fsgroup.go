@@ -155,7 +155,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd.Stderr = GinkgoWriter
 			cmd.Run()
 
-			Expect(buf.Bytes()).NotTo(HaveLen(0), "expected the file to have a non-zero entry")
+			Expect(buf.Bytes()).NotTo(BeEmpty(), "expected the file to have a non-zero entry")
 		}
 		Expect(f.Client().Delete(f.Context(), &pod)).NotTo(HaveOccurred())
 	})
@@ -187,7 +187,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd.Stderr = GinkgoWriter
 			cmd.Run()
 
-			Expect(buf.Bytes()).To(HaveLen(0), "expected the file to have a zero entry")
+			Expect(buf.Bytes()).To(BeEmpty(), "expected the file to have a zero entry")
 		}
 		Expect(f.Client().Delete(f.Context(), &badPod)).NotTo(HaveOccurred())
 	})
