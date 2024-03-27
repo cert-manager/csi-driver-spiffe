@@ -9,7 +9,6 @@ issues:
         - prealloc
         - errorlint
         - loggercheck
-        - gosimple
         - containedctx
       text: ".*"
 linters:

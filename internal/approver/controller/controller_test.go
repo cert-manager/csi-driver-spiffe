@@ -144,8 +144,7 @@ func Test_Reconcile(t *testing.T) {
 			assert.Equalf(t, test.expError, err != nil, "%v", err)
 			assert.Equal(t, test.expResult, result)
 
-			for _, expectedObject := range test.expObjects {
-				expObj := expectedObject.(client.Object)
+			for _, expObj := range test.expObjects {
 				var actual client.Object
 				switch expObj.(type) {
 				case *cmapi.CertificateRequest:
