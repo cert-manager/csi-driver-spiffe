@@ -2,7 +2,6 @@ issues:
   exclude-rules:
     - linters:
         - errcheck
-        - gofmt
         - gosec
         - staticcheck
         - gocritic

@@ -79,7 +79,7 @@ func Test_Reconcile(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
-							cmapi.CertificateRequestCondition{
+							{
 								Type:               cmapi.CertificateRequestConditionDenied,
 								Status:             cmmeta.ConditionTrue,
 								Reason:             "spiffe.csi.cert-manager.io",
@@ -109,7 +109,7 @@ func Test_Reconcile(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
-							cmapi.CertificateRequestCondition{
+							{
 								Type:               cmapi.CertificateRequestConditionApproved,
 								Status:             cmmeta.ConditionTrue,
 								Reason:             "spiffe.csi.cert-manager.io",

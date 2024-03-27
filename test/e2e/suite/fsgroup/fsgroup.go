@@ -46,7 +46,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 				Namespace:    f.Namespace.Name,
 			},
 			Spec: corev1.PodSpec{
-				Volumes: []corev1.Volume{corev1.Volume{
+				Volumes: []corev1.Volume{{
 					Name: "csi-driver-spiffe",
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
@@ -63,13 +63,13 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 					RunAsGroup: pointer.Int64(1541),
 				},
 				Containers: []corev1.Container{
-					corev1.Container{
+					{
 						Name:            "my-container",
 						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
-							corev1.VolumeMount{
+							{
 								Name:      "csi-driver-spiffe",
 								MountPath: "/var/run/secrets/my-pod",
 							},
