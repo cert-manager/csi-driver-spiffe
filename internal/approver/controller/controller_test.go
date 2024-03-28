@@ -30,7 +30,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 	fakeclock "k8s.io/utils/clock/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -79,7 +79,7 @@ func Test_Reconcile(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
-							cmapi.CertificateRequestCondition{
+							{
 								Type:               cmapi.CertificateRequestConditionDenied,
 								Status:             cmmeta.ConditionTrue,
 								Reason:             "spiffe.csi.cert-manager.io",
@@ -109,7 +109,7 @@ func Test_Reconcile(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
-							cmapi.CertificateRequestCondition{
+							{
 								Type:               cmapi.CertificateRequestConditionApproved,
 								Status:             cmmeta.ConditionTrue,
 								Reason:             "spiffe.csi.cert-manager.io",
@@ -136,7 +136,7 @@ func Test_Reconcile(t *testing.T) {
 			a := &approver{
 				client:    fakeclient,
 				lister:    fakeclient,
-				log:       klogr.New(),
+				log:       ktesting.NewLogger(t, ktesting.DefaultConfig),
 				evaluator: test.evaluator,
 			}
 
@@ -144,8 +144,7 @@ func Test_Reconcile(t *testing.T) {
 			assert.Equalf(t, test.expError, err != nil, "%v", err)
 			assert.Equal(t, test.expResult, result)
 
-			for _, expectedObject := range test.expObjects {
-				expObj := expectedObject.(client.Object)
+			for _, expObj := range test.expObjects {
 				var actual client.Object
 				switch expObj.(type) {
 				case *cmapi.CertificateRequest:

@@ -1,17 +1,10 @@
 issues:
   exclude-rules:
     - linters:
-        - errcheck
-        - gofmt
         - gosec
-        - staticcheck
-        - gocritic
         - prealloc
         - errorlint
-        - loggercheck
-        - gosimple
         - containedctx
-        - ginkgolinter
       text: ".*"
 linters:
   # Explicitly define all enabled linters

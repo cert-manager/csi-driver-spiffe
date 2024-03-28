@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/ktesting"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
 )
@@ -37,7 +37,7 @@ func Test_manageCAFiles(t *testing.T) {
 	t.Log("starting manageCAFiles()")
 	rootCAsChan := make(chan []byte)
 	c := &camanager{
-		log:     klogr.New(),
+		log:     ktesting.NewLogger(t, ktesting.DefaultConfig),
 		rootCAs: rootca.NewMemory(ctx, rootCAsChan),
 	}
 	go func() {

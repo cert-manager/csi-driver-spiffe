@@ -95,7 +95,9 @@ func (f *file) start(ctx context.Context, watcher *fsnotify.Watcher) {
 			// Watch for remove events, since this is actually the syslink being
 			// changed in the volume mount.
 			if event.Op == fsnotify.Remove {
-				watcher.Remove(event.Name)
+				if err := watcher.Remove(event.Name); err != nil {
+					f.log.Error(err, "failed to remove file watch")
+				}
 				if err := watcher.Add(f.filepath); err != nil {
 					f.log.Error(err, "failed to add new file watch")
 				}

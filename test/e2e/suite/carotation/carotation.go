@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
@@ -83,24 +83,24 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 				Namespace: f.Namespace.Name,
 			},
 			Spec: corev1.PodSpec{
-				Volumes: []corev1.Volume{corev1.Volume{
+				Volumes: []corev1.Volume{{
 					Name: "csi-driver-spiffe",
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
 							Driver:   "spiffe.csi.cert-manager.io",
-							ReadOnly: pointer.Bool(true),
+							ReadOnly: ptr.To(true),
 						},
 					},
 				}},
 				ServiceAccountName: "test-pod",
 				Containers: []corev1.Container{
-					corev1.Container{
+					{
 						Name:            "my-container",
 						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
-							corev1.VolumeMount{
+							{
 								Name:      "csi-driver-spiffe",
 								MountPath: "/var/run/secrets/my-pod",
 							},
@@ -142,7 +142,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).ToNot(HaveOccurred())
 
 			Expect(caData).To(Equal(buf.Bytes()), "expected the Issuer CA bundle to equal the CA mounted to the pod file")
 		}

@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
@@ -46,12 +46,12 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 				Namespace:    f.Namespace.Name,
 			},
 			Spec: corev1.PodSpec{
-				Volumes: []corev1.Volume{corev1.Volume{
+				Volumes: []corev1.Volume{{
 					Name: "csi-driver-spiffe",
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
 							Driver:   "spiffe.csi.cert-manager.io",
-							ReadOnly: pointer.Bool(true),
+							ReadOnly: ptr.To(true),
 							VolumeAttributes: map[string]string{
 								"spiffe.csi.cert-manager.io/fs-group": "1541",
 							},
@@ -59,17 +59,17 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 					},
 				}},
 				SecurityContext: &corev1.PodSecurityContext{
-					RunAsUser:  pointer.Int64(1321),
-					RunAsGroup: pointer.Int64(1541),
+					RunAsUser:  ptr.To(int64(1321)),
+					RunAsGroup: ptr.To(int64(1541)),
 				},
 				Containers: []corev1.Container{
-					corev1.Container{
+					{
 						Name:            "my-container",
 						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
-							corev1.VolumeMount{
+							{
 								Name:      "csi-driver-spiffe",
 								MountPath: "/var/run/secrets/my-pod",
 							},
@@ -153,9 +153,9 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, pod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).ToNot(HaveOccurred())
 
-			Expect(buf.Bytes()).NotTo(HaveLen(0), "expected the file to have a non-zero entry")
+			Expect(buf.Bytes()).NotTo(BeEmpty(), "expected the file to have a non-zero entry")
 		}
 		Expect(f.Client().Delete(f.Context(), &pod)).NotTo(HaveOccurred())
 	})
@@ -165,7 +165,7 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		badPod := *podTemplate.DeepCopy()
 		badPod.Namespace = f.Namespace.Name
 		badPod.Spec.ServiceAccountName = serviceAccount.Name
-		badPod.Spec.SecurityContext.RunAsGroup = pointer.Int64(123)
+		badPod.Spec.SecurityContext.RunAsGroup = ptr.To(int64(123))
 		Expect(f.Client().Create(f.Context(), &badPod)).NotTo(HaveOccurred())
 
 		By("Waiting for pod to become ready")
@@ -185,9 +185,9 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, badPod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
-			cmd.Run()
+			Expect(cmd.Run()).To(HaveOccurred())
 
-			Expect(buf.Bytes()).To(HaveLen(0), "expected the file to have a zero entry")
+			Expect(buf.Bytes()).To(BeEmpty(), "expected the file to have a zero entry")
 		}
 		Expect(f.Client().Delete(f.Context(), &badPod)).NotTo(HaveOccurred())
 	})
