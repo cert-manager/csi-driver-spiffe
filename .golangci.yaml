@@ -2,9 +2,6 @@ issues:
   exclude-rules:
     - linters:
         - gosec
-        - prealloc
-        - errorlint
-        - containedctx
       text: ".*"
 linters:
   # Explicitly define all enabled linters
