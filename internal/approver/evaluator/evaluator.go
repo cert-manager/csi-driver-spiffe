@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	requiedUsages = []cmapi.KeyUsage{
+	requiredUsages = []cmapi.KeyUsage{
 		cmapi.UsageKeyEncipherment,
 		cmapi.UsageDigitalSignature,
 		cmapi.UsageClientAuth,
@@ -104,8 +104,8 @@ func (i *internal) Evaluate(req *cmapi.CertificateRequest) error {
 		return fmt.Errorf("request contains spec.isCA=true")
 	}
 
-	if !util.EqualKeyUsagesUnsorted(req.Spec.Usages, requiedUsages) {
-		return fmt.Errorf("request contains wrong usages, exp=%v got=%v", requiedUsages, req.Spec.Usages)
+	if !util.EqualKeyUsagesUnsorted(req.Spec.Usages, requiredUsages) {
+		return fmt.Errorf("request contains wrong usages, exp=%v got=%v", requiredUsages, req.Spec.Usages)
 	}
 
 	if err := i.validateIdentity(csr, req.Spec.Username); err != nil {
