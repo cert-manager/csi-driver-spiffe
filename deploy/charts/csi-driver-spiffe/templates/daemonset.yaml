@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-driver
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
