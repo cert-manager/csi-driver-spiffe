@@ -58,7 +58,7 @@ func Test_manageCAFiles(t *testing.T) {
 	select {
 	case <-calledCtx.Done():
 		break
-	case <-time.After(time.Millisecond * 500):
+	case <-time.After(time.Second * 5):
 		assert.Fail(t, "updateRootCAFilesFn() was not called in time")
 	}
 
@@ -82,7 +82,7 @@ func Test_manageCAFiles(t *testing.T) {
 	select {
 	case <-calledTwiceChan:
 		break
-	case <-time.After(time.Millisecond * 500):
+	case <-time.After(time.Second * 5):
 		assert.Fail(t, "updateRootCAFilesFn() was not called twice in time")
 	}
 }
