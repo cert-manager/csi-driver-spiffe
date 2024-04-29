@@ -150,7 +150,8 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		By("Ensuring files can be read from volume")
 		for _, filename := range []string{"tls.crt", "tls.key", "ca.crt"} {
 			buf := new(bytes.Buffer)
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, pod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
+			// #nosec G204
+			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, pod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
 			Expect(cmd.Run()).ToNot(HaveOccurred())
@@ -182,7 +183,8 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		By("Ensuring files cannot be read from volume")
 		for _, filename := range []string{"tls.crt", "tls.key", "ca.crt"} {
 			buf := new(bytes.Buffer)
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, badPod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
+			// #nosec G204
+			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, badPod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
 			Expect(cmd.Run()).To(HaveOccurred())

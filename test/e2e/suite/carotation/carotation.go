@@ -139,7 +139,8 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 
 		for _, podName := range []string{"test-pod-1", "test-pod-2"} {
 			buf := new(bytes.Buffer)
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
+			// #nosec G204
+			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
 			cmd.Stdout = buf
 			cmd.Stderr = GinkgoWriter
 			Expect(cmd.Run()).ToNot(HaveOccurred())
@@ -156,6 +157,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 		for _, podName := range []string{"test-pod-1", "test-pod-2"} {
 			Eventually(func() bool {
 				buf := new(bytes.Buffer)
+				// #nosec G204
 				cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
 				cmd.Stdout = buf
 				cmd.Stderr = GinkgoWriter

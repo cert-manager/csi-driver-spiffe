@@ -35,7 +35,7 @@ func Test_NewFile(t *testing.T) {
 	assert.Error(t, err, "expect file to not exist")
 
 	t.Log("should return the contents of the file with CertificatesPEM()")
-	assert.NoError(t, os.WriteFile(filepath, []byte("test data"), 0644))
+	assert.NoError(t, os.WriteFile(filepath, []byte("test data"), 0600))
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	t.Cleanup(func() {
@@ -50,7 +50,7 @@ func Test_NewFile(t *testing.T) {
 
 	t.Log("should not fire an event when the file doesn't change")
 	sub := f.Subscribe()
-	assert.NoError(t, os.WriteFile(filepath, []byte("test data"), 0644))
+	assert.NoError(t, os.WriteFile(filepath, []byte("test data"), 0600))
 	select {
 	case <-time.After(time.Millisecond * 50):
 	case <-sub:
@@ -58,7 +58,7 @@ func Test_NewFile(t *testing.T) {
 	}
 
 	t.Log("should fire an event when the file changes")
-	assert.NoError(t, os.WriteFile(filepath, []byte("new test data"), 0644))
+	assert.NoError(t, os.WriteFile(filepath, []byte("new test data"), 0600))
 
 	select {
 	case <-time.After(time.Millisecond * 50):
