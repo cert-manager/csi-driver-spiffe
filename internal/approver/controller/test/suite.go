@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/controller"
 	evaluatorfake "github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator/fake"
 
@@ -88,7 +89,6 @@ var _ = Context("Approval", func() {
 		Expect(controller.AddApprover(ctx, log, controller.Options{
 			Manager:   mgr,
 			Evaluator: evaluator,
-			IssuerRef: issuerRef,
 		})).NotTo(HaveOccurred())
 
 		By("Running Approver controller")
@@ -108,19 +108,18 @@ var _ = Context("Approval", func() {
 		cancel()
 	})
 
-	It("should ignore CertificateRequest that have the wrong IssuerRef", func() {
+	It("should ignore CertificateRequests that are missing the identity annotation", func() {
 		cr := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "cert-manager-csi-driver-spiffe-",
 				Namespace:    namespace.Name,
+				Annotations:  map[string]string{
+					// intentionally left blank
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request: []byte("request"),
-				IssuerRef: cmmeta.ObjectReference{
-					Name:  "not-spiffe-ca",
-					Kind:  "ClusterIssuer",
-					Group: "cert-manager.io",
-				},
+				Request:   []byte("request"),
+				IssuerRef: issuerRef,
 			},
 		}
 		Expect(cl.Create(ctx, &cr)).NotTo(HaveOccurred())
@@ -142,6 +141,9 @@ var _ = Context("Approval", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "cert-manager-csi-driver-spiffe-",
 				Namespace:    namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: "sentinel",
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
 				Request:   []byte("request"),
@@ -167,6 +169,9 @@ var _ = Context("Approval", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "cert-manager-csi-driver-spiffe-",
 				Namespace:    namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: "sentinel",
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
 				Request:   []byte("request"),

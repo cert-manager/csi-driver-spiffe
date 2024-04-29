@@ -34,9 +34,6 @@ spec:
           - --csi-driver-name={{ .Values.app.name }}
 
           - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
-          - --issuer-name={{ .Values.app.issuer.name }}
-          - --issuer-kind={{ .Values.app.issuer.kind }}
-          - --issuer-group={{ .Values.app.issuer.group }}
           - --trust-domain={{ .Values.app.trustDomain }}
 
           - --leader-election-namespace=$(POD_NAMESPACE)

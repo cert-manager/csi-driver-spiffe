@@ -19,7 +19,6 @@ package options
 import (
 	"time"
 
-	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/spf13/pflag"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/flags"
@@ -57,17 +56,12 @@ type OptionsController struct {
 
 // OptionsCertManager are options specific to cert-manager and the evaluator.
 type OptionsCertManager struct {
-	// TrustDomain is the Trust Domain the evaluator will enforce requests request
-	// for.
+	// TrustDomain is the Trust Domain the evaluator will enforce requests request for.
 	TrustDomain string
 
 	// CertificateRequestDuration is the duration the evaluator will enforce
 	// CertificateRequest request for.
 	CertificateRequestDuration time.Duration
-
-	// IssuerRef is the issuer reference that will be used to match on created
-	// CertificateRequests.
-	IssuerRef cmmeta.ObjectReference
 }
 
 func New() *Options {
@@ -85,12 +79,27 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration which is enforced for requests to have.")
 
-	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
-		"Name of issuer which is matched against to evaluate on.")
-	fs.StringVar(&o.CertManager.IssuerRef.Kind, "issuer-kind", "ClusterIssuer",
-		"Kind of issuer which is matched against to evaluate on.")
-	fs.StringVar(&o.CertManager.IssuerRef.Group, "issuer-group", "cert-manager.io",
-		"Group of issuer which is matched against to evaluate on.")
+	// allow issuer-* args to still be passed to avoid a backwards incompatible change
+	var dummyIssuerRefName, dummyIssuerRefKind, dummyIssuerRefGroup string
+
+	fs.StringVar(&dummyIssuerRefName, "issuer-name", "", "Deprecated; value is ignored")
+	fs.StringVar(&dummyIssuerRefKind, "issuer-kind", "", "Deprecated; value is ignored")
+	fs.StringVar(&dummyIssuerRefGroup, "issuer-group", "", "Deprecated; value is ignored")
+
+	err := fs.MarkDeprecated("issuer-name", "issuer-name is deprecated and will be ignored")
+	if err != nil {
+		panic("failed to mark issuer-name flag as deprecated; this is an internal programming error")
+	}
+
+	err = fs.MarkDeprecated("issuer-kind", "issuer-kind is deprecated and will be ignored")
+	if err != nil {
+		panic("failed to mark issuer-kind flag as deprecated; this is an internal programming error")
+	}
+
+	err = fs.MarkDeprecated("issuer-group", "issuer-group is deprecated and will be ignored")
+	if err != nil {
+		panic("failed to mark issuer-group flag as deprecated; this is an internal programming error")
+	}
 }
 
 func (o *Options) addControllerFlags(fs *pflag.FlagSet) {

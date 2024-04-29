@@ -86,7 +86,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			})
 
 			if err := controller.AddApprover(ctx, opts.Logr, controller.Options{
-				IssuerRef: opts.CertManager.IssuerRef,
 				Evaluator: evaluator,
 				Manager:   mgr,
 			}); err != nil {

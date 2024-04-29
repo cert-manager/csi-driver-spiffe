@@ -33,6 +33,7 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -107,13 +108,17 @@ var _ = framework.CasesDescribe("Approval", func() {
 
 	It("should approve a valid request", func() {
 		By("Creating valid request")
+		spiffeID := fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)
 		certificateRequest := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-request-",
 				Namespace:    f.Namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)),
+				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, spiffeID),
 				Duration:  &metav1.Duration{Duration: time.Hour},
 				IssuerRef: f.Config().IssuerRef,
 				IsCA:      false,
@@ -131,13 +136,18 @@ var _ = framework.CasesDescribe("Approval", func() {
 
 	It("should deny a request with the wrong duration", func() {
 		By("Creating request with wrong duration")
+
+		spiffeID := fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)
 		certificateRequest := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-request-",
 				Namespace:    f.Namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)),
+				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, spiffeID),
 				Duration:  &metav1.Duration{Duration: time.Hour * 3},
 				IssuerRef: f.Config().IssuerRef,
 				IsCA:      false,
@@ -155,13 +165,19 @@ var _ = framework.CasesDescribe("Approval", func() {
 
 	It("should deny a request with the wrong SPIFFE ID", func() {
 		By("Creating request with wrong SPIFFE ID")
+
+		wrongSPIFFEID := fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, "not-the-right-sa")
+
 		certificateRequest := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-request-",
 				Namespace:    f.Namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: wrongSPIFFEID,
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, "not-the-right-sa")),
+				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, wrongSPIFFEID),
 				Duration:  &metav1.Duration{Duration: time.Hour},
 				IssuerRef: f.Config().IssuerRef,
 				IsCA:      false,
@@ -179,13 +195,19 @@ var _ = framework.CasesDescribe("Approval", func() {
 
 	It("should deny a request with the wrong key usages", func() {
 		By("Creating request with wrong key usages")
+
+		spiffeID := fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)
+
 		certificateRequest := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-request-",
 				Namespace:    f.Namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)),
+				Request:   genCSRPEM(pk, cmapi.ECDSAKeyAlgorithm, spiffeID),
 				Duration:  &metav1.Duration{Duration: time.Hour},
 				IssuerRef: f.Config().IssuerRef,
 				IsCA:      false,
@@ -206,13 +228,19 @@ var _ = framework.CasesDescribe("Approval", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating request with wrong key type")
+
+		spiffeID := fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)
+
 		certificateRequest := cmapi.CertificateRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "test-request-",
 				Namespace:    f.Namespace.Name,
+				Annotations: map[string]string{
+					annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
+				},
 			},
 			Spec: cmapi.CertificateRequestSpec{
-				Request:   genCSRPEM(pk, cmapi.RSAKeyAlgorithm, fmt.Sprintf("spiffe://foo.bar/ns/%s/sa/%s", f.Namespace.Name, serviceAccount.Name)),
+				Request:   genCSRPEM(pk, cmapi.RSAKeyAlgorithm, spiffeID),
 				Duration:  &metav1.Duration{Duration: time.Hour},
 				IssuerRef: f.Config().IssuerRef,
 				IsCA:      false,
