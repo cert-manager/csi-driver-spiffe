@@ -23,10 +23,16 @@ rules:
   resources: ["certificaterequests/status"]
   verbs: ["update"]
 
+{{- if .Values.app.approver.signerName }}
 - apiGroups: ["cert-manager.io"]
   resources: ["signers"]
   verbs: ["approve"]
   resourceNames: ["{{.Values.app.approver.signerName}}"]
+{{- else }}
+- apiGroups: ["cert-manager.io"]
+  resources: ["signers"]
+  verbs: ["approve"]
+{{- end }}
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create", "patch"]
