@@ -188,8 +188,8 @@
       "type": "object"
     },
     "helm-values.app.approver.signerName": {
-      "default": "clusterissuers.cert-manager.io/*",
-      "description": "The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval",
+      "default": "",
+      "description": "A signer name that the csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval. Defaults to empty which allows approval for all signers",
       "type": "string"
     },
     "helm-values.app.certificateRequestDuration": {

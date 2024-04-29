@@ -326,10 +326,10 @@ Number of replicas of the approver to run.
 #### **app.approver.signerName** ~ `string`
 > Default value:
 > ```yaml
-> clusterissuers.cert-manager.io/*
+> ""
 > ```
 
-The signer name that csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval
+A signer name that the csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval. Defaults to empty which allows approval for all signers
 #### **app.approver.readinessProbe.port** ~ `number`
 > Default value:
 > ```yaml
