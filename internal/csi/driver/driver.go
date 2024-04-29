@@ -160,25 +160,27 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		certificateRequestAnnotations: sanitizedAnnotations,
 	}
 
-	// Set sane defaults.
 	if len(d.certFileName) == 0 {
 		d.certFileName = "tls.crt"
 	}
+
 	if len(d.keyFileName) == 0 {
 		d.keyFileName = "tls.key"
 	}
+
 	if len(d.caFileName) == 0 {
 		d.caFileName = "ca.crt"
 	}
+
 	if d.certificateRequestDuration == 0 {
 		d.certificateRequestDuration = time.Hour
 	}
 
-	var err error
 	store, err := storage.NewFilesystem(d.log, opts.DataRoot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup filesystem: %w", err)
 	}
+
 	// Used by clients to set the stored file's file-system group before
 	// mounting.
 	store.FSGroupVolumeAttributeKey = "spiffe.csi.cert-manager.io/fs-group"
