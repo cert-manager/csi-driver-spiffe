@@ -21,8 +21,10 @@ import (
 	"crypto"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,6 +41,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
 
+	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
 	"github.com/cert-manager/csi-driver-spiffe/internal/version"
 )
@@ -139,6 +142,12 @@ type Driver struct {
 
 // New constructs a new Driver instance.
 func New(log logr.Logger, opts Options) (*Driver, error) {
+	sanitizedAnnotations, err := sanitizeAnnotations(opts.CertificateRequestAnnotations)
+	if err != nil {
+		log.Error(err, "some custom annotations were removed")
+		// don't exit, not a fatal error as sanitizeAnnotations will trim bad annotations
+	}
+
 	d := &Driver{
 		log:          log.WithName("csi"),
 		trustDomain:  opts.TrustDomain,
@@ -148,28 +157,30 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		rootCAs:      opts.RootCAs,
 
 		certificateRequestDuration:    opts.CertificateRequestDuration,
-		certificateRequestAnnotations: opts.CertificateRequestAnnotations,
+		certificateRequestAnnotations: sanitizedAnnotations,
 	}
 
-	// Set sane defaults.
 	if len(d.certFileName) == 0 {
 		d.certFileName = "tls.crt"
 	}
+
 	if len(d.keyFileName) == 0 {
 		d.keyFileName = "tls.key"
 	}
+
 	if len(d.caFileName) == 0 {
 		d.caFileName = "ca.crt"
 	}
+
 	if d.certificateRequestDuration == 0 {
 		d.certificateRequestDuration = time.Hour
 	}
 
-	var err error
 	store, err := storage.NewFilesystem(d.log, opts.DataRoot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup filesystem: %w", err)
 	}
+
 	// Used by clients to set the stored file's file-system group before
 	// mounting.
 	store.FSGroupVolumeAttributeKey = "spiffe.csi.cert-manager.io/fs-group"
@@ -278,9 +289,13 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 	if err != nil {
 		return nil, fmt.Errorf("internal error crafting X.509 URI, this is a bug, please report on GitHub: %w", err)
 	}
-	annotations := map[string]string{"spiffe.csi.cert-manager.io/identity": spiffeID}
+
+	crAnnotations := map[string]string{
+		annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
+	}
+
 	for key, value := range d.certificateRequestAnnotations {
-		annotations[key] = value
+		crAnnotations[key] = value
 	}
 
 	return &manager.CertificateRequestBundle{
@@ -297,7 +312,7 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 			cmapi.UsageClientAuth,
 		},
 		IssuerRef:   d.issuerRef,
-		Annotations: annotations,
+		Annotations: crAnnotations,
 	}, nil
 }
 
@@ -343,4 +358,21 @@ func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, cha
 	}
 
 	return nil
+}
+
+func sanitizeAnnotations(in map[string]string) (map[string]string, error) {
+	out := map[string]string{}
+
+	var errs []error
+
+	for key, value := range in {
+		if strings.HasPrefix(key, annotations.Prefix) {
+			errs = append(errs, fmt.Errorf("custom annotation %q was not valid; must not begin with %s", key, annotations.Prefix))
+			continue
+		}
+
+		out[key] = value
+	}
+
+	return out, errors.Join(errs...)
 }

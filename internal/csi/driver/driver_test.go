@@ -21,6 +21,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"reflect"
 	"testing"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -30,6 +31,7 @@ import (
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
 )
 
@@ -88,4 +90,49 @@ func Test_writeKeyPair(t *testing.T) {
 
 	_, err = x509svid.Parse(files["crt.pem"], files["key.pem"])
 	require.NoError(t, err)
+}
+
+func Test_DriverAnnotationSanitization(t *testing.T) {
+	badAnnotation := annotations.Prefix + "/customannotation"
+
+	tests := map[string]struct {
+		in          map[string]string
+		expectErr   bool
+		expectedOut map[string]string
+	}{
+		"bad annotations are removed": {
+			in: map[string]string{
+				badAnnotation:              "abc123",
+				"example.com/myannotation": "should-not-be-removed",
+			},
+			expectErr: true,
+			expectedOut: map[string]string{
+				"example.com/myannotation": "should-not-be-removed",
+			},
+		},
+		"good annotations don't produce an error": {
+			in: map[string]string{
+				"example.com/myannotation": "should-not-be-removed",
+			},
+			expectErr: false,
+			expectedOut: map[string]string{
+				"example.com/myannotation": "should-not-be-removed",
+			},
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			out, err := sanitizeAnnotations(test.in)
+
+			if err != nil != test.expectErr {
+				t.Errorf("expectErr=%v but err=%v", test.expectErr, err)
+			}
+
+			if !reflect.DeepEqual(out, test.expectedOut) {
+				t.Errorf("wanted out=%v but got %v", test.expectedOut, out)
+			}
+		})
+	}
 }

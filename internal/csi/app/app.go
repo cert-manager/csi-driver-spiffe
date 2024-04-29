@@ -19,7 +19,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -62,15 +61,6 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				log.Info("propagating root CA bundle disabled")
 			}
 
-			annotations := map[string]string{}
-			for key, value := range opts.CertManager.CertificateRequestAnnotations {
-				if strings.HasPrefix(key, "spiffe.csi.cert-manager.io") {
-					log.Error(nil, "custom annotations must not begin with spiffe.csi.cert-manager.io", "annotation-key", key)
-				} else {
-					annotations[key] = value
-				}
-			}
-
 			driver, err := driver.New(opts.Logr, driver.Options{
 				DriverName: opts.DriverName,
 				NodeID:     opts.Driver.NodeID,
@@ -79,7 +69,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 				RestConfig:                    opts.RestConfig,
 				TrustDomain:                   opts.CertManager.TrustDomain,
-				CertificateRequestAnnotations: annotations,
+				CertificateRequestAnnotations: opts.CertManager.CertificateRequestAnnotations,
 				CertificateRequestDuration:    opts.CertManager.CertificateRequestDuration,
 				IssuerRef:                     opts.CertManager.IssuerRef,
 
