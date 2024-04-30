@@ -30,14 +30,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator"
 )
 
 type Options struct {
-	// IssuerRef will be used to match against CertificateRequest that need
-	// evaluation.
-	IssuerRef cmmeta.ObjectReference
-
 	// Evaluator will be used to evaluate whether CertificateRequests should be
 	// Approved or Denied.
 	Evaluator evaluator.Interface
@@ -60,10 +57,6 @@ type approver struct {
 	// objects.
 	lister client.Reader
 
-	// issuerRef is the issuerRef that will be matched on CertificateRequests for
-	// evaluation.
-	issuerRef cmmeta.ObjectReference
-
 	// evaluator evaluates matched CertificateRequests for whether they should be
 	// approved or denied.
 	evaluator evaluator.Interface
@@ -75,7 +68,6 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 		log:       log.WithName("controller"),
 		client:    opts.Manager.GetClient(),
 		lister:    opts.Manager.GetCache(),
-		issuerRef: opts.IssuerRef,
 		evaluator: opts.Evaluator,
 	}
 
@@ -103,7 +95,10 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 				return false
 			}
 
-			return req.Spec.IssuerRef == a.issuerRef
+			// We expect that all csi-driver-spiffe certificates will have the identity
+			// annotation, so check for its existence as a final filter
+			_, annotationExists := req.ObjectMeta.Annotations[annotations.SPIFFEIdentityAnnnotationKey]
+			return annotationExists
 		})).
 		Complete(a)
 }
