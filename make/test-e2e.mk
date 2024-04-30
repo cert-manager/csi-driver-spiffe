@@ -74,12 +74,15 @@ test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumeMounts[0].mountPath=/va
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.sourceCABundle=/var/run/secrets/cert-manager-csi-driver-spiffe/ca.crt
 test-e2e-deps: install
 
+E2E_FOCUS ?=
+
 .PHONY: test-e2e
 ## e2e end-to-end tests
 ## @category Testing
 test-e2e: test-e2e-deps | kind-cluster $(NEEDS_GINKGO) $(NEEDS_KUBECTL) $(ARTIFACTS)
 	$(GINKGO) \
 		--output-dir=$(ARTIFACTS) \
+		--focus="$(E2E_FOCUS)" \
 		--junit-report=junit-go-e2e.xml \
 		./test/e2e/ \
 		-ldflags $(go_manager_ldflags) \
