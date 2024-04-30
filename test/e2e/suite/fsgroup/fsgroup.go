@@ -17,19 +17,21 @@ limitations under the License.
 package fsgroup
 
 import (
-	"bytes"
-	"os/exec"
-
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
+	"github.com/cert-manager/csi-driver-spiffe/test/e2e/util"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+)
+
+const (
+	mountPath     = "/var/run/secrets/my-pod"
+	containerName = "my-container"
 )
 
 var _ = framework.CasesDescribe("FSGroup", func() {
@@ -64,14 +66,14 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 				},
 				Containers: []corev1.Container{
 					{
-						Name:            "my-container",
+						Name:            containerName,
 						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								Name:      "csi-driver-spiffe",
-								MountPath: "/var/run/secrets/my-pod",
+								MountPath: mountPath,
 							},
 						},
 					},
@@ -137,27 +139,14 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		Expect(f.Client().Create(f.Context(), &pod)).NotTo(HaveOccurred())
 
 		By("Waiting for pod to become ready")
-		Eventually(func() bool {
-			Expect(f.Client().Get(f.Context(), client.ObjectKey{Namespace: f.Namespace.Name, Name: pod.Name}, &pod)).NotTo(HaveOccurred())
-			for _, c := range pod.Status.Conditions {
-				if c.Type == corev1.PodReady {
-					return c.Status == corev1.ConditionTrue
-				}
-			}
-			return false
-		}, "180s", "1s").Should(BeTrue(), "expected pod to become ready in time")
+		Expect(util.WaitForPodReady(f, &pod)).NotTo(HaveOccurred())
 
 		By("Ensuring files can be read from volume")
-		for _, filename := range []string{"tls.crt", "tls.key", "ca.crt"} {
-			buf := new(bytes.Buffer)
-			// #nosec G204
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, pod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
-			cmd.Stdout = buf
-			cmd.Stderr = GinkgoWriter
-			Expect(cmd.Run()).ToNot(HaveOccurred())
+		bundle, err := util.ReadCertFromMountPath(f, mountPath, pod.Name, containerName)
+		Expect(err).NotTo(HaveOccurred())
 
-			Expect(buf.Bytes()).NotTo(BeEmpty(), "expected the file to have a non-zero entry")
-		}
+		Expect(bundle.CheckNotEmpty()).NotTo(HaveOccurred())
+
 		Expect(f.Client().Delete(f.Context(), &pod)).NotTo(HaveOccurred())
 	})
 
@@ -169,28 +158,15 @@ var _ = framework.CasesDescribe("FSGroup", func() {
 		badPod.Spec.SecurityContext.RunAsGroup = ptr.To(int64(123))
 		Expect(f.Client().Create(f.Context(), &badPod)).NotTo(HaveOccurred())
 
-		By("Waiting for pod to become ready")
-		Eventually(func() bool {
-			Expect(f.Client().Get(f.Context(), client.ObjectKey{Namespace: f.Namespace.Name, Name: badPod.Name}, &badPod)).NotTo(HaveOccurred())
-			for _, c := range badPod.Status.Conditions {
-				if c.Type == corev1.PodReady {
-					return c.Status == corev1.ConditionTrue
-				}
-			}
-			return false
-		}, "180s", "1s").Should(BeTrue(), "expected pod to become ready in time")
+		By("Waiting for bad pod to become ready")
+		Expect(util.WaitForPodReady(f, &badPod)).NotTo(HaveOccurred())
 
 		By("Ensuring files cannot be read from volume")
-		for _, filename := range []string{"tls.crt", "tls.key", "ca.crt"} {
-			buf := new(bytes.Buffer)
-			// #nosec G204
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, badPod.Name, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/"+filename)
-			cmd.Stdout = buf
-			cmd.Stderr = GinkgoWriter
-			Expect(cmd.Run()).To(HaveOccurred())
+		bundle, err := util.ReadCertFromMountPath(f, mountPath, badPod.Name, containerName)
+		Expect(err).To(HaveOccurred())
 
-			Expect(buf.Bytes()).To(BeEmpty(), "expected the file to have a zero entry")
-		}
+		Expect(bundle).To(BeNil())
+
 		Expect(f.Client().Delete(f.Context(), &badPod)).NotTo(HaveOccurred())
 	})
 })
