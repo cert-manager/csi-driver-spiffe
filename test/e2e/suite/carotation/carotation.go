@@ -18,7 +18,7 @@ package carotation
 
 import (
 	"bytes"
-	"os/exec"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -27,9 +27,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
+	"github.com/cert-manager/csi-driver-spiffe/test/e2e/util"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+)
+
+const (
+	mountPath     = "/var/run/secrets/my-pod"
+	containerName = "my-container"
+
+	pollInterval = 1 * time.Second
+	pollTimeout  = 60 * time.Second
 )
 
 var _ = framework.CasesDescribe("CA rotation", func() {
@@ -95,14 +104,14 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 				ServiceAccountName: "test-pod",
 				Containers: []corev1.Container{
 					{
-						Name:            "my-container",
+						Name:            containerName,
 						Image:           "docker.io/library/busybox:1.36.1-musl",
 						ImagePullPolicy: corev1.PullNever,
 						Command:         []string{"sleep", "10000"},
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								Name:      "csi-driver-spiffe",
-								MountPath: "/var/run/secrets/my-pod",
+								MountPath: mountPath,
 							},
 						},
 					},
@@ -116,20 +125,9 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 		Expect(f.Client().Create(f.Context(), &pod2)).NotTo(HaveOccurred())
 
 		By("Waiting for pods to become ready")
-		for _, podName := range []string{"test-pod-1", "test-pod-2"} {
-			Eventually(func() bool {
-				var pod corev1.Pod
-				Expect(f.Client().Get(f.Context(), client.ObjectKey{Namespace: f.Namespace.Name, Name: podName}, &pod)).NotTo(HaveOccurred())
 
-				for _, c := range pod.Status.Conditions {
-					if c.Type == corev1.PodReady {
-						return c.Status == corev1.ConditionTrue
-					}
-				}
-
-				return false
-			}, "20s", "1s").Should(BeTrue(), "expected pod to become ready in time")
-		}
+		Expect(util.WaitForPodReady(f, &pod1)).NotTo(HaveOccurred())
+		Expect(util.WaitForPodReady(f, &pod2)).NotTo(HaveOccurred())
 
 		By("Comparing the CA stored in secret with CA stored in the Secret")
 		var caSecret corev1.Secret
@@ -137,34 +135,31 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 		caData, ok := caSecret.Data["ca.crt"]
 		Expect(ok).To(BeTrue(), "expected 'ca.crt' to be present in Issuer CA Secret")
 
-		for _, podName := range []string{"test-pod-1", "test-pod-2"} {
-			buf := new(bytes.Buffer)
-			// #nosec G204
-			cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
-			cmd.Stdout = buf
-			cmd.Stderr = GinkgoWriter
-			Expect(cmd.Run()).ToNot(HaveOccurred())
+		pod1Bundle, err := util.ReadCertFromMountPath(f, mountPath, pod1.Name, containerName)
+		Expect(err).NotTo(HaveOccurred())
 
-			Expect(caData).To(Equal(buf.Bytes()), "expected the Issuer CA bundle to equal the CA mounted to the pod file")
-		}
+		pod2Bundle, err := util.ReadCertFromMountPath(f, mountPath, pod2.Name, containerName)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(caData).To(Equal(pod1Bundle.CAPEM), "expected Issuer CA bundle to equal CA mounted in pod1 file")
+
+		Expect(caData).To(Equal(pod2Bundle.CAPEM), "expected Issuer CA bundle to equal CA mounted in pod2 file")
 
 		By("Updating the CA data in Secret")
+
 		newCAData := append([]byte("# This is a comment\n"), caData...)
+
 		caSecret.Data["ca.crt"] = newCAData
 		Expect(f.Client().Update(f.Context(), &caSecret)).NotTo(HaveOccurred())
 
 		By("Waiting for the new CA data to be written to pod volumes")
-		for _, podName := range []string{"test-pod-1", "test-pod-2"} {
+		for _, podName := range []string{pod1.Name, pod2.Name} {
 			Eventually(func() bool {
-				buf := new(bytes.Buffer)
-				// #nosec G204
-				cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n"+f.Namespace.Name, podName, "-cmy-container", "--", "cat", "/var/run/secrets/my-pod/ca.crt")
-				cmd.Stdout = buf
-				cmd.Stderr = GinkgoWriter
-				Expect(cmd.Run()).ToNot(HaveOccurred())
+				newBundle, err := util.ReadCertFromMountPath(f, mountPath, podName, containerName)
+				Expect(err).ToNot(HaveOccurred())
 
-				return bytes.Equal(buf.Bytes(), newCAData)
-			}, "100s", "1s").Should(BeTrue(), "expected the CA data to be updated on pod file")
+				return bytes.Equal(newBundle.CAPEM, newCAData)
+			}).WithTimeout(pollTimeout).WithPolling(pollInterval).WithContext(f.Context()).Should(BeTrue(), "expected the CA data to be updated on pod file")
 		}
 
 		By("Cleaning up resources")
