@@ -38,18 +38,12 @@ e2e-setup-cert-manager: | kind-cluster $(NEEDS_HELM) $(NEEDS_KUBECTL)
 		cert-manager cert-manager >/dev/null
 
 .PHONY: e2e-setup-example
-e2e-setup-example: | e2e-setup-cert-manager kind-cluster $(NEEDS_KUBECTL)
+e2e-setup-example: | e2e-setup-cert-manager kind-cluster $(NEEDS_KUBECTL) $(NEEDS_CMCTL)
 	$(KUBECTL) apply --server-side -f ./deploy/example/clusterissuer.yaml
-
 	sleep 3
-
-	cr_name=$$($(KUBECTL) get cr -n cert-manager --no-headers -o custom-columns=":metadata.name") && \
-	$(KUBECTL) patch cr $$cr_name \
-		-n cert-manager \
-		--subresource status \
-		--type merge \
-		--patch '{"status": {"conditions": [{"type": "Approved", "status": "True", "reason": "manual"}]}}'
-
+	@# We can rely on the CR being called csi-driver-spiffe-ca-1 in cert-manager v1.13+ thanks to
+	@# the StableCertificateRequestName feature gate being beta
+	$(CMCTL) approve -n cert-manager csi-driver-spiffe-ca-1 || :
 	$(KUBECTL) wait --for=condition=ready clusterissuer csi-driver-spiffe-ca
 
 # The "install" target can be run on its own with any currently active cluster,
