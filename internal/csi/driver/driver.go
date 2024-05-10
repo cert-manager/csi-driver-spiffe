@@ -38,8 +38,12 @@ import (
 	"github.com/cert-manager/csi-lib/storage"
 	"github.com/go-logr/logr"
 	"gopkg.in/square/go-jose.v2/jwt"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
@@ -73,7 +77,7 @@ type Options struct {
 	CertificateRequestDuration time.Duration
 
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
-	IssuerRef cmmeta.ObjectReference
+	IssuerRef *cmmeta.ObjectReference
 
 	// CertificateFileName is the name of the file that the signed certificate
 	// will be written to inside the Pod's volume.
@@ -98,6 +102,12 @@ type Options struct {
 	// CAFileName. If the root CA certificate data changes, all managed volume's
 	// file will be updated.
 	RootCAs rootca.Interface
+
+	// IssuanceConfigMapName is the name of the ConfigMap to watch for issuance configuration.
+	IssuanceConfigMapName string
+
+	// IssuanceConfigMapNamespace is the namespace of the ConfigMap to watch for issuance configuration
+	IssuanceConfigMapNamespace string
 }
 
 // Driver is used for running the actual CSI driver. Driver will respond to
@@ -117,9 +127,20 @@ type Driver struct {
 	// created CertificateRequests.
 	certificateRequestDuration time.Duration
 
-	// issuerRef is the issuerRef that will be set on all created
-	// CertificateRequests.
-	issuerRef cmmeta.ObjectReference
+	// activeIssuerRef is the issuerRef that will be set on all created CertificateRequests.
+	// Can be changed at runtime via runtime configuration (i.e. reading from a ConfigMap)
+	// Not to be confused with originalIssuerRef, which is an issuerRef optionally passed in
+	// via CLI args.
+	activeIssuerRef *cmmeta.ObjectReference
+
+	// originalIssuerRef is the issuerRef passed into the driver at startup. This will be used
+	// if no runtime configuration (ConfigMap configuration) is found, or if the ConfigMap for
+	// runtime configuration is deleted.
+	originalIssuerRef *cmmeta.ObjectReference
+
+	// activeIssuerRefMutex is used to control changes to the activeIssuerRef which can happen
+	// concurrently with a request to issue a new cert
+	activeIssuerRefMutex *sync.RWMutex
 
 	// certFileName, keyFileName, caFileName are the names used when writing file
 	// to volumes.
@@ -138,6 +159,17 @@ type Driver struct {
 	// camanager is used to update all managed volumes with the current root CA
 	// certificates PEM.
 	camanager *camanager
+
+	// kubernetesClient is used to watch ConfigMaps for issuance configuration
+	kubernetesClient client.WithWatch
+
+	// issuanceConfigMapName is the name of a ConfigMap which will be
+	// watched for issuance configuration at runtime
+	issuanceConfigMapName string
+
+	// issuanceConfigMapNamespace is the name of a ConfigMap which will be
+	// watched for issuance configuration at runtime
+	issuanceConfigMapNamespace string
 }
 
 // New constructs a new Driver instance.
@@ -148,16 +180,39 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		// don't exit, not a fatal error as sanitizeAnnotations will trim bad annotations
 	}
 
+	originalIssuerRef, err := handleOriginalIssuerRef(opts.IssuerRef)
+	if err != nil && err != errNoOriginalIssuer {
+		return nil, err
+	}
+
+	if originalIssuerRef == nil && (opts.IssuanceConfigMapName == "" || opts.IssuanceConfigMapNamespace == "") {
+		// if no install-time issuer was configured, runtime issuance details are not optional
+		return nil, fmt.Errorf("runtime issuance configuration is required if no issuer is provided at startup")
+	}
+
 	d := &Driver{
 		log:          log.WithName("csi"),
 		trustDomain:  opts.TrustDomain,
 		certFileName: opts.CertificateFileName,
 		keyFileName:  opts.KeyFileName,
-		issuerRef:    opts.IssuerRef,
-		rootCAs:      opts.RootCAs,
+
+		// we check if we can set activeIssuerRef later
+		activeIssuerRef:   nil,
+		originalIssuerRef: originalIssuerRef,
+
+		activeIssuerRefMutex: &sync.RWMutex{},
+
+		rootCAs: opts.RootCAs,
 
 		certificateRequestDuration:    opts.CertificateRequestDuration,
 		certificateRequestAnnotations: sanitizedAnnotations,
+
+		issuanceConfigMapName:      opts.IssuanceConfigMapName,
+		issuanceConfigMapNamespace: opts.IssuanceConfigMapNamespace,
+	}
+
+	if d.originalIssuerRef != nil {
+		d.activeIssuerRef = d.originalIssuerRef
 	}
 
 	if len(d.certFileName) == 0 {
@@ -194,6 +249,13 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 		return nil, fmt.Errorf("failed to build cert-manager client: %w", err)
 	}
 
+	k8sClient, err := client.NewWithWatch(opts.RestConfig, client.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to build kubernetes watcher client: %w", err)
+	}
+
+	d.kubernetesClient = k8sClient
+
 	mngrLog := d.log.WithName("manager")
 	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
@@ -222,7 +284,150 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 	return d, nil
 }
 
-// Run is a blocking func that run the CSI driver.
+// watchRuntimeConfigurationSource should be called in a goroutine to watch a ConfigMap for runtime configuration
+func (d *Driver) watchRuntimeConfigurationSource(ctx context.Context) {
+	logger := d.log.WithName("runtime-config-watcher").WithValues("config-map-name", d.issuanceConfigMapName, "config-map-namespace", d.issuanceConfigMapNamespace)
+
+LOOP:
+	for {
+		logger.Info("Starting / restarting watcher for runtime configuration")
+		cmList := &corev1.ConfigMapList{}
+
+		// First create a watcher. This is in a labelled loop in case the watcher dies for some reason
+		// while we're running - in that case, we don't want to give up entirely on watching for runtime config
+		// but instead we want to recreate the watcher.
+
+		watcher, err := d.kubernetesClient.Watch(ctx, cmList, &client.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector("metadata.name", d.issuanceConfigMapName),
+			Namespace:     d.issuanceConfigMapNamespace,
+		})
+
+		if err != nil {
+			logger.Error(err, "Failed to create ConfigMap watcher; will retry in 5s")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		for {
+			// Now loop indefinitely until the main context cancels or we get an event to process.
+			// If the main context cancels, we break out of the outer loop and this function returns.
+			// If we get an event, we first check whether the channel closed. If so, we recreate the watcher by continuing
+			// the outer loop.
+			select {
+			case <-ctx.Done():
+				logger.Info("Received context cancellation, shutting down runtime configuration watcher")
+				watcher.Stop()
+				break LOOP
+
+			case event, open := <-watcher.ResultChan():
+				if !open {
+					logger.Info("Received closed channel from ConfigMap watcher, will recreate")
+					watcher.Stop()
+					continue LOOP
+				}
+
+				switch event.Type {
+				case watch.Deleted:
+					d.handleRuntimeConfigIssuerDeletion(logger)
+
+				case watch.Added:
+					err := d.handleRuntimeConfigIssuerChange(logger, event)
+					if err != nil {
+						logger.Error(err, "Failed to handle new runtime configuration for issuerRef")
+					}
+
+				case watch.Modified:
+					err := d.handleRuntimeConfigIssuerChange(logger, event)
+					if err != nil {
+						logger.Error(err, "Failed to handle runtime configuration issuerRef change")
+					}
+
+				case watch.Bookmark:
+					// Ignore
+
+				case watch.Error:
+					err, ok := event.Object.(error)
+					if !ok {
+						logger.Error(nil, "Got an error event when watching runtime configuration but unable to determine further information")
+					} else {
+						logger.Error(err, "Got an error event when watching runtime configuration")
+					}
+
+				default:
+					logger.Info("Got unknown event for runtime configuration ConfigMap; ignoring", "event-type", string(event.Type))
+				}
+			}
+		}
+	}
+
+	logger.Info("Stopped runtime configuration watcher")
+}
+
+const (
+	issuerNameKey  = "issuer-name"
+	issuerKindKey  = "issuer-kind"
+	issuerGroupKey = "issuer-group"
+)
+
+func (d *Driver) handleRuntimeConfigIssuerChange(logger logr.Logger, event watch.Event) error {
+	d.activeIssuerRefMutex.Lock()
+	defer d.activeIssuerRefMutex.Unlock()
+
+	cm, ok := event.Object.(*corev1.ConfigMap)
+	if !ok {
+		return fmt.Errorf("got unexpected type for runtime configuration source; this is likely a programming error")
+	}
+
+	issuerRef := &cmmeta.ObjectReference{}
+
+	var dataErrs []error
+	var exists bool
+
+	issuerRef.Name, exists = cm.Data[issuerNameKey]
+	if !exists || len(issuerRef.Name) == 0 {
+		dataErrs = append(dataErrs, fmt.Errorf("missing key/value in ConfigMap data: %s", issuerNameKey))
+	}
+
+	issuerRef.Kind, exists = cm.Data[issuerKindKey]
+	if !exists || len(issuerRef.Kind) == 0 {
+		dataErrs = append(dataErrs, fmt.Errorf("missing key/value in ConfigMap data: %s", issuerKindKey))
+	}
+
+	issuerRef.Group, exists = cm.Data[issuerGroupKey]
+	if !exists || len(issuerRef.Group) == 0 {
+		dataErrs = append(dataErrs, fmt.Errorf("missing key/value in ConfigMap data; %s", issuerGroupKey))
+	}
+
+	if len(dataErrs) > 0 {
+		return errors.Join(dataErrs...)
+	}
+
+	// we now have a full issuerRef
+	// TODO: check if the issuer exists by querying for the CRD?
+
+	d.activeIssuerRef = issuerRef
+
+	logger.Info("Changed active issuerRef in response to runtime configuration ConfigMap", "issuer-name", d.activeIssuerRef.Name, "issuer-kind", d.activeIssuerRef.Kind, "issuer-group", d.activeIssuerRef.Group)
+
+	return nil
+}
+
+func (d *Driver) handleRuntimeConfigIssuerDeletion(logger logr.Logger) {
+	d.activeIssuerRefMutex.Lock()
+	defer d.activeIssuerRefMutex.Unlock()
+
+	if d.originalIssuerRef == nil {
+		logger.Info("Runtime issuance configuration was deleted and no issuerRef was configured at install time; issuance will fail until runtime configuration is reinstated")
+		d.activeIssuerRef = nil
+		return
+	}
+
+	logger.Info("Runtime issuance configuration was deleted; issuance will revert to original issuerRef configured at install time")
+
+	d.activeIssuerRef = d.originalIssuerRef
+}
+
+// Run is a blocking func that runs the CSI driver.
 func (d *Driver) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 
@@ -239,6 +444,12 @@ func (d *Driver) Run(ctx context.Context) error {
 	}()
 
 	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		d.watchRuntimeConfigurationSource(ctx)
+	}()
+
+	wg.Add(1)
 	var err error
 	go func() {
 		defer wg.Done()
@@ -252,6 +463,13 @@ func (d *Driver) Run(ctx context.Context) error {
 // generateRequest will generate a SPIFFE manager.CertificateRequestBundle
 // based upon the identity contained in the metadata service account token.
 func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRequestBundle, error) {
+	d.activeIssuerRefMutex.RLock()
+	defer d.activeIssuerRefMutex.RUnlock()
+
+	if d.activeIssuerRef == nil {
+		return nil, fmt.Errorf("no issuerRef is currently active for csi-driver-spiffe; configure one using runtime configuration")
+	}
+
 	// Extract the service account token from the volume metadata in order to
 	// derive the service account, and thus identity of the pod.
 	token, err := util.EmptyAudienceTokenFromMetadata(meta)
@@ -312,7 +530,7 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 			cmapi.UsageServerAuth,
 			cmapi.UsageClientAuth,
 		},
-		IssuerRef:   d.issuerRef,
+		IssuerRef:   *d.activeIssuerRef,
 		Annotations: crAnnotations,
 	}, nil
 }
@@ -376,4 +594,30 @@ func sanitizeAnnotations(in map[string]string) (map[string]string, error) {
 	}
 
 	return out, errors.Join(errs...)
+}
+
+var errNoOriginalIssuer = fmt.Errorf("no original issuer was provided")
+
+func handleOriginalIssuerRef(in *cmmeta.ObjectReference) (*cmmeta.ObjectReference, error) {
+	if in == nil {
+		return nil, errNoOriginalIssuer
+	}
+
+	if in.Name == "" && in.Kind == "" && in.Group == "" {
+		return nil, errNoOriginalIssuer
+	}
+
+	if in.Name == "" {
+		return nil, fmt.Errorf("issuerRef.Name is a required field if any field is set for issuerRef")
+	}
+
+	if in.Kind == "" {
+		return nil, fmt.Errorf("issuerRef.Kind is a required field if any field is set for issuerRef")
+	}
+
+	if in.Group == "" {
+		return nil, fmt.Errorf("issuerRef.Group is a required field if any field is set for issuerRef")
+	}
+
+	return in, nil
 }

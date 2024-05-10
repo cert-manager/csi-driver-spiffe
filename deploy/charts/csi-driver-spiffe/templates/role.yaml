@@ -1,6 +1,24 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
+rules:
+{{- if .Values.app.runtimeIssuanceConfigMap }}
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+  resourceNames: ["{{.Values.app.runtimeIssuanceConfigMap}}"]
+{{- end }}
+
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   namespace: {{ .Release.Namespace }}
   labels:

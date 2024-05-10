@@ -65,6 +65,9 @@
         "name": {
           "$ref": "#/$defs/helm-values.app.name"
         },
+        "runtimeIssuanceConfigMap": {
+          "$ref": "#/$defs/helm-values.app.runtimeIssuanceConfigMap"
+        },
         "trustDomain": {
           "$ref": "#/$defs/helm-values.app.trustDomain"
         }
@@ -445,6 +448,11 @@
     "helm-values.app.name": {
       "default": "spiffe.csi.cert-manager.io",
       "description": "The name for the CSI driver installation.",
+      "type": "string"
+    },
+    "helm-values.app.runtimeIssuanceConfigMap": {
+      "default": "",
+      "description": "Name of a ConfigMap in the installation namespace to watch, providing runtime configuration of an issuer to use.\n\nThe \"issuer-name\", \"issuer-kind\" and \"issuer-group\" keys must be present in the ConfigMap for it to be used.",
       "type": "string"
     },
     "helm-values.app.trustDomain": {

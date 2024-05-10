@@ -48,6 +48,9 @@ type Config struct {
 	IssuerSecretName      string
 	RestConfig            *rest.Config
 	KubectlBinPath        string
+
+	IssuanceConfigMapName      string
+	IssuanceConfigMapNamespace string
 }
 
 func (c *Config) AddFlags(fs *flag.FlagSet) *Config {
@@ -89,5 +92,7 @@ func (c *Config) addFlags(fs *flag.FlagSet) *Config {
 	fs.StringVar(&c.IssuerRef.Group, "issuer-group", "cert-manager.io", "Group of issuer which has been created for the test")
 	fs.StringVar(&c.IssuerSecretName, "issuer-secret-name", "csi-driver-spiffe-ca", "Name of the CA certificate Secret")
 	fs.StringVar(&c.IssuerSecretNamespace, "issuer-secret-namespace", "cert-manager", "Namespace where the CA certificate Secret is stored")
+	fs.StringVar(&c.IssuanceConfigMapName, "runtime-issuance-config-map-name", "runtime-config-map", "Name of runtime issuance ConfigMap")
+	fs.StringVar(&c.IssuanceConfigMapNamespace, "runtime-issuance-config-map-namespace", "cert-manager", "Namespace for runtime issuance ConfigMap")
 	return c
 }

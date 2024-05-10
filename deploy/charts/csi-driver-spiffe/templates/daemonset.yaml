@@ -83,6 +83,8 @@ spec:
             - --node-id=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --data-root=csi-data-dir
+            - "--runtime-issuance-config-map-name={{.Values.app.runtimeIssuanceConfigMap}}"
+            - "--runtime-issuance-config-map-namespace={{.Release.Namespace}}"
           {{- if .Values.app.extraCertificateRequestAnnotations }}
             - --extra-certificate-request-annotations={{ .Values.app.extraCertificateRequestAnnotations }}
           {{- end }}

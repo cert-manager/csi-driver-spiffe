@@ -1,6 +1,24 @@
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "cert-manager-csi-driver-spiffe.name" . }}
+  namespace: {{ .Release.Namespace }}
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   namespace: {{ .Release.Namespace }}
   labels:

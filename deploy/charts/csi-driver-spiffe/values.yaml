@@ -48,6 +48,14 @@ app:
   logLevel: 1 # 1-5
   # Duration requested for requested certificates.
   certificateRequestDuration: 1h
+
+  # Name of a ConfigMap in the installation namespace to watch, providing
+  # runtime configuration of an issuer to use.
+  #
+  # The "issuer-name", "issuer-kind" and "issuer-group" keys must be present in
+  # the ConfigMap for it to be used.
+  runtimeIssuanceConfigMap: ""
+
   # List of annotations to add to certificate requests
   #
   # For example:

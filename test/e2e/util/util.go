@@ -146,21 +146,23 @@ func ReadCertFromMountPath(f *framework.Framework, mountPath string, podName str
 	return bundle, nil
 }
 
-// IssuerCleanupFunc is called to clean up issuer related resources after a test. A returned
-// Any returned cleanup function should always be safe to call and should always be called at some point after the returning function
-// regardless of whether that function returned an error or not
+// IssuerCleanupFunc is called to clean up issuer related resources after a test. Any returned
+// cleanup function should always be safe to call and should always be called at some point after
+// the returning function regardless of whether that function returned an error or not
 type IssuerCleanupFunc func() error
 
-// dummyIssuerCleanupFunc should be returned by functions which return an IssuerCleanupFunc where there's nothing to clean up
-// (e.g. if a fatal error happened before any resources were created).
+// dummyIssuerCleanupFunc should be returned by functions which return an IssuerCleanupFunc where
+// there's nothing to clean up (e.g. if a fatal error happened before any resources were created).
 func dummyIssuerCleanupFunc() error {
 	return nil
 }
 
-// CreateSelfSignedIssuer creates a SelfSigned ClusterIssuer which can be used to in-turn create CA issuers for tests.
-// Returns an issuerRef for the issuer and a cleanup function to remove the issuer after the test completes.
-// The cleanup function is always safe to call and should always be called after this function returns, regardless of
-// whether it returned an error or not
+// CreateSelfSignedIssuer creates a SelfSigned ClusterIssuer which can be used to in-turn create CA
+// issuers for tests.
+// Returns an issuerRef for the issuer and a cleanup function to remove the issuer after the test
+// completes.
+// The cleanup function is always safe to call and should always be called after this function
+// returns, regardless of whether it returned an error or not
 func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.ObjectReference, IssuerCleanupFunc, error) {
 	iss := &cmapi.ClusterIssuer{
 		ObjectMeta: metav1.ObjectMeta{
@@ -191,10 +193,12 @@ func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.ObjectReference, Is
 	return issuerRef, cleanupFunc, nil
 }
 
-// CreateNewCAIssuer creates an issuer which can be used for an end-to-end test and cleaned up afterwards.
-// Returns an issuerRef for the issuer, a bundle containing the issuer's data and a function to clean up all issuer resources.
-// The cleanup function is always safe to call and should always be called after this function returns, regardless of
-// whether it returned an error or not
+// CreateNewCAIssuer creates an issuer which can be used for an end-to-end test and cleaned up
+// afterwards.
+// Returns an issuerRef for the issuer, a bundle containing the issuer's data and a function to
+// clean up all issuer resources.
+// The cleanup function is always safe to call and should always be called after this function
+// returns, regardless of whether it returned an error or not
 func CreateNewCAIssuer(f *framework.Framework) (*cmmeta.ObjectReference, *CertBundle, IssuerCleanupFunc, error) {
 	var objectsForCleanup []client.Object
 
