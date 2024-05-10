@@ -426,5 +426,71 @@ Optional priority class to be used for the csi-driver pods.
 > ```
 
 Labels to apply to all resources
+#### **nodeSelector** ~ `object`
+> Default value:
+> ```yaml
+> kubernetes.io/os: linux
+> ```
+
+Kubernetes node selector: node labels for pod assignment.
+
+#### **affinity** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+
+Kubernetes affinity: constraints for pod assignment.  
+  
+For example:
+
+```yaml
+affinity:
+  nodeAffinity:
+   requiredDuringSchedulingIgnoredDuringExecution:
+     nodeSelectorTerms:
+     - matchExpressions:
+       - key: foo.bar.com/role
+         operator: In
+         values:
+         - master
+```
+#### **tolerations** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+Kubernetes pod tolerations for cert-manager-csi-driver-spiffe.  
+  
+For example:
+
+```yaml
+tolerations:
+- key: foo.bar.com/role
+  operator: Equal
+  value: master
+  effect: NoSchedule
+```
+#### **topologySpreadConstraints** ~ `array`
+> Default value:
+> ```yaml
+> []
+> ```
+
+List of Kubernetes TopologySpreadConstraints.  
+  
+For example:
+
+```yaml
+topologySpreadConstraints:
+- maxSkew: 2
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/component: controller
+```
 
 <!-- /AUTO-GENERATED -->
