@@ -234,7 +234,8 @@ func (d *Driver) Run(ctx context.Context) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		d.camanager.run(ctx, time.Second*5)
+		updateRetryPeriod := time.Second * 5
+		d.camanager.run(ctx, updateRetryPeriod)
 	}()
 
 	wg.Add(1)

@@ -17,7 +17,7 @@ limitations under the License.
 package carotation
 
 import (
-	"bytes"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,8 +37,11 @@ const (
 	mountPath     = "/var/run/secrets/my-pod"
 	containerName = "my-container"
 
-	pollInterval = 1 * time.Second
-	pollTimeout  = 60 * time.Second
+	// pollInterval is set to 5s here because the updateRetryPeriod set when the driver
+	// starts the camanager is 5s. Polling every second is wasteful because updates will
+	// only be made every 5 seconds.
+	pollInterval = 5 * time.Second
+	pollTimeout  = 300 * time.Second
 )
 
 var _ = framework.CasesDescribe("CA rotation", func() {
@@ -135,22 +138,32 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 		caData, ok := caSecret.Data["ca.crt"]
 		Expect(ok).To(BeTrue(), "expected 'ca.crt' to be present in Issuer CA Secret")
 
+		tlsData, ok := caSecret.Data["tls.crt"]
+		Expect(ok).To(BeTrue(), "expected 'tls.crt' to be present in Issuer CA Secret")
+
+		Expect(caData).To(Equal(tlsData), "invalid test; expected 'ca.crt' to equal 'tls.crt' for Issuer CA Secret (this implies a previous test run wasn't cleaned up correctly)")
+
 		pod1Bundle, err := util.ReadCertFromMountPath(f, mountPath, pod1.Name, containerName)
 		Expect(err).NotTo(HaveOccurred())
 
 		pod2Bundle, err := util.ReadCertFromMountPath(f, mountPath, pod2.Name, containerName)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(caData).To(Equal(pod1Bundle.CAPEM), "expected Issuer CA bundle to equal CA mounted in pod1 file")
+		Expect(string(caData)).To(Equal(string(pod1Bundle.CAPEM)), "expected Issuer CA bundle to equal CA mounted in pod1 file")
 
-		Expect(caData).To(Equal(pod2Bundle.CAPEM), "expected Issuer CA bundle to equal CA mounted in pod2 file")
+		Expect(string(caData)).To(Equal(string(pod2Bundle.CAPEM)), "expected Issuer CA bundle to equal CA mounted in pod2 file")
 
 		By("Updating the CA data in Secret")
 
-		newCAData := append([]byte("# This is a comment\n"), caData...)
+		newCAData := append([]byte("# This is a comment\n"), tlsData...)
 
 		caSecret.Data["ca.crt"] = newCAData
 		Expect(f.Client().Update(f.Context(), &caSecret)).NotTo(HaveOccurred())
+
+		defer func() {
+			caSecret.Data["ca.crt"] = tlsData
+			Expect(f.Client().Update(f.Context(), &caSecret)).NotTo(HaveOccurred())
+		}()
 
 		By("Waiting for the new CA data to be written to pod volumes")
 		for _, podName := range []string{pod1.Name, pod2.Name} {
@@ -158,7 +171,7 @@ var _ = framework.CasesDescribe("CA rotation", func() {
 				newBundle, err := util.ReadCertFromMountPath(f, mountPath, podName, containerName)
 				Expect(err).ToNot(HaveOccurred())
 
-				return bytes.Equal(newBundle.CAPEM, newCAData)
+				return strings.TrimSpace(string(newBundle.CAPEM)) == strings.TrimSpace(string(newCAData))
 			}).WithTimeout(pollTimeout).WithPolling(pollInterval).WithContext(f.Context()).Should(BeTrue(), "expected the CA data to be updated on pod file")
 		}
 

@@ -107,7 +107,7 @@ func (c *camanager) run(ctx context.Context, updateRetryPeriod time.Duration) {
 				// Retry updating the root CA files.
 				go func() {
 					select {
-					// Wait for 5 seconds before retrying.
+					// Wait before retrying.
 					case <-time.After(updateRetryPeriod):
 					case <-ctx.Done():
 						return
