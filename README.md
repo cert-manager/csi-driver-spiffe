@@ -41,3 +41,7 @@ SPIFFE documents can then be used by Pods for mutual TLS (mTLS) or other authent
 
 Please follow the documentation at [cert-manager.io](https://cert-manager.io/docs/projects/csi-driver-spiffe/)
 for installing and using csi-driver-spiffe.
+
+## Release Process
+
+The release process is documented in [RELEASE.md](RELEASE.md).
