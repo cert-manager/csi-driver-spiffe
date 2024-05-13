@@ -19,13 +19,14 @@ image:
   # +docs:property
   # tag: vX.Y.Z
 
-  digest: {}
+  digest:
+    {}
     # Target csi-driver driver digest. Override any tag, if set.
     # For example:
     #   driver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
     # +docs:property=image.digest.driver
     # driver: sha256:...
-    
+
     # Target csi-driver approver digest. Override any tag, if set.
     # For example:
     #   approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
@@ -192,7 +193,7 @@ app:
           # Create Prometheus ServiceMonitor resource for cert-manager-csi-driver-spiffe approver.
           enabled: false
           # The value for the "prometheus" label on the ServiceMonitor. This allows
-          # for multiple Prometheus instances selecting difference ServiceMonitors 
+          # for multiple Prometheus instances selecting difference ServiceMonitors
           # using label selectors.
           prometheusInstance: default
           # The interval that the Prometheus will scrape for metrics.
@@ -218,3 +219,45 @@ priorityClassName: ""
 
 # Labels to apply to all resources
 commonLabels: {}
+
+# Kubernetes node selector: node labels for pod assignment.
+# +docs:property=nodeSelector
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Kubernetes affinity: constraints for pod assignment.
+#
+# For example:
+#   affinity:
+#     nodeAffinity:
+#      requiredDuringSchedulingIgnoredDuringExecution:
+#        nodeSelectorTerms:
+#        - matchExpressions:
+#          - key: foo.bar.com/role
+#            operator: In
+#            values:
+#            - master
+affinity: {}
+
+# Kubernetes pod tolerations for cert-manager-csi-driver-spiffe.
+#
+# For example:
+#   tolerations:
+#   - key: foo.bar.com/role
+#     operator: Equal
+#     value: master
+#     effect: NoSchedule
+tolerations: []
+
+# List of Kubernetes TopologySpreadConstraints.
+#
+# For example:
+#   topologySpreadConstraints:
+#   - maxSkew: 2
+#     topologyKey: topology.kubernetes.io/zone
+#     whenUnsatisfiable: ScheduleAnyway
+#     labelSelector:
+#       matchLabels:
+#         app.kubernetes.io/instance: cert-manager
+#         app.kubernetes.io/component: controller
+topologySpreadConstraints: []

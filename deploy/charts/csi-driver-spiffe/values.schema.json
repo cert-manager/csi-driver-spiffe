@@ -3,6 +3,9 @@
     "helm-values": {
       "additionalProperties": false,
       "properties": {
+        "affinity": {
+          "$ref": "#/$defs/helm-values.affinity"
+        },
         "app": {
           "$ref": "#/$defs/helm-values.app"
         },
@@ -18,10 +21,24 @@
         "imagePullSecrets": {
           "$ref": "#/$defs/helm-values.imagePullSecrets"
         },
+        "nodeSelector": {
+          "$ref": "#/$defs/helm-values.nodeSelector"
+        },
         "priorityClassName": {
           "$ref": "#/$defs/helm-values.priorityClassName"
+        },
+        "tolerations": {
+          "$ref": "#/$defs/helm-values.tolerations"
+        },
+        "topologySpreadConstraints": {
+          "$ref": "#/$defs/helm-values.topologySpreadConstraints"
         }
       },
+      "type": "object"
+    },
+    "helm-values.affinity": {
+      "default": {},
+      "description": "Kubernetes affinity: constraints for pod assignment.\n\nFor example:\naffinity:\n  nodeAffinity:\n   requiredDuringSchedulingIgnoredDuringExecution:\n     nodeSelectorTerms:\n     - matchExpressions:\n       - key: foo.bar.com/role\n         operator: In\n         values:\n         - master",
       "type": "object"
     },
     "helm-values.app": {
@@ -526,10 +543,29 @@
       "items": {},
       "type": "array"
     },
+    "helm-values.nodeSelector": {
+      "default": {
+        "kubernetes.io/os": "linux"
+      },
+      "description": "Kubernetes node selector: node labels for pod assignment.",
+      "type": "object"
+    },
     "helm-values.priorityClassName": {
       "default": "",
       "description": "Optional priority class to be used for the csi-driver pods.",
       "type": "string"
+    },
+    "helm-values.tolerations": {
+      "default": [],
+      "description": "Kubernetes pod tolerations for cert-manager-csi-driver-spiffe.\n\nFor example:\ntolerations:\n- key: foo.bar.com/role\n  operator: Equal\n  value: master\n  effect: NoSchedule",
+      "items": {},
+      "type": "array"
+    },
+    "helm-values.topologySpreadConstraints": {
+      "default": [],
+      "description": "List of Kubernetes TopologySpreadConstraints.\n\nFor example:\ntopologySpreadConstraints:\n- maxSkew: 2\n  topologyKey: topology.kubernetes.io/zone\n  whenUnsatisfiable: ScheduleAnyway\n  labelSelector:\n    matchLabels:\n      app.kubernetes.io/instance: cert-manager\n      app.kubernetes.io/component: controller",
+      "items": {},
+      "type": "array"
     }
   },
   "$ref": "#/$defs/helm-values",
