@@ -429,10 +429,19 @@ Labels to apply to all resources
 #### **nodeSelector** ~ `object`
 > Default value:
 > ```yaml
-> kubernetes.io/os: linux
+> {}
 > ```
 
-Kubernetes node selector: node labels for pod assignment.
+Kubernetes node selector: node labels for pod assignment.  
+  
+Recommended value:
+
+```yaml
+nodeSelector:
+  kubernetes.io/os: linux
+```
+
+
 
 #### **affinity** ~ `object`
 > Default value:

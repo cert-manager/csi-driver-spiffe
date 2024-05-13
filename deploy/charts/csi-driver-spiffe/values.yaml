@@ -221,9 +221,13 @@ priorityClassName: ""
 commonLabels: {}
 
 # Kubernetes node selector: node labels for pod assignment.
+#
+# Recommended value:
+#   nodeSelector:
+#     kubernetes.io/os: linux
+#
 # +docs:property=nodeSelector
-nodeSelector:
-  kubernetes.io/os: linux
+nodeSelector: {}
 
 # Kubernetes affinity: constraints for pod assignment.
 #
