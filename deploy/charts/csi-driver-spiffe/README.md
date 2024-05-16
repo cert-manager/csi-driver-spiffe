@@ -94,6 +94,15 @@ Verbosity of cert-manager-csi-driver logging.
 > ```
 
 Duration requested for requested certificates.
+#### **app.runtimeIssuanceConfigMap** ~ `string`
+> Default value:
+> ```yaml
+> ""
+> ```
+
+Name of a ConfigMap in the installation namespace to watch, providing runtime configuration of an issuer to use.  
+  
+The "issuer-name", "issuer-kind" and "issuer-group" keys must be present in the ConfigMap for it to be used.
 #### **app.extraCertificateRequestAnnotations** ~ `unknown`
 > Default value:
 > ```yaml

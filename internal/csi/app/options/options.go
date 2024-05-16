@@ -56,6 +56,12 @@ type OptionsDriver struct {
 
 // OptionsCertManager is options specific to cert-manager CertificateRequests.
 type OptionsCertManager struct {
+	// IssuanceConfigMapName is the name of a ConfigMap to watch for configuration options. The ConfigMap is expected to be in the same namespace as the csi-driver-spiffe pod.
+	IssuanceConfigMapName string
+
+	// IssuanceConfigMapNamespace is the namespace where the runtime configuration ConfigMap is located
+	IssuanceConfigMapNamespace string
+
 	// TrustDomain is the trust domain of this SPIFFE PKI. The TrustDomain will
 	// appear in signed certificate's URI SANs.
 	TrustDomain string
@@ -113,6 +119,10 @@ func (o *Options) addDriverFlags(fs *pflag.FlagSet) {
 }
 
 func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&o.CertManager.IssuanceConfigMapName, "runtime-issuance-config-map-name", "", "Name of a ConfigMap to watch at runtime for issuer details. If such a ConfigMap is found, overrides issuer-name, issuer-kind and issuer-group")
+
+	fs.StringVar(&o.CertManager.IssuanceConfigMapNamespace, "runtime-issuance-config-map-namespace", "", "Namespace for ConfigMap to be watched at runtime for issuer details")
+
 	fs.StringVar(&o.CertManager.TrustDomain, "trust-domain", "cluster.local",
 		"The trust domain that will be requested for on created CertificateRequests.")
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,

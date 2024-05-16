@@ -54,21 +54,23 @@ ifeq ($(findstring test-e2e,$(MAKECMDGOALS)),test-e2e)
 install: e2e-setup-example kind-cluster oci-load-manager oci-load-approver
 endif
 
+E2E_RUNTIME_CONFIG_MAP_NAME ?= runtime-config-map
+E2E_FOCUS ?=
+
 test-e2e-deps: INSTALL_OPTIONS :=
 test-e2e-deps: INSTALL_OPTIONS += --set image.repository.driver=$(oci_manager_image_name_development)
 test-e2e-deps: INSTALL_OPTIONS += --set image.repository.approver=$(oci_approver_image_name_development)
 test-e2e-deps: INSTALL_OPTIONS += --set image.pullPolicy=Never
 test-e2e-deps: INSTALL_OPTIONS += --set app.trustDomain=foo.bar
-test-e2e-deps: INSTALL_OPTIONS += --set app.approver.signerName=clusterissuers.cert-manager.io/csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.issuer.name=csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].name=root-cas
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].secret.secretName=csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumeMounts[0].name=root-cas
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumeMounts[0].mountPath=/var/run/secrets/cert-manager-csi-driver-spiffe
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.sourceCABundle=/var/run/secrets/cert-manager-csi-driver-spiffe/ca.crt
+test-e2e-deps: INSTALL_OPTIONS += --set app.runtimeIssuanceConfigMap=$(E2E_RUNTIME_CONFIG_MAP_NAME)
 test-e2e-deps: install
 
-E2E_FOCUS ?=
 
 .PHONY: test-e2e
 ## e2e end-to-end tests
@@ -82,4 +84,5 @@ test-e2e: test-e2e-deps | kind-cluster $(NEEDS_GINKGO) $(NEEDS_KUBECTL) $(ARTIFA
 		-ldflags $(go_manager_ldflags) \
 		-- \
 		--kubeconfig-path=$(CURDIR)/$(kind_kubeconfig) \
-		--kubectl-path=$(KUBECTL)
+		--kubectl-path=$(KUBECTL) \
+		--runtime-issuance-config-map-name=$(E2E_RUNTIME_CONFIG_MAP_NAME)
