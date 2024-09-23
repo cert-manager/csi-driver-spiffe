@@ -101,7 +101,7 @@ func Test_validateCSRExtentions(t *testing.T) {
 			},
 			expErr: false,
 		},
-		"if multiple URI names exist, dns name, and allowed usages, should error": {
+		"if multiple URI names exist, dns name, and allowed usages, shouldn't error": {
 			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
 			dns:  []string{"foo.bar"},
 			usages: []cmapi.KeyUsage{
@@ -110,7 +110,7 @@ func Test_validateCSRExtentions(t *testing.T) {
 				cmapi.UsageClientAuth,
 				cmapi.UsageServerAuth,
 			},
-			expErr: true,
+			expErr: false,
 		},
 		"if multiple URI names exist, ips, and allowed usages, should error": {
 			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},

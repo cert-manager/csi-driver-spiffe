@@ -73,6 +73,9 @@ type OptionsCertManager struct {
 	// requested with.
 	CertificateRequestDuration time.Duration
 
+	// IncludeDnsSan is set to true to indicate that the service account name should be included as a DNS SAN
+	IncludeDnsSan string
+
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
 	IssuerRef cmmeta.ObjectReference
 }
@@ -127,6 +130,7 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 		"The trust domain that will be requested for on created CertificateRequests.")
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration that created CertificateRequests will use.")
+	fs.StringVar(&o.CertManager.IncludeDnsSan, "include-dns-san", "false", "include the service account name as a DNS SAN")
 
 	fs.StringToStringVar(&o.CertManager.CertificateRequestAnnotations, "extra-certificate-request-annotations", map[string]string{},
 		"Comma-separated list of extra annotations to add to certificate requests e.g '--extra-certificate-request-annotations=hello=world,test=annotation'")

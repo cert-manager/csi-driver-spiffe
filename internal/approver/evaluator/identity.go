@@ -46,5 +46,17 @@ func (i *internal) validateIdentity(csr *x509.CertificateRequest, username strin
 		return fmt.Errorf("unexpected SPIFFE ID requested, exp=%q got=%q", expSpiffeID, csr.URIs[0].String())
 	}
 
+	// We allow one DNS SAN equal to the service account name
+	if len(csr.DNSNames) > 1 {
+		return fmt.Errorf("expected exactly 0 or 1 DNS SAN present on request, got=%d", len(csr.DNSNames))
+	}
+
+	if len(csr.DNSNames) == 1 {
+		expDNSName := split[3]
+		if csr.DNSNames[0] != expDNSName {
+			return fmt.Errorf("unexpected DNS SAN requested, exp=%q got=%q", expDNSName, csr.DNSNames[0])
+		}
+	}
+
 	return nil
 }

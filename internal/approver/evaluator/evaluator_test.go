@@ -34,8 +34,9 @@ func Test_Evaluate(t *testing.T) {
 	assert.NoError(t, err)
 
 	tests := map[string]struct {
-		req    func(t *testing.T) *cmapi.CertificateRequest
-		expErr bool
+		req           func(t *testing.T) *cmapi.CertificateRequest
+		expErr        bool
+		includeDnsSan bool
 	}{
 		"if request contains a badly encoded PEM, expect error": {
 			req: func(t *testing.T) *cmapi.CertificateRequest {
@@ -72,13 +73,40 @@ func Test_Evaluate(t *testing.T) {
 			},
 			expErr: true,
 		},
+		"if request contains DNS names and includeDnsSan is true, do not expect error": {
+			req: func(t *testing.T) *cmapi.CertificateRequest {
+				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
+					Spec: cmapi.CertificateSpec{
+						PrivateKey: &cmapi.CertificatePrivateKey{Algorithm: cmapi.ECDSAKeyAlgorithm},
+						URIs:       []string{"spiffe://foo.bar/ns/sandbox/sa/sleep"},
+						DNSNames:   []string{"sleep"},
+					},
+				})
+				assert.NoError(t, err)
+				csrDER, err := utilpki.EncodeCSR(csr, pk)
+				assert.NoError(t, err)
+				csrPEM := bytes.NewBuffer([]byte{})
+				assert.NoError(t, pem.Encode(csrPEM, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrDER}))
+				return &cmapi.CertificateRequest{Spec: cmapi.CertificateRequestSpec{
+					Request:  csrPEM.Bytes(),
+					Duration: &metav1.Duration{Duration: time.Hour},
+					Username: "system:serviceaccount:sandbox:sleep",
+					Usages: []cmapi.KeyUsage{
+						cmapi.UsageServerAuth, cmapi.UsageClientAuth,
+						cmapi.UsageDigitalSignature, cmapi.UsageKeyEncipherment,
+					},
+				}}
+			},
+			expErr:        false,
+			includeDnsSan: true,
+		},
 		"if request contains DNS names, expect error": {
 			req: func(t *testing.T) *cmapi.CertificateRequest {
 				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
 					Spec: cmapi.CertificateSpec{
 						PrivateKey: &cmapi.CertificatePrivateKey{Algorithm: cmapi.ECDSAKeyAlgorithm},
 						URIs:       []string{"spiffe://foo.bar/ns/sandbox/sa/sleep"},
-						DNSNames:   []string{"example.com"},
+						DNSNames:   []string{"sleep"},
 					},
 				})
 				assert.NoError(t, err)
@@ -313,6 +341,10 @@ func Test_Evaluate(t *testing.T) {
 			i := &internal{
 				trustDomain:                "foo.bar",
 				certificateRequestDuration: time.Hour,
+				includeDnsSan:              "false",
+			}
+			if test.includeDnsSan {
+				i.includeDnsSan = "true"
 			}
 
 			err := i.Evaluate(test.req(t))

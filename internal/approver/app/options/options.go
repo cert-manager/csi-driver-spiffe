@@ -62,6 +62,9 @@ type OptionsCertManager struct {
 	// CertificateRequestDuration is the duration the evaluator will enforce
 	// CertificateRequest request for.
 	CertificateRequestDuration time.Duration
+
+	// IncludeDnsSan is set to true to indicate that the service account name should be included as a DNS SAN
+	IncludeDnsSan string
 }
 
 func New() *Options {
@@ -78,6 +81,8 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration which is enforced for requests to have.")
+
+	fs.StringVar(&o.CertManager.IncludeDnsSan, "include-dns-san", "false", "include the service account name as a DNS SAN")
 
 	// allow issuer-* args to still be passed to avoid a backwards incompatible change
 	var dummyIssuerRefName, dummyIssuerRefKind, dummyIssuerRefGroup string

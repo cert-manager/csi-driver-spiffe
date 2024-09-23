@@ -48,6 +48,8 @@ app:
   logLevel: 1 # 1-5
   # Duration requested for requested certificates.
   certificateRequestDuration: 1h
+  # Include service account name as DNS SAN
+  includeDnsSan: "false"
 
   # Name of a ConfigMap in the installation namespace to watch, providing
   # runtime configuration of an issuer to use.
