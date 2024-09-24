@@ -47,8 +47,8 @@ helm_chart_name := cert-manager-csi-driver-spiffe
 helm_chart_version := $(VERSION)
 helm_labels_template_name := cert-manager-csi-driver-spiffe.labels
 helm_docs_use_helm_tool := 1
-helm_generate_schema := 1 
-helm_verify_values := 1 
+helm_generate_schema := 1
+helm_verify_values := 1
 
 golangci_lint_config := .golangci.yaml
 
@@ -63,5 +63,5 @@ endef
 images_amd64 ?=
 images_arm64 ?=
 
-images_amd64 += docker.io/library/busybox:1.36.1-musl@sha256:5a3e083edd9b641304256c54c4e7746f6b24ea2068efe62b537c37f9b72cbf79
-images_arm64 += docker.io/library/busybox:1.36.1-musl@sha256:3cb45b2ea885d1594b024e54eeece8dd313883d08bbb9d4f91533ab9a7f11b44
+images_amd64 += docker.io/library/busybox:1.36.1-musl@sha256:9a53a254f289b4e9542024676c004f8d4810f785641f8bbbecce03dda576e037
+images_arm64 += docker.io/library/busybox:1.36.1-musl@sha256:c6cdebd45a7b8fb6849484c6e079ed0db781d65bed367ae5804919ad3a4eda67
