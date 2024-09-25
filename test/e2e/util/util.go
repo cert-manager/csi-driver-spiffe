@@ -387,8 +387,6 @@ func approveCertificateRequestsForCertificate(f *framework.Framework, cert *cmap
 	var updateErrs []error
 
 	for _, cr := range crList.Items {
-		cr := cr
-
 		if !strings.HasPrefix(cr.Name, cert.Name) {
 			continue
 		}
