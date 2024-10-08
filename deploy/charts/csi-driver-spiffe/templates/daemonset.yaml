@@ -70,6 +70,7 @@ spec:
             - --csi-driver-name={{ .Values.app.name }}
 
             - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
+            - --include-dns-san={{ .Values.app.includeDnsSan }}
             - --issuer-name={{ .Values.app.issuer.name }}
             - --issuer-kind={{ .Values.app.issuer.kind }}
             - --issuer-group={{ .Values.app.issuer.group }}
