@@ -34,6 +34,7 @@ spec:
           - --csi-driver-name={{ .Values.app.name }}
 
           - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
+          - --include-dns-san={{ .Values.app.includeDnsSan }}
           - --trust-domain={{ .Values.app.trustDomain }}
 
           - --leader-election-namespace=$(POD_NAMESPACE)
