@@ -134,7 +134,7 @@ var _ = Context("Approval", func() {
 		Consistently(func() bool {
 			Eventually(func() error {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
-			}).Should(BeNil())
+			}).Should(Succeed())
 			return apiutil.CertificateRequestIsApproved(&cr) || apiutil.CertificateRequestIsDenied(&cr)
 		}, "3s").Should(BeFalse(), "expected neither approved not denied")
 	})
@@ -162,7 +162,7 @@ var _ = Context("Approval", func() {
 		Eventually(func() bool {
 			Eventually(func() error {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
-			}).Should(BeNil())
+			}).Should(Succeed())
 			return apiutil.CertificateRequestIsDenied(&cr)
 		}).Should(BeTrue(), "expected denial")
 	})
@@ -190,7 +190,7 @@ var _ = Context("Approval", func() {
 		Eventually(func() bool {
 			Eventually(func() error {
 				return cl.Get(ctx, client.ObjectKeyFromObject(&cr), &cr)
-			}).Should(BeNil())
+			}).Should(Succeed())
 			return apiutil.CertificateRequestIsApproved(&cr)
 		}).Should(BeTrue(), "expected approval")
 	})
