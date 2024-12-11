@@ -63,5 +63,5 @@ endef
 images_amd64 ?=
 images_arm64 ?=
 
-images_amd64 += docker.io/library/busybox:1.36.1-musl@sha256:9a53a254f289b4e9542024676c004f8d4810f785641f8bbbecce03dda576e037
-images_arm64 += docker.io/library/busybox:1.36.1-musl@sha256:c6cdebd45a7b8fb6849484c6e079ed0db781d65bed367ae5804919ad3a4eda67
+images_amd64 += docker.io/library/busybox:1.36.1-musl@sha256:3e4c072f6179b8698630d94422ca32effec45a2e2a7ae1d76cf6b5410ee06d33
+images_arm64 += docker.io/library/busybox:1.36.1-musl@sha256:b9d37d21fdb80a3262b4f59a802f00cede89937a63ded366bc4f647a5032a4db
