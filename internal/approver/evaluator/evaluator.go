@@ -49,6 +49,10 @@ type Options struct {
 	// CertificateRequestDuration is the duration that users _must_ request for,
 	// else the request will be denied.
 	CertificateRequestDuration time.Duration
+
+	// IncludeDnsSan is a flag that when set to true will
+	// include and allow a DNSSan set to the service account name in the CSR
+	IncludeDnsSan string
 }
 
 // internal is the internal implementation of the evaluator that should be used
@@ -61,6 +65,10 @@ type internal struct {
 	// certificateRequestDuration is the duration that users _must_ request for,
 	// else the request will be denied.
 	certificateRequestDuration time.Duration
+
+	// IncludeDnsSan is a flag that when set to true will
+	// include and allow a DNSSan set to the service account name in the CSR
+	includeDnsSan string
 }
 
 // New constructs a new evaluator.
@@ -68,6 +76,7 @@ func New(opts Options) Interface {
 	return &internal{
 		trustDomain:                opts.TrustDomain,
 		certificateRequestDuration: opts.CertificateRequestDuration,
+		includeDnsSan:              opts.IncludeDnsSan,
 	}
 }
 
@@ -90,10 +99,13 @@ func (i *internal) Evaluate(req *cmapi.CertificateRequest) error {
 	}
 
 	// if the csr contains any other options set, error
-	if len(csr.DNSNames) > 0 || len(csr.IPAddresses) > 0 ||
-		len(csr.Subject.CommonName) > 0 || len(csr.EmailAddresses) > 0 {
-		return fmt.Errorf("forbidden extensions, DNS=%q IPs=%q CommonName=%q Emails=%q",
-			csr.DNSNames, csr.IPAddresses, csr.Subject.CommonName, csr.EmailAddresses)
+	if len(csr.IPAddresses) > 0 || len(csr.Subject.CommonName) > 0 || len(csr.EmailAddresses) > 0 {
+		return fmt.Errorf("forbidden extensions, IPs=%q CommonName=%q Emails=%q",
+			csr.IPAddresses, csr.Subject.CommonName, csr.EmailAddresses)
+	}
+
+	if i.includeDnsSan != "true" && len(csr.DNSNames) > 0 {
+		return fmt.Errorf("forbidden extension, DNSs=%q and IncludeDnsSan is %q", csr.DNSNames, i.includeDnsSan)
 	}
 
 	if err := validateCSRExtentions(csr); err != nil {
