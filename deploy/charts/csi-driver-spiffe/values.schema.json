@@ -59,6 +59,9 @@
         "extraCertificateRequestAnnotations": {
           "$ref": "#/$defs/helm-values.app.extraCertificateRequestAnnotations"
         },
+        "includeDnsSan": {
+          "$ref": "#/$defs/helm-values.app.includeDnsSan"
+        },
         "issuer": {
           "$ref": "#/$defs/helm-values.app.issuer"
         },
@@ -412,6 +415,11 @@
     },
     "helm-values.app.extraCertificateRequestAnnotations": {
       "description": "List of annotations to add to certificate requests\n\nFor example:\nextraCertificateRequestAnnotations: app=csi-driver-spiffe,foo=bar"
+    },
+    "helm-values.app.includeDnsSan": {
+      "default": "false",
+      "description": "Include service account name as DNS SAN",
+      "type": "string"
     },
     "helm-values.app.issuer": {
       "additionalProperties": false,
