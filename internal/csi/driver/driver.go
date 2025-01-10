@@ -76,6 +76,10 @@ type Options struct {
 	// Defaults to 1 hour if empty.
 	CertificateRequestDuration time.Duration
 
+	// IncludeDnsSan is set to true to indicate that the service account name should be included as a DNS SAN
+	// Defaults to false
+	IncludeDnsSan string
+
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
 	IssuerRef *cmmeta.ObjectReference
 
@@ -126,6 +130,10 @@ type Driver struct {
 	// certificateRequestDuration is the duration which will be set of all
 	// created CertificateRequests.
 	certificateRequestDuration time.Duration
+
+	// IncludeDnsSan is set to true to indicate that the service account name should be included as a DNS SAN in
+	// created certificate requests
+	includeDnsSan string
 
 	// activeIssuerRef is the issuerRef that will be set on all created CertificateRequests.
 	// Can be changed at runtime via runtime configuration (i.e. reading from a ConfigMap)
@@ -209,6 +217,8 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 
 		issuanceConfigMapName:      opts.IssuanceConfigMapName,
 		issuanceConfigMapNamespace: opts.IssuanceConfigMapNamespace,
+
+		includeDnsSan: opts.IncludeDnsSan,
 	}
 
 	if d.originalIssuerRef != nil {
@@ -229,6 +239,10 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 
 	if d.certificateRequestDuration == 0 {
 		d.certificateRequestDuration = time.Hour
+	}
+
+	if d.includeDnsSan == "" {
+		d.includeDnsSan = "false"
 	}
 
 	store, err := storage.NewFilesystem(d.log, opts.DataRoot)
@@ -509,6 +523,9 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 		return nil, fmt.Errorf("internal error crafting X.509 URI, this is a bug, please report on GitHub: %w", err)
 	}
 
+	// Request dnsSAN name equivalent to service account name
+	dnsSAN := saName
+
 	crAnnotations := map[string]string{
 		annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
 	}
@@ -517,10 +534,16 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 		crAnnotations[key] = value
 	}
 
+	req := &x509.CertificateRequest{
+		URIs: []*url.URL{uri},
+	}
+
+	if d.includeDnsSan == "true" {
+		req.DNSNames = []string{dnsSAN}
+	}
+
 	return &manager.CertificateRequestBundle{
-		Request: &x509.CertificateRequest{
-			URIs: []*url.URL{uri},
-		},
+		Request:   req,
 		IsCA:      false,
 		Namespace: saNamespace,
 		Duration:  d.certificateRequestDuration,
