@@ -36,8 +36,9 @@ import (
 	"github.com/cert-manager/csi-lib/manager/util"
 	"github.com/cert-manager/csi-lib/metadata"
 	"github.com/cert-manager/csi-lib/storage"
+	jose "github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/go-logr/logr"
-	"gopkg.in/square/go-jose.v2/jwt"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/watch"
@@ -460,6 +461,23 @@ func (d *Driver) Run(ctx context.Context) error {
 	return err
 }
 
+// validSigningAlgs is a list of algorithms that the Kubernetes API server allows for signing
+// service account tokens. It's taken from [1].
+// If in the future the upstream list changes, we may start to see issues being raised
+// since we'll reject otherwise-valid algorithms, and this list may then need to be updated.
+// [1] https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiserver/plugin/pkg/authenticator/token/oidc/oidc.go#L229-L240
+var validSigningAlgs = []jose.SignatureAlgorithm{
+	jose.RS256,
+	jose.RS384,
+	jose.RS512,
+	jose.ES256,
+	jose.ES384,
+	jose.ES512,
+	jose.PS256,
+	jose.PS384,
+	jose.PS512,
+}
+
 // generateRequest will generate a SPIFFE manager.CertificateRequestBundle
 // based upon the identity contained in the metadata service account token.
 func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRequestBundle, error) {
@@ -477,7 +495,8 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 		return nil, err
 	}
 
-	jwttoken, err := jwt.ParseSigned(token)
+	// see comment for validSigningAlgs for more details on how the algorithms were chosen
+	jwttoken, err := jwt.ParseSigned(token, validSigningAlgs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token request token: %w", err)
 	}
