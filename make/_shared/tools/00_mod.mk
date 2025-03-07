@@ -132,8 +132,8 @@ tools += govulncheck=v1.1.3
 tools += operator-sdk=v1.38.0
 # https://pkg.go.dev/github.com/cli/cli/v2?tab=versions
 tools += gh=v2.63.1
-# https:///github.com/redhat-openshift-ecosystem/openshift-preflight/releases
-tools += preflight=1.11.1
+# https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases
+tools += preflight=1.12.0
 # https://github.com/daixiang0/gci/releases
 tools += gci=v0.13.5
 # https://github.com/google/yamlfmt/releases
@@ -161,7 +161,7 @@ ADDITIONAL_TOOLS ?=
 tools += $(ADDITIONAL_TOOLS)
 
 # https://go.dev/dl/
-VENDORED_GO_VERSION := 1.23.6
+VENDORED_GO_VERSION := 1.23.7
 
 # Print the go version which can be used in GH actions
 .PHONY: print-go-version
@@ -380,10 +380,10 @@ $(call for_each_kv,go_dependency,$(go_dependencies))
 # File downloads #
 ##################
 
-go_linux_amd64_SHA256SUM=9379441ea310de000f33a4dc767bd966e72ab2826270e038e78b2c53c2e7802d
-go_linux_arm64_SHA256SUM=561c780e8f4a8955d32bf72e46af0b5ee5e0debe1e4633df9a03781878219202
-go_darwin_amd64_SHA256SUM=782da50ce8ec5e98fac2cd3cdc6a1d7130d093294fc310038f651444232a3fb0
-go_darwin_arm64_SHA256SUM=5cae2450a1708aeb0333237a155640d5562abaf195defebc4306054565536221
+go_linux_amd64_SHA256SUM=4741525e69841f2e22f9992af25df0c1112b07501f61f741c12c6389fcb119f3
+go_linux_arm64_SHA256SUM=597acbd0505250d4d98c4c83adf201562a8c812cbcd7b341689a07087a87a541
+go_darwin_amd64_SHA256SUM=3a3d6745286297cd011d2ab071998a85fe82714bf178dc3cd6ecd3d043a59270
+go_darwin_arm64_SHA256SUM=a08a77374a4a8ab25568cddd9dad5ba7bb6d21e04c650dc2af3def6c9115ebba
 
 .PRECIOUS: $(DOWNLOAD_DIR)/tools/go@$(VENDORED_GO_VERSION)_$(HOST_OS)_$(HOST_ARCH).tar.gz
 $(DOWNLOAD_DIR)/tools/go@$(VENDORED_GO_VERSION)_$(HOST_OS)_$(HOST_ARCH).tar.gz: | $(DOWNLOAD_DIR)/tools
@@ -598,8 +598,8 @@ $(DOWNLOAD_DIR)/tools/istioctl@$(ISTIOCTL_VERSION)_$(HOST_OS)_$(HOST_ARCH): | $(
 		chmod +x $(outfile); \
 		rm $(outfile).tar.gz
 
-preflight_linux_amd64_SHA256SUM=ec4abfa6afd8952027cf15a4b05b80317edb18572184c33018769d6f39443af5
-preflight_linux_arm64_SHA256SUM=07e10e30b824ee14b57925315fbe0fa6df90e84a1c3df1fd15546cc14382b135
+preflight_linux_amd64_SHA256SUM=0cdad38aff54242f2dd531f520e9393485a5931cd8f9fc9ebd8a23a53c2bf199
+preflight_linux_arm64_SHA256SUM=9d814ff81b94b070c6ff6941fb124d4dab9efd2f37e083c10012540db4e6a60c
 
 # Currently there are no official releases for darwin, you cannot submit results
 # on non-official binaries, but we can still run tests.
