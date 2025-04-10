@@ -16,6 +16,10 @@ spec:
         app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
         {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 8 }}
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+
       serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
       containers:
       - name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
@@ -46,6 +50,12 @@ spec:
               fieldPath: metadata.namespace
         resources:
 {{- toYaml .Values.app.approver.resources | nindent 12 }}
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: { drop: ["ALL"] }
+          readOnlyRootFilesystem: true
+
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . | quote }}
       {{- end }}
