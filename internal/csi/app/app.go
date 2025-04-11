@@ -72,6 +72,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				CertificateRequestAnnotations: opts.CertManager.CertificateRequestAnnotations,
 				CertificateRequestDuration:    opts.CertManager.CertificateRequestDuration,
 				IssuerRef:                     &opts.CertManager.IssuerRef,
+				IncludeDnsSan:                 opts.CertManager.IncludeDnsSan,
 
 				IssuanceConfigMapName:      opts.CertManager.IssuanceConfigMapName,
 				IssuanceConfigMapNamespace: opts.CertManager.IssuanceConfigMapNamespace,
