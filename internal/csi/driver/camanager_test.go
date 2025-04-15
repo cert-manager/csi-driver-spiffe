@@ -29,23 +29,18 @@ import (
 )
 
 func Test_manageCAFiles(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	t.Cleanup(func() {
-		cancel()
-	})
-
 	t.Log("starting manageCAFiles()")
 	rootCAsChan := make(chan []byte)
 	c := &camanager{
 		log:     ktesting.NewLogger(t, ktesting.DefaultConfig),
-		rootCAs: rootca.NewMemory(ctx, rootCAsChan),
+		rootCAs: rootca.NewMemory(t.Context(), rootCAsChan),
 	}
 	go func() {
-		c.run(ctx, time.Millisecond*5)
+		c.run(t.Context(), time.Millisecond*5)
 	}()
 
 	t.Log("if root CAs update happens, expect updateRootCAFilesFn() to be called")
-	calledCtx, calledCancel := context.WithCancel(context.TODO())
+	calledCtx, calledCancel := context.WithCancel(t.Context())
 	c.updateRootCAFilesFn = func() error {
 		t.Log("updateRootCAFilesFn() called")
 		calledCancel()

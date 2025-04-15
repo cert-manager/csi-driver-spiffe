@@ -17,7 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -140,7 +139,7 @@ func Test_Reconcile(t *testing.T) {
 				evaluator: test.evaluator,
 			}
 
-			result, err := a.Reconcile(context.TODO(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "test-ns", Name: "test-cr"}})
+			result, err := a.Reconcile(t.Context(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "test-ns", Name: "test-cr"}})
 			assert.Equalf(t, test.expError, err != nil, "%v", err)
 			assert.Equal(t, test.expResult, result)
 
@@ -153,7 +152,7 @@ func Test_Reconcile(t *testing.T) {
 					t.Errorf("unexpected object kind in expected: %#+v", expObj)
 				}
 
-				err := fakeclient.Get(context.TODO(), client.ObjectKeyFromObject(expObj), actual)
+				err := fakeclient.Get(t.Context(), client.ObjectKeyFromObject(expObj), actual)
 				if err != nil {
 					t.Errorf("unexpected error getting expected object: %s", err)
 				} else if !apiequality.Semantic.DeepEqual(expObj, actual) {

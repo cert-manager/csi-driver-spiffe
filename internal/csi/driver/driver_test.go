@@ -17,7 +17,6 @@ limitations under the License.
 package driver
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -37,11 +36,6 @@ import (
 
 // Ensure writeKeyPair is compatible with go-spiffe/v2 x509svid.Parse.
 func Test_writeKeyPair(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(func() {
-		cancel()
-	})
-
 	capk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)
 
@@ -65,7 +59,7 @@ func Test_writeKeyPair(t *testing.T) {
 	require.NoError(t, err)
 
 	ch := make(chan []byte)
-	rootCAs := rootca.NewMemory(ctx, ch)
+	rootCAs := rootca.NewMemory(t.Context(), ch)
 	ch <- caPEM
 
 	store := storage.NewMemoryFS()
