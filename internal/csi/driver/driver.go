@@ -444,11 +444,13 @@ func (d *Driver) Run(ctx context.Context) error {
 		d.camanager.run(ctx, updateRetryPeriod)
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		d.watchRuntimeConfigurationSource(ctx)
-	}()
+	if d.hasRuntimeConfiguration() {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			d.watchRuntimeConfigurationSource(ctx)
+		}()
+	}
 
 	wg.Add(1)
 	var err error
@@ -596,6 +598,12 @@ func (d *Driver) writeKeypair(meta metadata.Metadata, key crypto.PrivateKey, cha
 	}
 
 	return nil
+}
+
+// hasRuntimeConfiguration returns true if runtime configuration has been correctly
+// configured with a ConfigMap name and namespace, and false otherwise.
+func (d *Driver) hasRuntimeConfiguration() bool {
+	return d.issuanceConfigMapName != "" && d.issuanceConfigMapNamespace != ""
 }
 
 func sanitizeAnnotations(in map[string]string) (map[string]string, error) {
