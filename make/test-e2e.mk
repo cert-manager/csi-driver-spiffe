@@ -80,8 +80,8 @@ test-e2e: test-e2e-deps | kind-cluster $(NEEDS_GINKGO) $(NEEDS_KUBECTL) $(ARTIFA
 		--output-dir=$(ARTIFACTS) \
 		--focus="$(E2E_FOCUS)" \
 		--junit-report=junit-go-e2e.xml \
+		--ldflags "$(go_manager_ldflags)" \
 		./test/e2e/ \
-		-ldflags $(go_manager_ldflags) \
 		-- \
 		--kubeconfig-path=$(CURDIR)/$(kind_kubeconfig) \
 		--kubectl-path=$(KUBECTL) \

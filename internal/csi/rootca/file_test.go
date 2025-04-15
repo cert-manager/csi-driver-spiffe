@@ -17,7 +17,6 @@ limitations under the License.
 package rootca
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,19 +30,13 @@ func Test_NewFile(t *testing.T) {
 	filepath := filepath.Join(t.TempDir(), "test-file.pem")
 
 	t.Log("if no file exists, expect NewFile to error")
-	_, err := NewFile(context.TODO(), ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
+	_, err := NewFile(t.Context(), ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
 	assert.Error(t, err, "expect file to not exist")
 
 	t.Log("should return the contents of the file with CertificatesPEM()")
 	assert.NoError(t, os.WriteFile(filepath, []byte("test data"), 0600))
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	t.Cleanup(func() {
-		// Ensure we clean up the file watcher
-		cancel()
-	})
-
-	f, err := NewFile(ctx, ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
+	f, err := NewFile(t.Context(), ktesting.NewLogger(t, ktesting.DefaultConfig), filepath)
 	assert.NoError(t, err)
 
 	assert.Equal(t, []byte("test data"), f.CertificatesPEM())
