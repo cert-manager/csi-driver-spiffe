@@ -38,6 +38,7 @@ const (
 	//      uniformResourceIdentifier       [6]     IA5String,
 	// }
 	asn1TagURI = 6
+	asn1TagDNS = 2
 )
 
 var (
@@ -162,9 +163,9 @@ func validateSubjectAltNameExtension(ext pkix.Extension) error {
 			return err
 		}
 
-		// Only URI SANs are permitted for SPIFFE certificates
-		if rawValue.Tag != asn1TagURI {
-			return fmt.Errorf("non uri san extension given: %s", rawValue.Bytes)
+		// Allow URI and DNS SANs for SPIFFE certificates
+		if !((rawValue.Tag == asn1TagURI) || (rawValue.Tag == asn1TagDNS)) {
+			return fmt.Errorf("non uri or dns san extension given: %s", rawValue.Bytes)
 		}
 	}
 
