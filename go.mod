@@ -1,7 +1,6 @@
 module github.com/cert-manager/csi-driver-spiffe
 
-go 1.24
-toolchain go1.24.1
+go 1.24.0
 
 require (
 	github.com/cert-manager/cert-manager v1.17.2
