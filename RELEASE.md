@@ -21,9 +21,9 @@ These are:
 The latest image can be checked using `crane`:
 
 ```console
-$ crane ls registry.k8s.io/sig-storage/livenessprobe | sort -V
+crane ls --omit-digest-tags registry.k8s.io/sig-storage/livenessprobe | sort -V | tail -1
 
-$ crane ls registry.k8s.io/sig-storage/csi-node-driver-registrar | sort -V
+crane ls --omit-digest-tags registry.k8s.io/sig-storage/csi-node-driver-registrar | sort -V | tail -1
 ```
 
 ### Doing a Release
