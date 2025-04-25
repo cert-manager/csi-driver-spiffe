@@ -18,7 +18,6 @@ spec:
         kubectl.kubernetes.io/default-container: cert-manager-csi-driver-spiffe
     spec:
       securityContext:
-        readOnlyRootFilesystem: true
         seccompProfile: { type: RuntimeDefault }
 
       {{- with .Values.imagePullSecrets }}
@@ -33,6 +32,7 @@ spec:
             runAsUser: 0
             allowPrivilegeEscalation: false
             capabilities: { drop: [ "ALL" ] }
+            readOnlyRootFilesystem: true
           image: "{{ template "image" (tuple .Values.app.driver.nodeDriverRegistrarImage $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.app.driver.nodeDriverRegistrarImage.pullPolicy }}
           args:
@@ -55,6 +55,7 @@ spec:
             runAsUser: 0
             allowPrivilegeEscalation: false
             capabilities: { drop: [ "ALL" ] }
+            readOnlyRootFilesystem: true
           image: "{{ template "image" (tuple .Values.app.driver.livenessProbeImage $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.app.driver.livenessProbeImage.pullPolicy }}
           args:
@@ -71,6 +72,7 @@ spec:
             runAsUser: 0
             privileged: true
             capabilities: { drop: [ "ALL" ] }
+            readOnlyRootFilesystem: true
           image: "{{ template "image-driver" (tuple .Values.image $.Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args :
