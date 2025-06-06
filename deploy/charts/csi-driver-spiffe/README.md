@@ -94,6 +94,13 @@ Verbosity of cert-manager-csi-driver logging.
 > ```
 
 Duration requested for requested certificates.
+#### **app.includeDnsSan** ~ `string`
+> Default value:
+> ```yaml
+> "false"
+> ```
+
+Include service account name as DNS SAN
 #### **app.runtimeIssuanceConfigMap** ~ `string`
 > Default value:
 > ```yaml
