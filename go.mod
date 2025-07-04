@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/cert-manager/cert-manager v1.18.2
-	github.com/cert-manager/csi-lib v0.8.1
+	github.com/cert-manager/csi-lib v0.9.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-jose/go-jose/v4 v4.1.1
 	github.com/go-logr/logr v1.4.3
