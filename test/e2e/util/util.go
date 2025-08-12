@@ -124,7 +124,7 @@ func ReadCertFromMountPath(f *framework.Framework, mountPath string, podName str
 		containerArg := fmt.Sprintf("-c%s", containerName)
 
 		// #nosec G204
-		cmd := exec.Command(f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, podName, containerArg, "--", "cat", fullPath)
+		cmd := exec.CommandContext(f.Context(), f.Config().KubectlBinPath, "exec", "-n", f.Namespace.Name, podName, containerArg, "--", "cat", fullPath)
 
 		cmd.Stdout = buf
 		cmd.Stderr = GinkgoWriter
