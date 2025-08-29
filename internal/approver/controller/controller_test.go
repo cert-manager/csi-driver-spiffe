@@ -25,6 +25,7 @@ import (
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,7 +75,6 @@ func Test_Reconcile(t *testing.T) {
 			expError: false,
 			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
@@ -104,7 +104,6 @@ func Test_Reconcile(t *testing.T) {
 			expError: false,
 			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
@@ -156,7 +155,7 @@ func Test_Reconcile(t *testing.T) {
 				if err != nil {
 					t.Errorf("unexpected error getting expected object: %s", err)
 				} else if !apiequality.Semantic.DeepEqual(expObj, actual) {
-					t.Errorf("unexpected expected object, exp=%#+v got=%#+v", expObj, actual)
+					t.Errorf("unexpected expected object (-want +got):\n%s", cmp.Diff(expObj, actual))
 				}
 			}
 		})
