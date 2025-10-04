@@ -6,7 +6,7 @@ require (
 	github.com/cert-manager/cert-manager v1.18.2
 	github.com/cert-manager/csi-lib v0.9.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/go-jose/go-jose/v4 v4.1.2
+	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-cmp v0.7.0
 	github.com/onsi/ginkgo/v2 v2.26.0
