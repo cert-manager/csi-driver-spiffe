@@ -23,6 +23,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"maps"
 	"net/url"
 	"strings"
 	"sync"
@@ -437,19 +438,15 @@ func (d *Driver) Run(ctx context.Context) error {
 		d.driver.Stop()
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		updateRetryPeriod := time.Second * 5
 		d.camanager.run(ctx, updateRetryPeriod)
-	}()
+	})
 
 	if d.hasRuntimeConfiguration() {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			d.watchRuntimeConfigurationSource(ctx)
-		}()
+		})
 	}
 
 	wg.Add(1)
@@ -534,9 +531,7 @@ func (d *Driver) generateRequest(meta metadata.Metadata) (*manager.CertificateRe
 		annotations.SPIFFEIdentityAnnnotationKey: spiffeID,
 	}
 
-	for key, value := range d.certificateRequestAnnotations {
-		crAnnotations[key] = value
-	}
+	maps.Copy(crAnnotations, d.certificateRequestAnnotations)
 
 	return &manager.CertificateRequestBundle{
 		Request: &x509.CertificateRequest{
