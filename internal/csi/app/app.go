@@ -61,7 +61,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				log.Info("propagating root CA bundle disabled")
 			}
 
-			driver, err := driver.New(opts.Logr, driver.Options{
+			driver, err := driver.New(ctx, opts.Logr, driver.Options{
 				DriverName: opts.DriverName,
 				NodeID:     opts.Driver.NodeID,
 				Endpoint:   opts.Driver.Endpoint,
