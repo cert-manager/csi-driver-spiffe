@@ -175,7 +175,7 @@ type Driver struct {
 }
 
 // New constructs a new Driver instance.
-func New(log logr.Logger, opts Options) (*Driver, error) {
+func New(ctx context.Context, log logr.Logger, opts Options) (*Driver, error) {
 	sanitizedAnnotations, err := sanitizeAnnotations(opts.CertificateRequestAnnotations)
 	if err != nil {
 		log.Error(err, "some custom annotations were removed")
@@ -259,7 +259,7 @@ func New(log logr.Logger, opts Options) (*Driver, error) {
 	d.kubernetesClient = k8sClient
 
 	mngrLog := d.log.WithName("manager")
-	d.driver, err = driver.New(opts.Endpoint, d.log.WithName("driver"), driver.Options{
+	d.driver, err = driver.New(ctx, opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
 		DriverVersion: version.AppVersion,
 		NodeID:        opts.NodeID,
