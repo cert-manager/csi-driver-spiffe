@@ -3,7 +3,7 @@ module github.com/cert-manager/csi-driver-spiffe
 go 1.25.0
 
 require (
-	github.com/cert-manager/cert-manager v1.19.2
+	github.com/cert-manager/cert-manager v1.19.3
 	github.com/cert-manager/csi-lib v0.10.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-jose/go-jose/v4 v4.1.3
