@@ -6,6 +6,44 @@
 
 <!-- AUTO-GENERATED -->
 
+#### **image.digest.approver** ~ `string`
+
+
+Deprecated: use approverImage.digest instead
+#### **image.registry** ~ `string`
+
+
+Deprecated: use driverImage.repository and approverImage.repository instead
+#### **image.tag** ~ `string`
+
+
+Deprecated: use driverImage.tag and approverImage.tag instead
+#### **image.pullPolicy** ~ `string`
+
+
+Deprecated: use driverImage.pullPolicy and approverImage.pullPolicy instead
+#### **image.repository** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+#### **image.repository.driver** ~ `string`
+
+
+Deprecated: use driverImage.repository instead
+#### **image.repository.approver** ~ `string`
+
+
+Deprecated: use approverImage.repository instead
+#### **image.digest** ~ `object`
+> Default value:
+> ```yaml
+> {}
+> ```
+#### **image.digest.driver** ~ `string`
+
+
+Deprecated: use driverImage.digest instead
 #### **driverImage.registry** ~ `string`
 
 Target image registry. This value is prepended to the target image repository, if set.  

@@ -73,8 +73,8 @@ spec:
             privileged: true
             capabilities: { drop: [ "ALL" ] }
             readOnlyRootFilesystem: true
-          image: "{{ template "image" (tuple .Values.driverImage $.Chart.AppVersion) }}"
-          imagePullPolicy: {{ .Values.driverImage.pullPolicy }}
+          image: "{{ template "image" (tuple (include "image-compat-driver" (tuple $.Values.image $.Values.driverImage) | fromJson) $.Chart.AppVersion) }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.driverImage.pullPolicy }}
           args :
             - --log-level={{ .Values.app.logLevel }}
 

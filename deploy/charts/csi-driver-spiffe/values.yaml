@@ -1,3 +1,35 @@
+# Deprecated: use driverImage and approverImage instead
+image:
+  # +docs:property
+  # Deprecated: use driverImage.repository and approverImage.repository instead
+  # registry: quay.io
+
+  # +docs:property
+  # Deprecated: use driverImage.tag and approverImage.tag instead
+  # tag: vX.Y.Z
+
+  # +docs:property
+  # Deprecated: use driverImage.pullPolicy and approverImage.pullPolicy instead
+  # pullPolicy: IfNotPresent
+
+  repository: {}
+    # +docs:property=image.repository.driver
+    # Deprecated: use driverImage.repository instead
+    # driver: quay.io/jetstack/cert-manager-csi-driver-spiffe
+
+    # +docs:property=image.repository.approver
+    # Deprecated: use approverImage.repository instead
+    # approver: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+
+  digest: {}
+    # +docs:property=image.digest.driver
+    # Deprecated: use driverImage.digest instead
+    # driver: sha256:...
+
+    # +docs:property=image.digest.approver
+    # Deprecated: use approverImage.digest instead
+    # approver: sha256:...
+
 driverImage:
   # Target image registry. This value is prepended to the target image repository, if set.
   # For example:

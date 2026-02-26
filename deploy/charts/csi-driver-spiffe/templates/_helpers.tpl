@@ -42,3 +42,25 @@ See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linke
 {{- if .digest -}}{{ printf "@%s" .digest }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
 {{- end }}
 {{- end }}
+
+{{- define "image-compat-approver" -}}
+{{- $old := index . 0 -}}
+{{- $new := index . 1 -}}
+{{- $image := dict -}}
+{{- $_ := set $image "registry" ($old.registry | default $new.registry) -}}
+{{- $_ := set $image "repository" ($old.repository.approver | default $new.repository) -}}
+{{- $_ := set $image "tag" ($old.tag | default $new.tag) -}}
+{{- $_ := set $image "digest" ($old.digest.approver | default $new.digest) -}}
+{{- $image | toJson -}}
+{{- end }}
+
+{{- define "image-compat-driver" -}}
+{{- $old := index . 0 -}}
+{{- $new := index . 1 -}}
+{{- $image := dict -}}
+{{- $_ := set $image "registry" ($old.registry | default $new.registry) -}}
+{{- $_ := set $image "repository" ($old.repository.driver | default $new.repository) -}}
+{{- $_ := set $image "tag" ($old.tag | default $new.tag) -}}
+{{- $_ := set $image "digest" ($old.digest.driver | default $new.digest) -}}
+{{- $image | toJson -}}
+{{- end }}

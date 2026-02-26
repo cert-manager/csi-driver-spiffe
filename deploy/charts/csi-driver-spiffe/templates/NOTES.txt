@@ -1,3 +1,7 @@
+{{- if or .Values.image.registry .Values.image.repository.approver .Values.image.repository.driver .Values.image.tag .Values.image.digest.approver .Values.image.digest.driver }}
+⚠️  WARNING: `image` is deprecated, use `approverImage` or `driverImage` instead.
+
+{{- end }}
 csi-driver-spiffe {{ .Chart.AppVersion }} has been deployed successfully!
 
 For usage instructions and a guide to getting started, check out the csi-driver-spiffe
