@@ -23,8 +23,8 @@ spec:
       serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
       containers:
       - name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-        image: "{{ template "image-approver" (tuple .Values.image $.Chart.AppVersion) }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "{{ template "image" (tuple .Values.approverImage $.Chart.AppVersion) }}"
+        imagePullPolicy: {{ .Values.approverImage.pullPolicy }}
         ports:
         - containerPort: {{ .Values.app.approver.metrics.port }}
         readinessProbe:

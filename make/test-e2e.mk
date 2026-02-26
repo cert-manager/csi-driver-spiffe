@@ -58,9 +58,10 @@ E2E_RUNTIME_CONFIG_MAP_NAME ?= runtime-config-map
 E2E_FOCUS ?=
 
 test-e2e-deps: INSTALL_OPTIONS :=
-test-e2e-deps: INSTALL_OPTIONS += --set image.repository.driver=$(oci_manager_image_name_development)
-test-e2e-deps: INSTALL_OPTIONS += --set image.repository.approver=$(oci_approver_image_name_development)
-test-e2e-deps: INSTALL_OPTIONS += --set image.pullPolicy=Never
+test-e2e-deps: INSTALL_OPTIONS += --set driverImage.repository=$(oci_manager_image_name_development)
+test-e2e-deps: INSTALL_OPTIONS += --set driverImage.pullPolicy=Never
+test-e2e-deps: INSTALL_OPTIONS += --set approverImage.repository=$(oci_approver_image_name_development)
+test-e2e-deps: INSTALL_OPTIONS += --set approverImage.pullPolicy=Never
 test-e2e-deps: INSTALL_OPTIONS += --set app.trustDomain=foo.bar
 test-e2e-deps: INSTALL_OPTIONS += --set app.issuer.name=csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].name=root-cas

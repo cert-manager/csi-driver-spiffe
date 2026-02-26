@@ -1,39 +1,51 @@
-image:
+driverImage:
   # Target image registry. This value is prepended to the target image repository, if set.
   # For example:
   #   registry: quay.io
-  #   repository:
-  #     driver: jetstack/cert-manager-csi-driver-spiffe
-  #     approver: jetstack/cert-manager-csi-driver-spiffe-approver
+  #   repository: jetstack/cert-manager-csi-driver-spiffe
   # +docs:property
   # registry: quay.io
 
-  repository:
-    # Target image repository for the csi-driver driver DaemonSet.
-    driver: quay.io/jetstack/cert-manager-csi-driver-spiffe
-    # Target image repository for the csi-driver approver Deployment.
-    approver: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+  # Target image repository.
+  repository: quay.io/jetstack/cert-manager-csi-driver-spiffe
 
   # Override the image tag to deploy by setting this variable.
   # If no value is set, the chart's appVersion is used.
   # +docs:property
   # tag: vX.Y.Z
 
-  digest:
-    {}
-    # Target csi-driver driver digest. Override any tag, if set.
-    # For example:
-    #   driver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-    # +docs:property=image.digest.driver
-    # driver: sha256:...
-
-    # Target csi-driver approver digest. Override any tag, if set.
-    # For example:
-    #   approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-    # +docs:property=image.digest.approver
-    # approver: sha256:...
+  # Target image digest. Override any tag, if set.
+  # For example:
+  #   digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+  # +docs:property
+  # digest: sha256:...
 
   # Kubernetes imagePullPolicy on DaemonSet.
+  pullPolicy: IfNotPresent
+
+approverImage:
+  # Target image registry. This value is prepended to the target image repository, if set.
+  # For example:
+  #   registry: quay.io
+  #   repository: jetstack/cert-manager-csi-driver-spiffe-approver
+  # +docs:property
+  # registry: quay.io
+  
+  # Target image repository.
+  repository: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+
+  # Override the image tag to deploy by setting this variable.
+  # If no value is set, the chart's appVersion is used.
+  # +docs:property
+  # tag: vX.Y.Z
+
+  # Target image digest. Override any tag, if set.
+  # For example:
+  #   digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+  # +docs:property
+  # digest: sha256:...
+
+  # Kubernetes imagePullPolicy on Deployment.
   pullPolicy: IfNotPresent
 
 # Optional secrets used for pulling the csi-driver-spiffe and csi-driver-spiffe-approver container images

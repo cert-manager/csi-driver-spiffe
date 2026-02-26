@@ -51,9 +51,10 @@ golangci_lint_config := .golangci.yaml
 
 define helm_values_mutation_function
 $(YQ) \
-	'( .image.repository.driver = "$(oci_manager_image_name)" ) | \
-	( .image.repository.approver = "$(oci_approver_image_name)" ) | \
-	( .image.tag = "$(oci_manager_image_tag)" )' \
+	'( .driverImage.repository = "$(oci_manager_image_name)" ) | \
+	( .driverImage.tag = "$(oci_manager_image_tag)" ) | \
+	( .approverImage.repository = "$(oci_approver_image_name)" ) | \
+	( .approverImage.tag = "$(oci_approver_image_tag)" )' \
 	$1 --inplace
 endef
 

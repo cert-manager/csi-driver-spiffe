@@ -42,32 +42,3 @@ See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linke
 {{- if .digest -}}{{ printf "@%s" .digest }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
 {{- end }}
 {{- end }}
-
-{{/*
-Variants of the above image template which are addapted for the custom values format used in this chart:
-    registry: quay.io
-    repository:
-      driver: jetstack/cert-manager-csi-driver-spiffe
-      approver: jetstack/cert-manager-csi-driver-spiffe-approver
-    tag: vX.Y.Z
-    digest:
-      driver: sha256:...
-      approver: sha256:...
-    pullPolicy: IfNotPresent
-*/}}
-{{- define "image-driver" -}}
-{{- $defaultTag := index . 1 -}}
-{{- with index . 0 -}}
-{{- if .registry -}}{{ printf "%s/%s" .registry .repository.driver }}{{- else -}}{{- .repository.driver -}}{{- end -}}
-{{- if .digest.driver -}}{{ printf "@%s" .digest.driver }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
-{{- end }}
-{{- end }}
-
-{{- define "image-approver" -}}
-{{- $defaultTag := index . 1 -}}
-{{- with index . 0 -}}
-{{- if .registry -}}{{ printf "%s/%s" .registry .repository.approver }}{{- else -}}{{- .repository.approver -}}{{- end -}}
-{{- if .digest.approver -}}{{ printf "@%s" .digest.approver }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
-{{- end }}
-{{- end }}
-
