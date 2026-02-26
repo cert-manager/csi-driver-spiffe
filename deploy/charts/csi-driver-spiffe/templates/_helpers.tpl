@@ -42,3 +42,51 @@ See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linke
 {{- if .digest -}}{{ printf "@%s" .digest }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Backwards compatibility helper for driver image configuration.
+Prefers legacy image format if set, otherwise uses new driverImage format.
+*/}}
+{{- define "driver-image-config" -}}
+{{- $config := dict -}}
+{{- if .Values.image -}}
+  {{- /* Use legacy format if explicitly set */ -}}
+  {{- $_ := set $config "registry" .Values.image.registry -}}
+  {{- if and .Values.image.repository .Values.image.repository.driver -}}
+    {{- $_ := set $config "repository" .Values.image.repository.driver -}}
+  {{- end -}}
+  {{- $_ := set $config "tag" .Values.image.tag -}}
+  {{- if and .Values.image.digest .Values.image.digest.driver -}}
+    {{- $_ := set $config "digest" .Values.image.digest.driver -}}
+  {{- end -}}
+  {{- $_ := set $config "pullPolicy" .Values.image.pullPolicy -}}
+{{- else -}}
+  {{- /* Use new format */ -}}
+  {{- $config = .Values.driverImage -}}
+{{- end -}}
+{{- $config | toJson -}}
+{{- end }}
+
+{{/*
+Backwards compatibility helper for approver image configuration.
+Prefers legacy image format if set, otherwise uses new approverImage format.
+*/}}
+{{- define "approver-image-config" -}}
+{{- $config := dict -}}
+{{- if .Values.image -}}
+  {{- /* Use legacy format if explicitly set */ -}}
+  {{- $_ := set $config "registry" .Values.image.registry -}}
+  {{- if and .Values.image.repository .Values.image.repository.approver -}}
+    {{- $_ := set $config "repository" .Values.image.repository.approver -}}
+  {{- end -}}
+  {{- $_ := set $config "tag" .Values.image.tag -}}
+  {{- if and .Values.image.digest .Values.image.digest.approver -}}
+    {{- $_ := set $config "digest" .Values.image.digest.approver -}}
+  {{- end -}}
+  {{- $_ := set $config "pullPolicy" .Values.image.pullPolicy -}}
+{{- else -}}
+  {{- /* Use new format */ -}}
+  {{- $config = .Values.approverImage -}}
+{{- end -}}
+{{- $config | toJson -}}
+{{- end }}

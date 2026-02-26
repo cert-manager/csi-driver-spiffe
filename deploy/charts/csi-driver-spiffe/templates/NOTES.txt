@@ -1,4 +1,39 @@
 csi-driver-spiffe {{ .Chart.AppVersion }} has been deployed successfully!
+{{- if .Values.image }}
+
+⚠️  WARNING: The 'image' section in your values is DEPRECATED and will be removed
+⚠️  in a future release. Please migrate to using 'driverImage' and 'approverImage'
+⚠️  sections instead.
+
+❌  Old format:
+
+  image:
+    registry: quay.io
+    repository:
+      driver: jetstack/cert-manager-csi-driver-spiffe
+      approver: jetstack/cert-manager-csi-driver-spiffe-approver
+    tag: v1.0.0
+    digest:
+      driver: sha256:...
+      approver: sha256:...
+    pullPolicy: IfNotPresent
+
+✅  New format:
+
+  driverImage:
+    registry: quay.io
+    repository: jetstack/cert-manager-csi-driver-spiffe
+    tag: v1.0.0
+    digest: sha256:...
+    pullPolicy: IfNotPresent
+
+  approverImage:
+    registry: quay.io
+    repository: jetstack/cert-manager-csi-driver-spiffe-approver
+    tag: v1.0.0
+    digest: sha256:...
+    pullPolicy: IfNotPresent
+{{- end }}
 
 For usage instructions and a guide to getting started, check out the csi-driver-spiffe
 page on the cert-manager website:

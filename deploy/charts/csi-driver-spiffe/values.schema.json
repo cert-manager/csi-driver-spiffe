@@ -21,6 +21,9 @@
         "global": {
           "$ref": "#/$defs/helm-values.global"
         },
+        "image": {
+          "$ref": "#/$defs/helm-values.image"
+        },
         "imagePullSecrets": {
           "$ref": "#/$defs/helm-values.imagePullSecrets"
         },
@@ -559,6 +562,82 @@
     },
     "helm-values.global": {
       "description": "Global values shared across all (sub)charts"
+    },
+    "helm-values.image": {
+      "additionalProperties": false,
+      "description": "DEPRECATED. Use 'driverImage' and 'approverImage' instead. This is still supported for backwards compatibility but will be removed in a future release.",
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.image.digest"
+        },
+        "pullPolicy": {
+          "$ref": "#/$defs/helm-values.image.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.image.registry"
+        },
+        "repository": {
+          "$ref": "#/$defs/helm-values.image.repository"
+        },
+        "tag": {
+          "$ref": "#/$defs/helm-values.image.tag"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.image.digest": {
+      "additionalProperties": false,
+      "description": "DEPRECATED:. Use driverImage.digest and approverImage.digest instead.",
+      "properties": {
+        "approver": {
+          "$ref": "#/$defs/helm-values.image.digest.approver"
+        },
+        "driver": {
+          "$ref": "#/$defs/helm-values.image.digest.driver"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.image.digest.approver": {
+      "description": "DEPRECATED:. Use approverImage.digest instead.",
+      "type": "string"
+    },
+    "helm-values.image.digest.driver": {
+      "description": "DEPRECATED:. Use driverImage.digest instead.",
+      "type": "string"
+    },
+    "helm-values.image.pullPolicy": {
+      "description": "DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.",
+      "type": "string"
+    },
+    "helm-values.image.registry": {
+      "description": "DEPRECATED. Use driverImage.registry and approverImage.registry instead.",
+      "type": "string"
+    },
+    "helm-values.image.repository": {
+      "additionalProperties": false,
+      "description": "DEPRECATED. use driverImage.repository and approverImage.repository instead.",
+      "properties": {
+        "approver": {
+          "$ref": "#/$defs/helm-values.image.repository.approver"
+        },
+        "driver": {
+          "$ref": "#/$defs/helm-values.image.repository.driver"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.image.repository.approver": {
+      "description": "DEPRECATED:. Use approverImage.repository instead.",
+      "type": "string"
+    },
+    "helm-values.image.repository.driver": {
+      "description": "DEPRECATED:. Use driverImage.repository instead.",
+      "type": "string"
+    },
+    "helm-values.image.tag": {
+      "description": "DEPRECATED:. Use driverImage.tag and approverImage.tag instead.",
+      "type": "string"
     },
     "helm-values.imagePullSecrets": {
       "default": [],

@@ -6,6 +6,46 @@
 
 <!-- AUTO-GENERATED -->
 
+#### **image** ~ `object`
+
+DEPRECATED. Use 'driverImage' and 'approverImage' instead. This is still supported for backwards compatibility but will be removed in a future release.
+
+#### **image.registry** ~ `string`
+
+DEPRECATED. Use driverImage.registry and approverImage.registry instead.
+
+#### **image.repository** ~ `object`
+
+DEPRECATED. use driverImage.repository and approverImage.repository instead.
+
+#### **image.repository.driver** ~ `string`
+
+DEPRECATED:. Use driverImage.repository instead.
+
+#### **image.repository.approver** ~ `string`
+
+DEPRECATED:. Use approverImage.repository instead.
+
+#### **image.tag** ~ `string`
+
+DEPRECATED:. Use driverImage.tag and approverImage.tag instead.
+
+#### **image.digest** ~ `object`
+
+DEPRECATED:. Use driverImage.digest and approverImage.digest instead.
+
+#### **image.digest.driver** ~ `string`
+
+DEPRECATED:. Use driverImage.digest instead.
+
+#### **image.digest.approver** ~ `string`
+
+DEPRECATED:. Use approverImage.digest instead.
+
+#### **image.pullPolicy** ~ `string`
+
+DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.
+
 #### **driverImage.registry** ~ `string`
 
 Target image registry. This value is prepended to the target image repository, if set.  

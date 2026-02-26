@@ -1,3 +1,10 @@
+# Image configuration for the csi-driver-spiffe components.
+#
+# NOTE: The old 'image' section format (with nested repository.driver/approver
+# and digest.driver/approver) is DEPRECATED but still supported for backwards
+# compatibility. Please migrate to using the separate 'driverImage' and
+# 'approverImage' sections below.
+
 driverImage:
   # Target image registry. This value is prepended to the target image repository, if set.
   # For example:
@@ -30,7 +37,7 @@ approverImage:
   #   repository: jetstack/cert-manager-csi-driver-spiffe-approver
   # +docs:property
   # registry: quay.io
-  
+
   # Target image repository.
   repository: quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
 
@@ -283,15 +290,56 @@ tolerations: []
 topologySpreadConstraints: []
 
 openshift:
-  securityContextConstraint: 
+  securityContextConstraint:
     # Include RBAC to allow the DaemonSet to "use" the specified
     # SecurityContextConstraints.
     #
     # This value can either be a boolean true or false, or the string "detect".
-    # If set to "detect" then the securityContextConstraint is automatically 
+    # If set to "detect" then the securityContextConstraint is automatically
     # enabled for openshift installs.
     #
     # +docs:type=boolean,string,null
     enabled: detect
     # Name of the SecurityContextConstraints to create RBAC for.
     name: privileged
+
+# DEPRECATED. Use 'driverImage' and 'approverImage' instead. This is still
+# supported for backwards compatibility but will be removed in a future release.
+# +docs:property=image
+# image: {}
+
+# DEPRECATED. Use driverImage.registry and approverImage.registry instead.
+# +docs:property=image.registry
+# registry: quay.io
+
+# DEPRECATED. use driverImage.repository and approverImage.repository instead.
+# +docs:property=image.repository
+# repository: {}
+
+# DEPRECATED:. Use driverImage.repository instead.
+# +docs:property=image.repository.driver
+# driver: dummy
+
+# DEPRECATED:. Use approverImage.repository instead.
+# +docs:property=image.repository.approver
+# approver: dummy
+
+# DEPRECATED:. Use driverImage.tag and approverImage.tag instead.
+# +docs:property=image.tag
+# tag: vX.Y.Z
+
+# DEPRECATED:. Use driverImage.digest and approverImage.digest instead.
+# +docs:property=image.digest
+# digest: {}
+
+# DEPRECATED:. Use driverImage.digest instead.
+# +docs:property=image.digest.driver
+# driver: sha256:...
+
+# DEPRECATED:. Use approverImage.digest instead.
+# +docs:property=image.digest.approver
+# approver: sha256:...
+
+# DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.
+# +docs:property=image.pullPolicy
+# pullPolicy: IfNotPresent
