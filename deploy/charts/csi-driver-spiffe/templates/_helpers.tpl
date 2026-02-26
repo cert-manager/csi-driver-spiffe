@@ -48,22 +48,15 @@ Backwards compatibility helper for driver image configuration.
 Prefers legacy image format if set, otherwise uses new driverImage format.
 */}}
 {{- define "driver-image-config" -}}
+{{- $image := .Values.image | default dict -}}
+{{- $repository := $image.repository | default dict -}}
+{{- $digest := $image.digest | default dict -}}
 {{- $config := dict -}}
-{{- if .Values.image -}}
-  {{- /* Use legacy format if explicitly set */ -}}
-  {{- $_ := set $config "registry" .Values.image.registry -}}
-  {{- if and .Values.image.repository .Values.image.repository.driver -}}
-    {{- $_ := set $config "repository" .Values.image.repository.driver -}}
-  {{- end -}}
-  {{- $_ := set $config "tag" .Values.image.tag -}}
-  {{- if and .Values.image.digest .Values.image.digest.driver -}}
-    {{- $_ := set $config "digest" .Values.image.digest.driver -}}
-  {{- end -}}
-  {{- $_ := set $config "pullPolicy" .Values.image.pullPolicy -}}
-{{- else -}}
-  {{- /* Use new format */ -}}
-  {{- $config = .Values.driverImage -}}
-{{- end -}}
+{{- $_ := set $config "registry" ($image.registry | default .Values.driverImage.registry) -}}
+{{- $_ := set $config "repository" ($repository.driver | default .Values.driverImage.repository) -}}
+{{- $_ := set $config "tag" ($image.tag | default .Values.driverImage.tag) -}}
+{{- $_ := set $config "digest" ($digest.driver | default .Values.driverImage.digest) -}}
+{{- $_ := set $config "pullPolicy" ($image.pullPolicy | default .Values.driverImage.pullPolicy) -}}
 {{- $config | toJson -}}
 {{- end }}
 
@@ -72,21 +65,14 @@ Backwards compatibility helper for approver image configuration.
 Prefers legacy image format if set, otherwise uses new approverImage format.
 */}}
 {{- define "approver-image-config" -}}
+{{- $image := .Values.image | default dict -}}
+{{- $repository := $image.repository | default dict -}}
+{{- $digest := $image.digest | default dict -}}
 {{- $config := dict -}}
-{{- if .Values.image -}}
-  {{- /* Use legacy format if explicitly set */ -}}
-  {{- $_ := set $config "registry" .Values.image.registry -}}
-  {{- if and .Values.image.repository .Values.image.repository.approver -}}
-    {{- $_ := set $config "repository" .Values.image.repository.approver -}}
-  {{- end -}}
-  {{- $_ := set $config "tag" .Values.image.tag -}}
-  {{- if and .Values.image.digest .Values.image.digest.approver -}}
-    {{- $_ := set $config "digest" .Values.image.digest.approver -}}
-  {{- end -}}
-  {{- $_ := set $config "pullPolicy" .Values.image.pullPolicy -}}
-{{- else -}}
-  {{- /* Use new format */ -}}
-  {{- $config = .Values.approverImage -}}
-{{- end -}}
+{{- $_ := set $config "registry" ($image.registry | default .Values.approverImage.registry) -}}
+{{- $_ := set $config "repository" ($repository.approver | default .Values.approverImage.repository) -}}
+{{- $_ := set $config "tag" ($image.tag | default .Values.approverImage.tag) -}}
+{{- $_ := set $config "digest" ($digest.approver | default .Values.approverImage.digest) -}}
+{{- $_ := set $config "pullPolicy" ($image.pullPolicy | default .Values.approverImage.pullPolicy) -}}
 {{- $config | toJson -}}
 {{- end }}

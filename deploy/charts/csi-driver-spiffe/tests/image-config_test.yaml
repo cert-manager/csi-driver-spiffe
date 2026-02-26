@@ -142,6 +142,16 @@ tests:
           path: spec.template.spec.containers[0].image
           pattern: "^old\\.registry\\.io/old/approver:v0\\.5\\.0$"
 
+  - it: it should support partial overwrites in old format (e.g. registry only)
+    template: daemonset.yaml
+    set:
+      image.registry: custom.registry.io
+      image.tag: v0.9.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^custom\\.registry\\.io/quay\\.io/jetstack/cert-manager-csi-driver-spiffe:v0\\.9\\.0$"
+
   # Test default values when nothing is specified
   - it: should use default driverImage values
     template: daemonset.yaml
