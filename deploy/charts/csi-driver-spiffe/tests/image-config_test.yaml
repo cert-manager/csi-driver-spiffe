@@ -1,0 +1,227 @@
+suite: test image configuration backwards compatibility
+templates:
+  - daemonset.yaml
+  - deployment.yaml
+tests:
+  # Test new format (driverImage/approverImage)
+  - it: should use driverImage when specified
+    template: daemonset.yaml
+    set:
+      driverImage.registry: registry.example.com
+      driverImage.repository: custom/driver
+      driverImage.tag: v1.2.3
+      driverImage.pullPolicy: Always
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^registry\\.example\\.com/custom/driver:v1\\.2\\.3$"
+      - equal:
+          path: spec.template.spec.containers[2].imagePullPolicy
+          value: Always
+
+  - it: should use approverImage when specified
+    template: deployment.yaml
+    set:
+      approverImage.registry: registry.example.com
+      approverImage.repository: custom/approver
+      approverImage.tag: v1.2.3
+      approverImage.pullPolicy: Always
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^registry\\.example\\.com/custom/approver:v1\\.2\\.3$"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: should use driverImage digest when specified
+    template: daemonset.yaml
+    set:
+      driverImage.registry: registry.example.com
+      driverImage.repository: custom/driver
+      driverImage.digest: sha256:abcdef123456
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^registry\\.example\\.com/custom/driver@sha256:abcdef123456$"
+
+  - it: should use approverImage digest when specified
+    template: deployment.yaml
+    set:
+      approverImage.registry: registry.example.com
+      approverImage.repository: custom/approver
+      approverImage.digest: sha256:fedcba654321
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^registry\\.example\\.com/custom/approver@sha256:fedcba654321$"
+
+  # Test old format (image.repository.driver/approver) - backwards compatibility
+  - it: should use old image format for driver when specified
+    template: daemonset.yaml
+    set:
+      image.registry: quay.io
+      image.repository.driver: legacy/driver-image
+      image.tag: v0.9.0
+      image.pullPolicy: Never
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^quay\\.io/legacy/driver-image:v0\\.9\\.0$"
+      - equal:
+          path: spec.template.spec.containers[2].imagePullPolicy
+          value: Never
+
+  - it: should use old image format for approver when specified
+    template: deployment.yaml
+    set:
+      image.registry: quay.io
+      image.repository.approver: legacy/approver-image
+      image.tag: v0.9.0
+      image.pullPolicy: Never
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^quay\\.io/legacy/approver-image:v0\\.9\\.0$"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Never
+
+  - it: should use old image format with driver digest
+    template: daemonset.yaml
+    set:
+      image.registry: quay.io
+      image.repository.driver: legacy/driver-image
+      image.digest.driver: sha256:olddriver123
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^quay\\.io/legacy/driver-image@sha256:olddriver123$"
+
+  - it: should use old image format with approver digest
+    template: deployment.yaml
+    set:
+      image.registry: quay.io
+      image.repository.approver: legacy/approver-image
+      image.digest.approver: sha256:oldapprover456
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^quay\\.io/legacy/approver-image@sha256:oldapprover456$"
+
+  # Test old format without nested repository (simpler legacy format)
+  - it: should handle old image format without nested repository for driver
+    template: daemonset.yaml
+    set:
+      image.registry: docker.io
+      image.repository.driver: simple/repo
+      image.tag: v1.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^docker\\.io/simple/repo:v1\\.0\\.0$"
+
+  - it: should handle old image format without nested repository for approver
+    template: deployment.yaml
+    set:
+      image.registry: docker.io
+      image.repository.approver: simple/repo
+      image.tag: v1.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^docker\\.io/simple/repo:v1\\.0\\.0$"
+
+  # Test precedence: old format should take precedence when both are set
+  - it: should prefer old image format over new format for driver
+    template: daemonset.yaml
+    set:
+      # Old format (should be used)
+      image.registry: old.registry.io
+      image.repository.driver: old/driver
+      image.tag: v0.5.0
+      # New format (should be ignored)
+      driverImage.registry: new.registry.io
+      driverImage.repository: new/driver
+      driverImage.tag: v1.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^old\\.registry\\.io/old/driver:v0\\.5\\.0$"
+
+  - it: should prefer old image format over new format for approver
+    template: deployment.yaml
+    set:
+      # Old format (should be used)
+      image.registry: old.registry.io
+      image.repository.approver: old/approver
+      image.tag: v0.5.0
+      # New format (should be ignored)
+      approverImage.registry: new.registry.io
+      approverImage.repository: new/approver
+      approverImage.tag: v1.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^old\\.registry\\.io/old/approver:v0\\.5\\.0$"
+
+  # Test default values when nothing is specified
+  - it: should use default driverImage values
+    template: daemonset.yaml
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^quay\\.io/jetstack/cert-manager-csi-driver-spiffe:"
+      - equal:
+          path: spec.template.spec.containers[2].imagePullPolicy
+          value: IfNotPresent
+
+  - it: should use default approverImage values
+    template: deployment.yaml
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^quay\\.io/jetstack/cert-manager-csi-driver-spiffe-approver:"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  # Test that tag is optional and defaults to chart appVersion
+  - it: should use appVersion when tag is not specified in new format
+    template: daemonset.yaml
+    set:
+      driverImage.repository: custom/driver
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^custom/driver:v0\\.0\\.0$"
+
+  - it: should use appVersion when tag is not specified in old format
+    template: daemonset.yaml
+    set:
+      image.repository.driver: legacy/driver
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^legacy/driver:v0\\.0\\.0$"
+
+  # Test registry without explicit setting
+  - it: should work without registry in new format
+    template: daemonset.yaml
+    set:
+      driverImage.repository: standalone/driver
+      driverImage.tag: v2.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[2].image
+          pattern: "^standalone/driver:v2\\.0\\.0$"
+
+  - it: should work without registry in old format
+    template: deployment.yaml
+    set:
+      image.repository.approver: standalone/approver
+      image.tag: v2.0.0
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^standalone/approver:v2\\.0\\.0$"
