@@ -62,6 +62,8 @@ test-e2e-deps: INSTALL_OPTIONS += --set driverImage.repository=$(oci_manager_ima
 test-e2e-deps: INSTALL_OPTIONS += --set driverImage.pullPolicy=Never
 test-e2e-deps: INSTALL_OPTIONS += --set approverImage.repository=$(oci_approver_image_name_development)
 test-e2e-deps: INSTALL_OPTIONS += --set approverImage.pullPolicy=Never
+test-e2e-deps: INSTALL_OPTIONS += --set app.driver.livenessProbeImage.repository=$(livenessprobe_image_name_source)
+test-e2e-deps: INSTALL_OPTIONS += --set app.driver.nodeDriverRegistrarImage.repository=$(nodedriverregistrar_image_name_source)
 test-e2e-deps: INSTALL_OPTIONS += --set app.trustDomain=foo.bar
 test-e2e-deps: INSTALL_OPTIONS += --set app.issuer.name=csi-driver-spiffe-ca
 test-e2e-deps: INSTALL_OPTIONS += --set app.driver.volumes[0].name=root-cas
