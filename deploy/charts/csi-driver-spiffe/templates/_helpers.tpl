@@ -44,30 +44,35 @@ See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linke
 {{- end }}
 
 {{/*
-Variants of the above image template which are addapted for the custom values format used in this chart:
-    registry: quay.io
-    repository:
-      driver: jetstack/cert-manager-csi-driver-spiffe
-      approver: jetstack/cert-manager-csi-driver-spiffe-approver
-    tag: vX.Y.Z
-    digest:
-      driver: sha256:...
-      approver: sha256:...
-    pullPolicy: IfNotPresent
+Backwards compatibility helper for driver image configuration.
+Prefers legacy image format if set, otherwise uses new driverImage format.
 */}}
-{{- define "image-driver" -}}
-{{- $defaultTag := index . 1 -}}
-{{- with index . 0 -}}
-{{- if .registry -}}{{ printf "%s/%s" .registry .repository.driver }}{{- else -}}{{- .repository.driver -}}{{- end -}}
-{{- if .digest.driver -}}{{ printf "@%s" .digest.driver }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
-{{- end }}
-{{- end }}
-
-{{- define "image-approver" -}}
-{{- $defaultTag := index . 1 -}}
-{{- with index . 0 -}}
-{{- if .registry -}}{{ printf "%s/%s" .registry .repository.approver }}{{- else -}}{{- .repository.approver -}}{{- end -}}
-{{- if .digest.approver -}}{{ printf "@%s" .digest.approver }}{{- else -}}{{ printf ":%s" (default $defaultTag .tag) }}{{- end -}}
-{{- end }}
+{{- define "driver-image-config" -}}
+{{- $image := .Values.image | default dict -}}
+{{- $repository := $image.repository | default dict -}}
+{{- $digest := $image.digest | default dict -}}
+{{- $config := dict -}}
+{{- $_ := set $config "registry" ($image.registry | default .Values.driverImage.registry) -}}
+{{- $_ := set $config "repository" ($repository.driver | default .Values.driverImage.repository) -}}
+{{- $_ := set $config "tag" ($image.tag | default .Values.driverImage.tag) -}}
+{{- $_ := set $config "digest" ($digest.driver | default .Values.driverImage.digest) -}}
+{{- $_ := set $config "pullPolicy" ($image.pullPolicy | default .Values.driverImage.pullPolicy) -}}
+{{- $config | toJson -}}
 {{- end }}
 
+{{/*
+Backwards compatibility helper for approver image configuration.
+Prefers legacy image format if set, otherwise uses new approverImage format.
+*/}}
+{{- define "approver-image-config" -}}
+{{- $image := .Values.image | default dict -}}
+{{- $repository := $image.repository | default dict -}}
+{{- $digest := $image.digest | default dict -}}
+{{- $config := dict -}}
+{{- $_ := set $config "registry" ($image.registry | default .Values.approverImage.registry) -}}
+{{- $_ := set $config "repository" ($repository.approver | default .Values.approverImage.repository) -}}
+{{- $_ := set $config "tag" ($image.tag | default .Values.approverImage.tag) -}}
+{{- $_ := set $config "digest" ($digest.approver | default .Values.approverImage.digest) -}}
+{{- $_ := set $config "pullPolicy" ($image.pullPolicy | default .Values.approverImage.pullPolicy) -}}
+{{- $config | toJson -}}
+{{- end }}

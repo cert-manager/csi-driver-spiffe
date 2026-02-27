@@ -9,8 +9,14 @@
         "app": {
           "$ref": "#/$defs/helm-values.app"
         },
+        "approverImage": {
+          "$ref": "#/$defs/helm-values.approverImage"
+        },
         "commonLabels": {
           "$ref": "#/$defs/helm-values.commonLabels"
+        },
+        "driverImage": {
+          "$ref": "#/$defs/helm-values.driverImage"
         },
         "global": {
           "$ref": "#/$defs/helm-values.global"
@@ -463,16 +469,103 @@
       "description": "The Trust Domain for this driver.",
       "type": "string"
     },
+    "helm-values.approverImage": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.approverImage.digest"
+        },
+        "pullPolicy": {
+          "$ref": "#/$defs/helm-values.approverImage.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.approverImage.registry"
+        },
+        "repository": {
+          "$ref": "#/$defs/helm-values.approverImage.repository"
+        },
+        "tag": {
+          "$ref": "#/$defs/helm-values.approverImage.tag"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.approverImage.digest": {
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
+    "helm-values.approverImage.pullPolicy": {
+      "default": "IfNotPresent",
+      "description": "Kubernetes imagePullPolicy on Deployment.",
+      "type": "string"
+    },
+    "helm-values.approverImage.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository: jetstack/cert-manager-csi-driver-spiffe-approver",
+      "type": "string"
+    },
+    "helm-values.approverImage.repository": {
+      "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe-approver",
+      "description": "Target image repository.",
+      "type": "string"
+    },
+    "helm-values.approverImage.tag": {
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
+      "type": "string"
+    },
     "helm-values.commonLabels": {
       "default": {},
       "description": "Labels to apply to all resources",
       "type": "object"
+    },
+    "helm-values.driverImage": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/helm-values.driverImage.digest"
+        },
+        "pullPolicy": {
+          "$ref": "#/$defs/helm-values.driverImage.pullPolicy"
+        },
+        "registry": {
+          "$ref": "#/$defs/helm-values.driverImage.registry"
+        },
+        "repository": {
+          "$ref": "#/$defs/helm-values.driverImage.repository"
+        },
+        "tag": {
+          "$ref": "#/$defs/helm-values.driverImage.tag"
+        }
+      },
+      "type": "object"
+    },
+    "helm-values.driverImage.digest": {
+      "description": "Target image digest. Override any tag, if set.\nFor example:\ndigest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "type": "string"
+    },
+    "helm-values.driverImage.pullPolicy": {
+      "default": "IfNotPresent",
+      "description": "Kubernetes imagePullPolicy on DaemonSet.",
+      "type": "string"
+    },
+    "helm-values.driverImage.registry": {
+      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository: jetstack/cert-manager-csi-driver-spiffe",
+      "type": "string"
+    },
+    "helm-values.driverImage.repository": {
+      "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe",
+      "description": "Target image repository.",
+      "type": "string"
+    },
+    "helm-values.driverImage.tag": {
+      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
+      "type": "string"
     },
     "helm-values.global": {
       "description": "Global values shared across all (sub)charts"
     },
     "helm-values.image": {
       "additionalProperties": false,
+      "description": "DEPRECATED. Use 'driverImage' and 'approverImage' instead. This is still supported for backwards compatibility but will be removed in a future release.",
       "properties": {
         "digest": {
           "$ref": "#/$defs/helm-values.image.digest"
@@ -494,7 +587,7 @@
     },
     "helm-values.image.digest": {
       "additionalProperties": false,
-      "default": {},
+      "description": "DEPRECATED:. Use driverImage.digest and approverImage.digest instead.",
       "properties": {
         "approver": {
           "$ref": "#/$defs/helm-values.image.digest.approver"
@@ -506,24 +599,24 @@
       "type": "object"
     },
     "helm-values.image.digest.approver": {
-      "description": "Target csi-driver approver digest. Override any tag, if set.\nFor example:\napprover: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "description": "DEPRECATED:. Use approverImage.digest instead.",
       "type": "string"
     },
     "helm-values.image.digest.driver": {
-      "description": "Target csi-driver driver digest. Override any tag, if set.\nFor example:\ndriver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20",
+      "description": "DEPRECATED:. Use driverImage.digest instead.",
       "type": "string"
     },
     "helm-values.image.pullPolicy": {
-      "default": "IfNotPresent",
-      "description": "Kubernetes imagePullPolicy on DaemonSet.",
+      "description": "DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.",
       "type": "string"
     },
     "helm-values.image.registry": {
-      "description": "Target image registry. This value is prepended to the target image repository, if set.\nFor example:\nregistry: quay.io\nrepository:\n  driver: jetstack/cert-manager-csi-driver-spiffe\n  approver: jetstack/cert-manager-csi-driver-spiffe-approver",
+      "description": "DEPRECATED. Use driverImage.registry and approverImage.registry instead.",
       "type": "string"
     },
     "helm-values.image.repository": {
       "additionalProperties": false,
+      "description": "DEPRECATED. use driverImage.repository and approverImage.repository instead.",
       "properties": {
         "approver": {
           "$ref": "#/$defs/helm-values.image.repository.approver"
@@ -535,17 +628,15 @@
       "type": "object"
     },
     "helm-values.image.repository.approver": {
-      "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe-approver",
-      "description": "Target image repository for the csi-driver approver Deployment.",
+      "description": "DEPRECATED:. Use approverImage.repository instead.",
       "type": "string"
     },
     "helm-values.image.repository.driver": {
-      "default": "quay.io/jetstack/cert-manager-csi-driver-spiffe",
-      "description": "Target image repository for the csi-driver driver DaemonSet.",
+      "description": "DEPRECATED:. Use driverImage.repository instead.",
       "type": "string"
     },
     "helm-values.image.tag": {
-      "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
+      "description": "DEPRECATED:. Use driverImage.tag and approverImage.tag instead.",
       "type": "string"
     },
     "helm-values.imagePullSecrets": {

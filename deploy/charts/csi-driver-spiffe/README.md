@@ -6,66 +6,120 @@
 
 <!-- AUTO-GENERATED -->
 
+#### **image** ~ `object`
+
+DEPRECATED. Use 'driverImage' and 'approverImage' instead. This is still supported for backwards compatibility but will be removed in a future release.
+
 #### **image.registry** ~ `string`
+
+DEPRECATED. Use driverImage.registry and approverImage.registry instead.
+
+#### **image.repository** ~ `object`
+
+DEPRECATED. use driverImage.repository and approverImage.repository instead.
+
+#### **image.repository.driver** ~ `string`
+
+DEPRECATED:. Use driverImage.repository instead.
+
+#### **image.repository.approver** ~ `string`
+
+DEPRECATED:. Use approverImage.repository instead.
+
+#### **image.tag** ~ `string`
+
+DEPRECATED:. Use driverImage.tag and approverImage.tag instead.
+
+#### **image.digest** ~ `object`
+
+DEPRECATED:. Use driverImage.digest and approverImage.digest instead.
+
+#### **image.digest.driver** ~ `string`
+
+DEPRECATED:. Use driverImage.digest instead.
+
+#### **image.digest.approver** ~ `string`
+
+DEPRECATED:. Use approverImage.digest instead.
+
+#### **image.pullPolicy** ~ `string`
+
+DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.
+
+#### **driverImage.registry** ~ `string`
 
 Target image registry. This value is prepended to the target image repository, if set.  
 For example:
 
 ```yaml
 registry: quay.io
-repository:
-  driver: jetstack/cert-manager-csi-driver-spiffe
-  approver: jetstack/cert-manager-csi-driver-spiffe-approver
+repository: jetstack/cert-manager-csi-driver-spiffe
 ```
 
-#### **image.repository.driver** ~ `string`
+#### **driverImage.repository** ~ `string`
 > Default value:
 > ```yaml
 > quay.io/jetstack/cert-manager-csi-driver-spiffe
 > ```
 
-Target image repository for the csi-driver driver DaemonSet.
-#### **image.repository.approver** ~ `string`
-> Default value:
-> ```yaml
-> quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
-> ```
-
-Target image repository for the csi-driver approver Deployment.
-#### **image.tag** ~ `string`
+Target image repository.
+#### **driverImage.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
 
-#### **image.digest** ~ `object`
-> Default value:
-> ```yaml
-> {}
-> ```
-#### **image.digest.driver** ~ `string`
+#### **driverImage.digest** ~ `string`
 
-Target csi-driver driver digest. Override any tag, if set.  
+Target image digest. Override any tag, if set.  
 For example:
 
 ```yaml
-driver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
 ```
 
-#### **image.digest.approver** ~ `string`
-
-Target csi-driver approver digest. Override any tag, if set.  
-For example:
-
-```yaml
-approver: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
-```
-
-#### **image.pullPolicy** ~ `string`
+#### **driverImage.pullPolicy** ~ `string`
 > Default value:
 > ```yaml
 > IfNotPresent
 > ```
 
 Kubernetes imagePullPolicy on DaemonSet.
+#### **approverImage.registry** ~ `string`
+
+Target image registry. This value is prepended to the target image repository, if set.  
+For example:
+
+```yaml
+registry: quay.io
+repository: jetstack/cert-manager-csi-driver-spiffe-approver
+```
+
+#### **approverImage.repository** ~ `string`
+> Default value:
+> ```yaml
+> quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+> ```
+
+Target image repository.
+#### **approverImage.tag** ~ `string`
+
+Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
+
+#### **approverImage.digest** ~ `string`
+
+Target image digest. Override any tag, if set.  
+For example:
+
+```yaml
+digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
+```
+
+#### **approverImage.pullPolicy** ~ `string`
+> Default value:
+> ```yaml
+> IfNotPresent
+> ```
+
+Kubernetes imagePullPolicy on Deployment.
 #### **imagePullSecrets** ~ `array`
 > Default value:
 > ```yaml

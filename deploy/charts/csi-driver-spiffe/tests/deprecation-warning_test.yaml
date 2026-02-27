@@ -1,0 +1,27 @@
+suite: test deprecation warning for old image format
+templates:
+  - NOTES.txt
+tests:
+  - it: should show deprecation warning when old image format is used
+    set:
+      image.registry: quay.io
+      image.repository.driver: old/driver
+      image.repository.approver: old/approver
+    asserts:
+      - matchRegexRaw:
+          pattern: "WARNING: The 'image' section in your values is DEPRECATED"
+      - matchRegexRaw:
+          pattern: "Please migrate to using 'driverImage' and 'approverImage'"
+
+  - it: should NOT show deprecation warning when only new format is used
+    set:
+      driverImage.repository: new/driver
+      approverImage.repository: new/approver
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "WARNING: The 'image' section in your values is DEPRECATED"
+
+  - it: should NOT show deprecation warning with default values
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "WARNING: The 'image' section in your values is DEPRECATED"
