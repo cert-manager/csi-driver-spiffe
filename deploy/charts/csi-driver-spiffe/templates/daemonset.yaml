@@ -33,7 +33,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities: { drop: [ "ALL" ] }
             readOnlyRootFilesystem: true
-          image: "{{ template "image" (tuple .Values.app.driver.nodeDriverRegistrarImage $.Chart.AppVersion) }}"
+          image: "{{ template "image" (tuple .Values.app.driver.nodeDriverRegistrarImage .Values.imageRegistry .Values.imageNamespace .Values.app.driver.nodeDriverRegistrarImage._defaultReference) }}"
           imagePullPolicy: {{ .Values.app.driver.nodeDriverRegistrarImage.pullPolicy }}
           args:
             - -v={{ .Values.app.logLevel }}
@@ -56,7 +56,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities: { drop: [ "ALL" ] }
             readOnlyRootFilesystem: true
-          image: "{{ template "image" (tuple .Values.app.driver.livenessProbeImage $.Chart.AppVersion) }}"
+          image: "{{ template "image" (tuple .Values.app.driver.livenessProbeImage .Values.imageRegistry .Values.imageNamespace .Values.app.driver.livenessProbeImage._defaultReference) }}"
           imagePullPolicy: {{ .Values.app.driver.livenessProbeImage.pullPolicy }}
           args:
             - --csi-address=/plugin/csi.sock
@@ -74,7 +74,7 @@ spec:
             capabilities: { drop: [ "ALL" ] }
             readOnlyRootFilesystem: true
           {{- $driverImageConfig := include "driver-image-config" . | fromJson }}
-          image: "{{ template "image" (tuple $driverImageConfig $.Chart.AppVersion) }}"
+          image: "{{ template "image" (tuple $driverImageConfig .Values.imageRegistry .Values.imageNamespace (printf ":%s" $.Chart.AppVersion)) }}"
           imagePullPolicy: {{ $driverImageConfig.pullPolicy }}
           args :
             - --log-level={{ .Values.app.logLevel }}

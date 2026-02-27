@@ -46,6 +46,25 @@ DEPRECATED:. Use approverImage.digest instead.
 
 DEPRECATED:. Use driverImage.pullPolicy and approverImage.pullPolicy instead.
 
+#### **imageRegistry** ~ `string`
+> Default value:
+> ```yaml
+> quay.io
+> ```
+
+The container registry used for csi-driver-spiffe images by default. This can include path prefixes (e.g. "artifactory.example.com/docker").
+
+#### **imageNamespace** ~ `string`
+> Default value:
+> ```yaml
+> jetstack
+> ```
+
+The repository namespace used for csi-driver-spiffe images by default.  
+Examples:  
+- jetstack  
+- cert-manager
+
 #### **driverImage.registry** ~ `string`
 
 Target image registry. This value is prepended to the target image repository, if set.  
@@ -56,13 +75,32 @@ registry: quay.io
 repository: jetstack/cert-manager-csi-driver-spiffe
 ```
 
+Deprecated: per-component registry prefix.  
+  
+If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from  
+`imageRegistry` + `imageNamespace` + `image.name`.  
+  
+This can produce "double registry" style references such as  
+`legacy.example.io/quay.io/jetstack/...`. Prefer using the global  
+`imageRegistry`/`imageNamespace` values.
+
 #### **driverImage.repository** ~ `string`
 > Default value:
 > ```yaml
-> quay.io/jetstack/cert-manager-csi-driver-spiffe
+> ""
 > ```
 
-Target image repository.
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`). Example: quay.io/jetstack/cert-manager-csi-driver-spiffe
+
+#### **driverImage.name** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager-csi-driver-spiffe
+> ```
+
+The image name for the csi-driver.  
+This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
+
 #### **driverImage.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
@@ -93,13 +131,32 @@ registry: quay.io
 repository: jetstack/cert-manager-csi-driver-spiffe-approver
 ```
 
+Deprecated: per-component registry prefix.  
+  
+If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from  
+`imageRegistry` + `imageNamespace` + `image.name`.  
+  
+This can produce "double registry" style references such as  
+`legacy.example.io/quay.io/jetstack/...`. Prefer using the global  
+`imageRegistry`/`imageNamespace` values.
+
 #### **approverImage.repository** ~ `string`
 > Default value:
 > ```yaml
-> quay.io/jetstack/cert-manager-csi-driver-spiffe-approver
+> ""
 > ```
 
-Target image repository.
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`). Example: quay.io/jetstack/cert-manager-csi-driver-spiffe
+
+#### **approverImage.name** ~ `string`
+> Default value:
+> ```yaml
+> cert-manager-csi-driver-spiffe-approver
+> ```
+
+The image name for the csi-driver.  
+This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
+
 #### **approverImage.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
@@ -140,7 +197,7 @@ imagePullSecrets:
 > 1
 > ```
 
-Verbosity of cert-manager-csi-driver logging.
+Verbosity of cert-manager-csi-driver-spiffe logging.
 #### **app.certificateRequestDuration** ~ `string`
 > Default value:
 > ```yaml
@@ -300,18 +357,33 @@ registry: registry.k8s.io
 repository: sig-storage/csi-node-driver-registrar
 ```
 
+Deprecated: per-component registry prefix.  
+  
+If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from  
+`imageRegistry` + `imageNamespace` + `image.name`.  
+  
+This can produce "double registry" style references such as  
+`legacy.example.io/quay.io/jetstack/...`. Prefer using the global  
+`imageRegistry`/`imageNamespace` values.
+
 #### **app.driver.nodeDriverRegistrarImage.repository** ~ `string`
 > Default value:
 > ```yaml
-> registry.k8s.io/sig-storage/csi-node-driver-registrar
+> ""
 > ```
 
-Target image repository.
-#### **app.driver.nodeDriverRegistrarImage.tag** ~ `string`
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`). Example: quay.io/jetstack/cert-manager-csi-driver-spiffe
+
+#### **app.driver.nodeDriverRegistrarImage.name** ~ `string`
 > Default value:
 > ```yaml
-> v2.16.0@sha256:ab482308a4921e28a6df09a16ab99a457e9af9641ff44fb1be1a690d07ce8b70
+> csi-node-driver-registrar
 > ```
+
+The image name for the node-driver-registrar.  
+This is used to construct the full image reference if `repository` is empty.
+
+#### **app.driver.nodeDriverRegistrarImage.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
 
@@ -341,18 +413,33 @@ registry: registry.k8s.io
 repository: sig-storage/livenessprobe
 ```
 
+Deprecated: per-component registry prefix.  
+  
+If set, this value is *prepended* to the image repository that the chart would otherwise render. This applies both when `image.repository` is set and when the repository is computed from  
+`imageRegistry` + `imageNamespace` + `image.name`.  
+  
+This can produce "double registry" style references such as  
+`legacy.example.io/quay.io/jetstack/...`. Prefer using the global  
+`imageRegistry`/`imageNamespace` values.
+
 #### **app.driver.livenessProbeImage.repository** ~ `string`
 > Default value:
 > ```yaml
-> registry.k8s.io/sig-storage/livenessprobe
+> ""
 > ```
 
-Target image repository.
-#### **app.driver.livenessProbeImage.tag** ~ `string`
+Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`). Example: quay.io/jetstack/cert-manager-csi-driver-spiffe
+
+#### **app.driver.livenessProbeImage.name** ~ `string`
 > Default value:
 > ```yaml
-> v2.18.0@sha256:c4cc074199c045dd73ab85f28897e2a32f4d6f38ffdba4f3b13b8007ccbd3570
+> livenessprobe
 > ```
+
+The image name for the liveness probe.  
+This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
+
+#### **app.driver.livenessProbeImage.tag** ~ `string`
 
 Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.
 

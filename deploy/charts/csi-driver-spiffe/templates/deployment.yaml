@@ -24,7 +24,7 @@ spec:
       containers:
       - name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
         {{- $approverImageConfig := include "approver-image-config" . | fromJson }}
-        image: "{{ template "image" (tuple $approverImageConfig $.Chart.AppVersion) }}"
+        image: "{{ template "image" (tuple $approverImageConfig .Values.imageRegistry .Values.imageNamespace (printf ":%s" $.Chart.AppVersion)) }}"
         imagePullPolicy: {{ $approverImageConfig.pullPolicy }}
         ports:
         - containerPort: {{ .Values.app.approver.metrics.port }}

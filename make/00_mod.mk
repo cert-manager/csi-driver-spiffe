@@ -49,12 +49,18 @@ helm_labels_template_name := cert-manager-csi-driver-spiffe.labels
 
 golangci_lint_config := .golangci.yaml
 
+livenessprobe_image_name_source := registry.k8s.io/sig-storage/livenessprobe
+livenessprobe_image_name := quay.io/jetstack/livenessprobe
+livenessprobe_image_tag := v2.18.0
+
+nodedriverregistrar_image_name_source := registry.k8s.io/sig-storage/csi-node-driver-registrar
+nodedriverregistrar_image_name := quay.io/jetstack/csi-node-driver-registrar
+nodedriverregistrar_image_tag := v2.16.0
+
 define helm_values_mutation_function
 $(YQ) \
-	'( .driverImage.repository = "$(oci_manager_image_name)" ) | \
-	( .driverImage.tag = "$(oci_manager_image_tag)" ) | \
-	( .approverImage.repository = "$(oci_approver_image_name)" ) | \
-	( .approverImage.tag = "$(oci_approver_image_tag)" )' \
+	'( .app.driver.livenessProbeImage._defaultReference = ":$(livenessprobe_image_tag)" ) | \
+	( .app.driver.nodeDriverRegistrarImage._defaultReference = ":$(nodedriverregistrar_image_tag)" )' \
 	$1 --inplace
 endef
 
