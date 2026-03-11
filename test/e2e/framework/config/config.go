@@ -43,7 +43,7 @@ func GetConfig() *Config {
 type Config struct {
 	kubeConfig string
 
-	IssuerRef             cmmeta.ObjectReference
+	IssuerRef             cmmeta.IssuerReference
 	IssuerSecretNamespace string
 	IssuerSecretName      string
 	RestConfig            *rest.Config
