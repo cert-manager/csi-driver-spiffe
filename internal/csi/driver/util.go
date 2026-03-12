@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"github.com/cert-manager/csi-lib/metadata"
+
+	cmpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 )
 
 // generatePrivateKey generates an ECDSA private key, which is the only currently supported type
@@ -35,7 +37,27 @@ func generatePrivateKey(_ metadata.Metadata) (crypto.PrivateKey, error) {
 }
 
 // signRequest will sign a given X.509 certificate signing request with the given key.
+// When URI SANs are present and the subject is empty (as with SPIFFE SVIDs),
+// RFC 5280 §4.2.1.6 requires the SAN extension to be marked critical.
+// Go's x509.CreateCertificateRequest does not do this, so we marshal the
+// SAN extension ourselves via cert-manager's MarshalSANs helper.
 func signRequest(_ metadata.Metadata, key crypto.PrivateKey, request *x509.CertificateRequest) ([]byte, error) {
+	if len(request.URIs) > 0 {
+		uriStrings := make([]string, len(request.URIs))
+		for i, u := range request.URIs {
+			uriStrings[i] = u.String()
+		}
+		sans := cmpki.GeneralNames{UniformResourceIdentifiers: uriStrings}
+		// hasSubject=false → Critical=true
+		sanExt, err := cmpki.MarshalSANs(sans, false)
+		if err != nil {
+			return nil, err
+		}
+		request.ExtraExtensions = append(request.ExtraExtensions, sanExt)
+		// Clear URIs to avoid a duplicate SAN extension from the stdlib.
+		request.URIs = nil
+	}
+
 	csrDer, err := x509.CreateCertificateRequest(rand.Reader, request, key)
 	if err != nil {
 		return nil, err
