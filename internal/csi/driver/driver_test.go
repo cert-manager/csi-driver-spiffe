@@ -20,6 +20,11 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/pem"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -128,4 +133,45 @@ func Test_DriverAnnotationSanitization(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_signRequest_SAN_critical(t *testing.T) {
+	const spiffeID = "spiffe://example.org/ns/default/sa/workload"
+
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+
+	spiffeURI, err := url.Parse(spiffeID)
+	require.NoError(t, err)
+
+	csrTemplate := &x509.CertificateRequest{
+		// Subject intentionally left empty — this is the SPIFFE SVID pattern.
+		Subject: pkix.Name{},
+		URIs:    []*url.URL{spiffeURI},
+	}
+
+	csrPEM, err := signRequest(metadata.Metadata{}, key, csrTemplate)
+	require.NoError(t, err)
+
+	block, _ := pem.Decode(csrPEM)
+	require.NotNil(t, block, "PEM decode must succeed")
+
+	csr, err := x509.ParseCertificateRequest(block.Bytes)
+	require.NoError(t, err)
+
+	sanOID := asn1.ObjectIdentifier{2, 5, 29, 17}
+
+	var sanExt *pkix.Extension
+	for i := range csr.Extensions {
+		if csr.Extensions[i].Id.Equal(sanOID) {
+			sanExt = &csr.Extensions[i]
+			break
+		}
+	}
+	require.NotNil(t, sanExt, "CSR must contain the SAN extension (OID 2.5.29.17)")
+	require.True(t, sanExt.Critical, "SAN extension must be critical when subject is empty")
+
+	// Verify the SPIFFE URI is present in the parsed CSR.
+	require.Len(t, csr.URIs, 1)
+	require.Equal(t, spiffeID, csr.URIs[0].String())
 }
