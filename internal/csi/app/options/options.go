@@ -74,7 +74,7 @@ type OptionsCertManager struct {
 	CertificateRequestDuration time.Duration
 
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
-	IssuerRef cmmeta.ObjectReference
+	IssuerRef cmmeta.IssuerReference
 }
 
 // OptionsVolume is options specific to mounted volumes.

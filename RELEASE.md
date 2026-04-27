@@ -10,21 +10,20 @@ There is a semi-automated release process for this project. When you create a Gi
 
 ### Preparing for a Release
 
-**BEFORE** doing a release, check if the other images in the csi-driver Helm
-chart need to be updated.
+**BEFORE** doing a release, check if the other images in the csi-driver-spiffe Helm
+chart need to be updated. These images are copied to `quay.io/jetstack` as part of our
+release process.
 
 These are:
 
-- registry.k8s.io/sig-storage/livenessprobe (`.Values.livenessProbeImage.tag`)
-- registry.k8s.io/sig-storage/csi-node-driver-registrar (`.Values.nodeDriverRegistrarImage.tag`)
-
-The latest image can be checked using `crane`:
-
-```console
-crane ls --omit-digest-tags registry.k8s.io/sig-storage/livenessprobe | sort -V | tail -1
-
-crane ls --omit-digest-tags registry.k8s.io/sig-storage/csi-node-driver-registrar | sort -V | tail -1
-```
+- `registry.k8s.io/sig-storage/livenessprobe` copied to `quay.io/jetstack/livenessprobe`
+    - find the latest version using crane:  
+    `crane ls --omit-digest-tags registry.k8s.io/sig-storage/livenessprobe | sort -V | tail -1`
+    - update `livenessprobe_image_tag` in `make/00_mod.mk`
+- `registry.k8s.io/sig-storage/csi-node-driver-registrar` copied to `quay.io/jetstack/csi-node-driver-registrar`
+    - find the latest version using crane:  
+    `crane ls --omit-digest-tags registry.k8s.io/sig-storage/csi-node-driver-registrar | sort -V | tail -1`
+    - update `nodedriverregistrar_image_tag` in `make/00_mod.mk`
 
 ### Doing a Release
 

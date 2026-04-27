@@ -79,7 +79,7 @@ type Options struct {
 	CertificateRequestDuration time.Duration
 
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
-	IssuerRef *cmmeta.ObjectReference
+	IssuerRef *cmmeta.IssuerReference
 
 	// CertificateFileName is the name of the file that the signed certificate
 	// will be written to inside the Pod's volume.
@@ -133,12 +133,12 @@ type Driver struct {
 	// Can be changed at runtime via runtime configuration (i.e. reading from a ConfigMap)
 	// Not to be confused with originalIssuerRef, which is an issuerRef optionally passed in
 	// via CLI args.
-	activeIssuerRef *cmmeta.ObjectReference
+	activeIssuerRef *cmmeta.IssuerReference
 
 	// originalIssuerRef is the issuerRef passed into the driver at startup. This will be used
 	// if no runtime configuration (ConfigMap configuration) is found, or if the ConfigMap for
 	// runtime configuration is deleted.
-	originalIssuerRef *cmmeta.ObjectReference
+	originalIssuerRef *cmmeta.IssuerReference
 
 	// activeIssuerRefMutex is used to control changes to the activeIssuerRef which can happen
 	// concurrently with a request to issue a new cert
@@ -380,7 +380,7 @@ func (d *Driver) handleRuntimeConfigIssuerChange(logger logr.Logger, event watch
 		return fmt.Errorf("got unexpected type for runtime configuration source; this is likely a programming error")
 	}
 
-	issuerRef := &cmmeta.ObjectReference{}
+	issuerRef := &cmmeta.IssuerReference{}
 
 	var dataErrs []error
 	var exists bool
@@ -620,7 +620,7 @@ func sanitizeAnnotations(in map[string]string) (map[string]string, error) {
 
 var errNoOriginalIssuer = fmt.Errorf("no original issuer was provided")
 
-func handleOriginalIssuerRef(in *cmmeta.ObjectReference) (*cmmeta.ObjectReference, error) {
+func handleOriginalIssuerRef(in *cmmeta.IssuerReference) (*cmmeta.IssuerReference, error) {
 	if in == nil {
 		return nil, errNoOriginalIssuer
 	}

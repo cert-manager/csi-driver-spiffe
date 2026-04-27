@@ -49,7 +49,7 @@ var _ = Context("Approval", func() {
 		namespace corev1.Namespace
 
 		evaluator = evaluatorfake.New()
-		issuerRef = cmmeta.ObjectReference{
+		issuerRef = cmmeta.IssuerReference{
 			Name:  "spiffe-ca",
 			Kind:  "ClusterIssuer",
 			Group: "cert-manager.io",

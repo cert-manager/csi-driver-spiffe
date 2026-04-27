@@ -163,7 +163,7 @@ func dummyIssuerCleanupFunc() error {
 // completes.
 // The cleanup function is always safe to call and should always be called after this function
 // returns, regardless of whether it returned an error or not
-func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.ObjectReference, IssuerCleanupFunc, error) {
+func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.IssuerReference, IssuerCleanupFunc, error) {
 	iss := &cmapi.ClusterIssuer{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "selfsigned-clusterissuer-",
@@ -184,7 +184,7 @@ func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.ObjectReference, Is
 		return f.Client().Delete(f.Context(), iss)
 	}
 
-	issuerRef := &cmmeta.ObjectReference{
+	issuerRef := &cmmeta.IssuerReference{
 		Name:  iss.Name,
 		Kind:  "ClusterIssuer",
 		Group: "cert-manager.io",
@@ -199,7 +199,7 @@ func CreateSelfSignedIssuer(f *framework.Framework) (*cmmeta.ObjectReference, Is
 // clean up all issuer resources.
 // The cleanup function is always safe to call and should always be called after this function
 // returns, regardless of whether it returned an error or not
-func CreateNewCAIssuer(f *framework.Framework) (*cmmeta.ObjectReference, *CertBundle, IssuerCleanupFunc, error) {
+func CreateNewCAIssuer(f *framework.Framework) (*cmmeta.IssuerReference, *CertBundle, IssuerCleanupFunc, error) {
 	var objectsForCleanup []client.Object
 
 	selfSignedIssuerRef, selfSignedCleanupFunc, err := CreateSelfSignedIssuer(f)
@@ -286,7 +286,7 @@ func CreateNewCAIssuer(f *framework.Framework) (*cmmeta.ObjectReference, *CertBu
 		return nil, nil, cleanupFunc, err
 	}
 
-	newIssuerRef := cmmeta.ObjectReference{
+	newIssuerRef := cmmeta.IssuerReference{
 		Name:  iss.Name,
 		Kind:  "ClusterIssuer",
 		Group: "cert-manager.io",
