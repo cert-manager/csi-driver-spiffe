@@ -35,7 +35,7 @@ IMPORTANT: This function is standardized across all charts in the cert-manager G
 Any changes to this function should also be made in cert-manager, trust-manager, approver-policy, ...
 See https://github.com/cert-manager/cert-manager/issues/6329 for a list of linked PRs.
 */}}
-{{- define "image" -}}
+{{- define "cert-manager-csi-driver-spiffe.image" -}}
 {{- /*
 Calling convention:
 
@@ -47,7 +47,7 @@ usage through tuple/variable indirection.
 */ -}}
 
 {{- if ne (len .) 4 -}}
-    {{- fail (printf "ERROR: template \"image\" expects (tuple <imageValues> <imageRegistry> <imageNamespace> <defaultReference>), got %d arguments" (len .)) -}}
+    {{- fail (printf "ERROR: template \"cert-manager-csi-driver-spiffe.image\" expects (tuple <imageValues> <imageRegistry> <imageNamespace> <defaultReference>), got %d arguments" (len .)) -}}
 {{- end -}}
 
 {{- $image := index . 0 -}}
@@ -95,7 +95,7 @@ usage through tuple/variable indirection.
 {{- else -}}
     {{- printf "%s" $defaultReference -}}
 {{- end -}}
-{{- end }}
+{{- end -}}
 
 {{/*
 Backwards compatibility helper for driver image configuration.
