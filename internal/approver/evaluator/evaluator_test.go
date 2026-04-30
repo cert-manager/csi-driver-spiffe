@@ -26,7 +26,6 @@ import (
 	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func Test_Evaluate(t *testing.T) {
@@ -231,7 +230,7 @@ func Test_Evaluate(t *testing.T) {
 				csr, err := utilpki.GenerateCSR(&cmapi.Certificate{
 					Spec: cmapi.CertificateSpec{
 						PrivateKey:            &cmapi.CertificatePrivateKey{Algorithm: cmapi.ECDSAKeyAlgorithm},
-						EncodeUsagesInRequest: ptr.To(true),
+						EncodeUsagesInRequest: new(true),
 						URIs:                  []string{"spiffe://foo.bar/ns/sandbox/sa/sleep"},
 						Usages: []cmapi.KeyUsage{
 							cmapi.UsageDigitalSignature, cmapi.UsageKeyEncipherment,

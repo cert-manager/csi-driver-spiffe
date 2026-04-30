@@ -23,7 +23,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/framework"
 	"github.com/cert-manager/csi-driver-spiffe/test/e2e/util"
@@ -98,7 +97,7 @@ var _ = framework.CasesDescribe("RuntimeConfiguration", func() {
 					VolumeSource: corev1.VolumeSource{
 						CSI: &corev1.CSIVolumeSource{
 							Driver:           "spiffe.csi.cert-manager.io",
-							ReadOnly:         ptr.To(true),
+							ReadOnly:         new(true),
 							VolumeAttributes: map[string]string{},
 						},
 					},
