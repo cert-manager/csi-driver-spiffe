@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -38,6 +39,7 @@ import (
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator/fake"
+	"github.com/cert-manager/csi-driver-spiffe/internal/csi/runtimeconfig"
 )
 
 func Test_Reconcile(t *testing.T) {
@@ -47,12 +49,31 @@ func Test_Reconcile(t *testing.T) {
 		fixedclock    = fakeclock.NewFakeClock(fixedTime)
 	)
 
+	spiffeAnnotations := map[string]string{
+		"spiffe.csi.cert-manager.io/identity": "spiffe://cluster.local/ns/test-ns/sa/test-sa",
+	}
+
+	spiffeIssuerRef := cmmeta.IssuerReference{
+		Name:  "spiffe-ca",
+		Kind:  "ClusterIssuer",
+		Group: "cert-manager.io",
+	}
+	otherIssuerRef := cmmeta.IssuerReference{
+		Name:  "other-ca",
+		Kind:  "ClusterIssuer",
+		Group: "cert-manager.io",
+	}
+	spiffeRuntimeConfig := runtimeconfig.NewMemory(context.Background(),
+		runtimeconfig.Config{IssuerRef: spiffeIssuerRef}, nil)
+
 	tests := map[string]struct {
-		existingCRObjects []client.Object
-		evaluator         evaluator.Interface
-		expResult         ctrl.Result
-		expError          bool
-		expObjects        []client.Object
+		existingCRObjects    []client.Object
+		evaluator            evaluator.Interface
+		runtimeConfig        runtimeconfig.Interface
+		autoApproveNonSpiffe bool
+		expResult            ctrl.Result
+		expError             bool
+		expObjects           []client.Object
 	}{
 		"if CertificateRequest doesn't exist, ignore": {
 			existingCRObjects: []client.Object{},
@@ -65,7 +86,7 @@ func Test_Reconcile(t *testing.T) {
 			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
-					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10", Annotations: spiffeAnnotations},
 				},
 			},
 			expResult: ctrl.Result{},
@@ -75,7 +96,7 @@ func Test_Reconcile(t *testing.T) {
 			expError: false,
 			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11", Annotations: spiffeAnnotations},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
 							{
@@ -94,7 +115,7 @@ func Test_Reconcile(t *testing.T) {
 			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
 					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
-					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10", Annotations: spiffeAnnotations},
 				},
 			},
 			expResult: ctrl.Result{},
@@ -104,7 +125,7 @@ func Test_Reconcile(t *testing.T) {
 			expError: false,
 			expObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11", Annotations: spiffeAnnotations},
 					Status: cmapi.CertificateRequestStatus{
 						Conditions: []cmapi.CertificateRequestCondition{
 							{
@@ -112,6 +133,68 @@ func Test_Reconcile(t *testing.T) {
 								Status:             cmmeta.ConditionTrue,
 								Reason:             "spiffe.csi.cert-manager.io",
 								Message:            "Approved request",
+								LastTransitionTime: fixedmetatime,
+							},
+						},
+					},
+				},
+			},
+		},
+		"auto-approve: unannotated request targeting non-SPIFFE issuer is Approved": {
+			existingCRObjects: []client.Object{
+				&cmapi.CertificateRequest{
+					TypeMeta: metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
+					Spec:     cmapi.CertificateRequestSpec{IssuerRef: otherIssuerRef},
+				},
+			},
+			evaluator:            fake.New(),
+			runtimeConfig:        spiffeRuntimeConfig,
+			autoApproveNonSpiffe: true,
+			expResult:            ctrl.Result{},
+			expError:             false,
+			expObjects: []client.Object{
+				&cmapi.CertificateRequest{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
+					Spec:       cmapi.CertificateRequestSpec{IssuerRef: otherIssuerRef},
+					Status: cmapi.CertificateRequestStatus{
+						Conditions: []cmapi.CertificateRequestCondition{
+							{
+								Type:               cmapi.CertificateRequestConditionApproved,
+								Status:             cmmeta.ConditionTrue,
+								Reason:             "spiffe.csi.cert-manager.io",
+								Message:            "Approved request",
+								LastTransitionTime: fixedmetatime,
+							},
+						},
+					},
+				},
+			},
+		},
+		"auto-approve: unannotated request targeting SPIFFE issuer is Denied": {
+			existingCRObjects: []client.Object{
+				&cmapi.CertificateRequest{
+					TypeMeta: metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
+					Spec:     cmapi.CertificateRequestSpec{IssuerRef: spiffeIssuerRef},
+				},
+			},
+			evaluator:            fake.New(),
+			runtimeConfig:        spiffeRuntimeConfig,
+			autoApproveNonSpiffe: true,
+			expResult:            ctrl.Result{},
+			expError:             false,
+			expObjects: []client.Object{
+				&cmapi.CertificateRequest{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "11"},
+					Spec:       cmapi.CertificateRequestSpec{IssuerRef: spiffeIssuerRef},
+					Status: cmapi.CertificateRequestStatus{
+						Conditions: []cmapi.CertificateRequestCondition{
+							{
+								Type:               cmapi.CertificateRequestConditionDenied,
+								Status:             cmmeta.ConditionTrue,
+								Reason:             "spiffe.csi.cert-manager.io",
+								Message:            "Denied request: non-SPIFFE certificate targeting configured SPIFFE issuer",
 								LastTransitionTime: fixedmetatime,
 							},
 						},
@@ -132,10 +215,12 @@ func Test_Reconcile(t *testing.T) {
 				Build()
 
 			a := &approver{
-				client:    fakeclient,
-				lister:    fakeclient,
-				log:       ktesting.NewLogger(t, ktesting.DefaultConfig),
-				evaluator: test.evaluator,
+				client:               fakeclient,
+				lister:               fakeclient,
+				log:                  ktesting.NewLogger(t, ktesting.DefaultConfig),
+				evaluator:            test.evaluator,
+				runtimeConfig:        test.runtimeConfig,
+				autoApproveNonSpiffe: test.autoApproveNonSpiffe,
 			}
 
 			result, err := a.Reconcile(t.Context(), ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "test-ns", Name: "test-cr"}})

@@ -92,6 +92,9 @@
     "helm-values.app.approver": {
       "additionalProperties": false,
       "properties": {
+        "autoApproveNonSpiffe": {
+          "$ref": "#/$defs/helm-values.app.approver.autoApproveNonSpiffe"
+        },
         "metrics": {
           "$ref": "#/$defs/helm-values.app.approver.metrics"
         },
@@ -109,6 +112,11 @@
         }
       },
       "type": "object"
+    },
+    "helm-values.app.approver.autoApproveNonSpiffe": {
+      "default": false,
+      "description": "When enabled, the approver will approve all CertificateRequests that do not target the configured SPIFFE issuer. This allows csi-driver-spiffe to act as a drop-in replacement for cert-manager's default approval controller, removing the need for approver-policy in simple deployments.\n\nWARNING: Enabling this grants the approver authority to approve all. CertificateRequests cluster-wide that do not target the SPIFFE issuer. Only enable if cert-manager's built-in auto-approver has been disabled.",
+      "type": "boolean"
     },
     "helm-values.app.approver.metrics": {
       "additionalProperties": false,
