@@ -64,4 +64,3 @@ func (m *memory) Config() Config {
 	defer m.lock.RUnlock()
 	return m.active
 }
-

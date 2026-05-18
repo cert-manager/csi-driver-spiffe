@@ -143,9 +143,9 @@ func Test_Reconcile(t *testing.T) {
 		"auto-approve: unannotated request targeting non-SPIFFE issuer is Approved": {
 			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					TypeMeta: metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
+					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
-					Spec:     cmapi.CertificateRequestSpec{IssuerRef: otherIssuerRef},
+					Spec:       cmapi.CertificateRequestSpec{IssuerRef: otherIssuerRef},
 				},
 			},
 			evaluator:            fake.New(),
@@ -174,9 +174,9 @@ func Test_Reconcile(t *testing.T) {
 		"auto-approve: unannotated request targeting SPIFFE issuer is Denied": {
 			existingCRObjects: []client.Object{
 				&cmapi.CertificateRequest{
-					TypeMeta: metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
+					TypeMeta:   metav1.TypeMeta{Kind: "CertificateRequest", APIVersion: "cert-manager.io/v1"},
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: "test-cr", ResourceVersion: "10"},
-					Spec:     cmapi.CertificateRequestSpec{IssuerRef: spiffeIssuerRef},
+					Spec:       cmapi.CertificateRequestSpec{IssuerRef: spiffeIssuerRef},
 				},
 			},
 			evaluator:            fake.New(),
