@@ -20,11 +20,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/app/options"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/driver"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
+	"github.com/cert-manager/csi-driver-spiffe/internal/csi/runtimeconfig"
 	"github.com/cert-manager/csi-driver-spiffe/internal/version"
 )
 
@@ -61,6 +64,30 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				log.Info("propagating root CA bundle disabled")
 			}
 
+			// Store the logger in the context so that packages using
+			// logr.FromContext can retrieve it.
+			ctx = logr.NewContext(ctx, opts.Logr)
+
+			var k8sClient client.WithWatch
+			if opts.CertManager.IssuanceConfigMapName != "" {
+				var err error
+				k8sClient, err = client.NewWithWatch(opts.RestConfig, client.Options{})
+				if err != nil {
+					return fmt.Errorf("failed to build kubernetes watcher client: %w", err)
+				}
+			}
+
+			rtConfig, err := runtimeconfig.New(ctx, k8sClient, runtimeconfig.Options{
+				StaticConfig: runtimeconfig.Config{IssuerRef: opts.CertManager.IssuerRef},
+				DynamicConfig: runtimeconfig.DynamicConfig{
+					ConfigMapName:      opts.CertManager.IssuanceConfigMapName,
+					ConfigMapNamespace: opts.CertManager.IssuanceConfigMapNamespace,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
 			driver, err := driver.New(ctx, opts.Logr, driver.Options{
 				DriverName: opts.DriverName,
 				NodeID:     opts.Driver.NodeID,
@@ -71,16 +98,13 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				TrustDomain:                   opts.CertManager.TrustDomain,
 				CertificateRequestAnnotations: opts.CertManager.CertificateRequestAnnotations,
 				CertificateRequestDuration:    opts.CertManager.CertificateRequestDuration,
-				IssuerRef:                     &opts.CertManager.IssuerRef,
-
-				IssuanceConfigMapName:      opts.CertManager.IssuanceConfigMapName,
-				IssuanceConfigMapNamespace: opts.CertManager.IssuanceConfigMapNamespace,
 
 				CertificateFileName: opts.Volume.CertificateFileName,
 				KeyFileName:         opts.Volume.KeyFileName,
 
-				CAFileName: opts.Volume.CAFileName,
-				RootCAs:    rootCA,
+				CAFileName:    opts.Volume.CAFileName,
+				RootCAs:       rootCA,
+				RuntimeConfig: rtConfig,
 			})
 			if err != nil {
 				return err
