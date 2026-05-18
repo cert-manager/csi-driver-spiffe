@@ -32,6 +32,7 @@ import (
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator"
+	"github.com/cert-manager/csi-driver-spiffe/internal/csi/runtimeconfig"
 )
 
 type Options struct {
@@ -42,6 +43,14 @@ type Options struct {
 	// Manager is a controller-runtime Manager that the Approver controller will
 	// be registered against.
 	Manager manager.Manager
+
+	// RuntimeConfig provides the current runtime configuration, including the
+	// issuer reference to use when creating CertificateRequests.
+	RuntimeConfig runtimeconfig.Interface
+
+	// AutoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
+	AutoApproveNonSpiffe bool
 }
 
 // approver watches for CertificateRequests which have been created by the
@@ -60,15 +69,25 @@ type approver struct {
 	// evaluator evaluates matched CertificateRequests for whether they should be
 	// approved or denied.
 	evaluator evaluator.Interface
+
+	// runtimeConfig provides the current runtime configuration, including the
+	// issuer reference to use when creating CertificateRequests.
+	runtimeConfig runtimeconfig.Interface
+
+	// autoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
+	autoApproveNonSpiffe bool
 }
 
 // AddApprover will register the approver controller.
 func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 	a := &approver{
-		log:       log.WithName("controller"),
-		client:    opts.Manager.GetClient(),
-		lister:    opts.Manager.GetCache(),
-		evaluator: opts.Evaluator,
+		log:                  log.WithName("controller"),
+		client:               opts.Manager.GetClient(),
+		lister:               opts.Manager.GetCache(),
+		evaluator:            opts.Evaluator,
+		runtimeConfig:        opts.RuntimeConfig,
+		autoApproveNonSpiffe: opts.AutoApproveNonSpiffe,
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
@@ -98,7 +117,10 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 			// We expect that all csi-driver-spiffe certificates will have the identity
 			// annotation, so check for its existence as a final filter
 			_, annotationExists := req.ObjectMeta.Annotations[annotations.SPIFFEIdentityAnnnotationKey]
-			return annotationExists
+
+			// When auto-approval is enabled, also process annotation-absent requests
+			// so they can be approved or denied based on their issuerRef.
+			return annotationExists || a.autoApproveNonSpiffe
 		})).
 		Complete(a)
 }
@@ -115,12 +137,28 @@ func (a *approver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := a.evaluator.Evaluate(&cr); err != nil {
-		log.Error(err, "denying request")
-		apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: "+err.Error())
+	// If the annotation is set we use the normal evaluation flow
+	if _, annotationExists := cr.Annotations[annotations.SPIFFEIdentityAnnnotationKey]; annotationExists {
+		if err := a.evaluator.Evaluate(&cr); err != nil {
+			log.Error(err, "denying request")
+			apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: "+err.Error())
+			return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
+		}
+
+		log.Info("approving request")
+		apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Approved request")
 		return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
 	}
 
+	// Deny unannotated requests that target the SPIFFE issuer to prevent
+	// obtaining a SPIFFE certificate outside of the normal validation path.
+	if cr.Spec.IssuerRef == a.runtimeConfig.Config().IssuerRef {
+		log.Info("denying request")
+		apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: non-SPIFFE certificate targeting configured SPIFFE issuer")
+		return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
+	}
+
+	// Request is not for the spiffe issuer, auto approve
 	log.Info("approving request")
 	apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Approved request")
 	return ctrl.Result{}, a.client.Status().Update(ctx, &cr)

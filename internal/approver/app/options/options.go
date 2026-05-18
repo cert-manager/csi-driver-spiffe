@@ -19,6 +19,7 @@ package options
 import (
 	"time"
 
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/spf13/pflag"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/flags"
@@ -56,12 +57,25 @@ type OptionsController struct {
 
 // OptionsCertManager are options specific to cert-manager and the evaluator.
 type OptionsCertManager struct {
+	// IssuanceConfigMapName is the name of a ConfigMap to watch for configuration options. The ConfigMap is expected to be in the same namespace as the csi-driver-spiffe pod.
+	IssuanceConfigMapName string
+
+	// IssuanceConfigMapNamespace is the namespace where the runtime configuration ConfigMap is located
+	IssuanceConfigMapNamespace string
+
 	// TrustDomain is the Trust Domain the evaluator will enforce requests request for.
 	TrustDomain string
 
 	// CertificateRequestDuration is the duration the evaluator will enforce
 	// CertificateRequest request for.
 	CertificateRequestDuration time.Duration
+
+	// IssuerRef is the IssuerRef used when creating CertificateRequests.
+	IssuerRef cmmeta.IssuerReference
+
+	// AutoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
+	AutoApproveNonSpiffe bool
 }
 
 func New() *Options {
@@ -73,33 +87,29 @@ func New() *Options {
 }
 
 func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&o.CertManager.IssuanceConfigMapName, "runtime-issuance-config-map-name", "",
+		"Name of a ConfigMap to watch at runtime for issuer details. If such a ConfigMap is found, overrides issuer-name, issuer-kind and issuer-group")
+
+	fs.StringVar(&o.CertManager.IssuanceConfigMapNamespace, "runtime-issuance-config-map-namespace", "",
+		"Namespace for ConfigMap to be watched at runtime for issuer details")
+
 	fs.StringVar(&o.CertManager.TrustDomain, "trust-domain", "cluster.local",
 		"The trust domain this approver ensures is present on requests.")
 
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration which is enforced for requests to have.")
 
-	// allow issuer-* args to still be passed to avoid a backwards incompatible change
-	var dummyIssuerRefName, dummyIssuerRefKind, dummyIssuerRefGroup string
+	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
+		"Name of the issuer that CertificateRequests will be created for.")
 
-	fs.StringVar(&dummyIssuerRefName, "issuer-name", "", "Deprecated; value is ignored")
-	fs.StringVar(&dummyIssuerRefKind, "issuer-kind", "", "Deprecated; value is ignored")
-	fs.StringVar(&dummyIssuerRefGroup, "issuer-group", "", "Deprecated; value is ignored")
+	fs.StringVar(&o.CertManager.IssuerRef.Kind, "issuer-kind", "ClusterIssuer",
+		"Kind of the issuer that CertificateRequests will be created for.")
 
-	err := fs.MarkDeprecated("issuer-name", "issuer-name is deprecated and will be ignored")
-	if err != nil {
-		panic("failed to mark issuer-name flag as deprecated; this is an internal programming error")
-	}
+	fs.StringVar(&o.CertManager.IssuerRef.Group, "issuer-group", "cert-manager.io",
+		"Group of the issuer that CertificateRequests will be created for.")
 
-	err = fs.MarkDeprecated("issuer-kind", "issuer-kind is deprecated and will be ignored")
-	if err != nil {
-		panic("failed to mark issuer-kind flag as deprecated; this is an internal programming error")
-	}
-
-	err = fs.MarkDeprecated("issuer-group", "issuer-group is deprecated and will be ignored")
-	if err != nil {
-		panic("failed to mark issuer-group flag as deprecated; this is an internal programming error")
-	}
+	fs.BoolVar(&o.CertManager.AutoApproveNonSpiffe, "auto-approve-non-spiffe", false,
+		"Enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.")
 }
 
 func (o *Options) addControllerFlags(fs *pflag.FlagSet) {
