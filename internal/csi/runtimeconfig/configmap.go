@@ -221,4 +221,3 @@ func (c *configmap) Config() Config {
 	defer c.lock.RUnlock()
 	return c.active
 }
-

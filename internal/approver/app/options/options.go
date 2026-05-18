@@ -19,9 +19,9 @@ package options
 import (
 	"time"
 
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/spf13/pflag"
 
-	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/csi-driver-spiffe/internal/flags"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
