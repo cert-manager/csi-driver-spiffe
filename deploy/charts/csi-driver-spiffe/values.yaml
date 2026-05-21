@@ -308,8 +308,7 @@ app:
     #
     # WARNING: Enabling this grants the approver authority to approve all
     # CertificateRequests cluster-wide that do not target the SPIFFE issuer.
-    # Only enable if cert-manager's built-in auto-approver has been disabled.
-    autoApproveNonSpiffe: false
+    autoApproveNonSPIFFE: false
 
     readinessProbe:
       # Container port to expose csi-driver-spiffe-approver HTTP readiness

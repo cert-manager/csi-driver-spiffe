@@ -84,9 +84,9 @@ type OptionsCertManager struct {
 	// IssuerRef is the IssuerRef used when creating CertificateRequests.
 	IssuerRef cmmeta.IssuerReference
 
-	// AutoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// AutoApproveNonSPIFFE enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
 	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
-	AutoApproveNonSpiffe bool
+	AutoApproveNonSPIFFE bool
 }
 
 func New() *Options {
@@ -129,7 +129,7 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CertManager.IssuerRef.Group, "issuer-group", "cert-manager.io",
 		"Group of the issuer that CertificateRequests will be created for.")
 
-	fs.BoolVar(&o.CertManager.AutoApproveNonSpiffe, "auto-approve-non-spiffe", false,
+	fs.BoolVar(&o.CertManager.AutoApproveNonSPIFFE, "auto-approve-non-spiffe", false,
 		"Enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.")
 }
 

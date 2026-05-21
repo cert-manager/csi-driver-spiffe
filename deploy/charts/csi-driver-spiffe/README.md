@@ -489,7 +489,7 @@ Number of replicas of the approver to run.
 > ```
 
 A signer name that the csi-driver-spiffe approver will be given permission to approve and deny. CertificateRequests referencing this signer name can be processed by the SPIFFE approver. See: https://cert-manager.io/docs/concepts/certificaterequest/#approval. Defaults to empty which allows approval for all signers
-#### **app.approver.autoApproveNonSpiffe** ~ `bool`
+#### **app.approver.autoApproveNonSPIFFE** ~ `bool`
 > Default value:
 > ```yaml
 > false
@@ -497,7 +497,7 @@ A signer name that the csi-driver-spiffe approver will be given permission to ap
 
 When enabled, the approver will approve all CertificateRequests that do not target the configured SPIFFE issuer. This allows csi-driver-spiffe to act as a drop-in replacement for cert-manager's default approval controller, removing the need for approver-policy in simple deployments.  
   
-WARNING: Enabling this grants the approver authority to approve all. CertificateRequests cluster-wide that do not target the SPIFFE issuer. Only enable if cert-manager's built-in auto-approver has been disabled.
+WARNING: Enabling this grants the approver authority to approve all. CertificateRequests cluster-wide that do not target the SPIFFE issuer.
 #### **app.approver.readinessProbe.port** ~ `number`
 > Default value:
 > ```yaml

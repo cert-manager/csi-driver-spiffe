@@ -47,7 +47,7 @@ spec:
           - "--runtime-issuance-config-map-name={{.Values.app.runtimeIssuanceConfigMap}}"
           - "--runtime-issuance-config-map-namespace={{.Release.Namespace}}"
 
-          {{- if .Values.app.approver.autoApproveNonSpiffe }}
+          {{- if .Values.app.approver.autoApproveNonSPIFFE }}
           - --auto-approve-non-spiffe
           {{- end }}
           - --leader-election-namespace=$(POD_NAMESPACE)

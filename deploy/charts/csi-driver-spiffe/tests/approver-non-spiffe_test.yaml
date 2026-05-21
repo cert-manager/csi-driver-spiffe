@@ -2,16 +2,16 @@ suite: test approver non-SPIFFE auto-approval args
 templates:
   - deployment.yaml
 tests:
-  - it: should inject --auto-approve-non-spiffe when autoApproveNonSpiffe is true
+  - it: should inject --auto-approve-non-spiffe when autoApproveNonSPIFFE is true
     template: deployment.yaml
     set:
-      app.approver.autoApproveNonSpiffe: true
+      app.approver.autoApproveNonSPIFFE: true
     asserts:
       - contains:
           path: spec.template.spec.containers[0].args
           content: --auto-approve-non-spiffe
 
-  - it: should not inject --auto-approve-non-spiffe when autoApproveNonSpiffe is false (default)
+  - it: should not inject --auto-approve-non-spiffe when autoApproveNonSPIFFE is false (default)
     template: deployment.yaml
     asserts:
       - notContains:

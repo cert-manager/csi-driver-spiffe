@@ -86,7 +86,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			if opts.CertManager.AutoApproveNonSpiffe {
+			if opts.CertManager.AutoApproveNonSPIFFE {
 				log.Info("auto-approval of non-SPIFFE CertificateRequests enabled: this approver will approve all CertificateRequests not targeting the configured SPIFFE issuer")
 			}
 
@@ -122,7 +122,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				Evaluator:            evaluator,
 				Manager:              mgr,
 				RuntimeConfig:        rtConfig,
-				AutoApproveNonSpiffe: opts.CertManager.AutoApproveNonSpiffe,
+				AutoApproveNonSPIFFE: opts.CertManager.AutoApproveNonSPIFFE,
 			}); err != nil {
 				return fmt.Errorf("failed to register approver controller: %w", err)
 			}

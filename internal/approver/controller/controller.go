@@ -23,6 +23,7 @@ import (
 	apiutil "github.com/cert-manager/cert-manager/pkg/api/util"
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -48,9 +49,9 @@ type Options struct {
 	// issuer reference to use when creating CertificateRequests.
 	RuntimeConfig runtimeconfig.Interface
 
-	// AutoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// AutoApproveNonSPIFFE enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
 	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
-	AutoApproveNonSpiffe bool
+	AutoApproveNonSPIFFE bool
 }
 
 // approver watches for CertificateRequests which have been created by the
@@ -74,9 +75,9 @@ type approver struct {
 	// issuer reference to use when creating CertificateRequests.
 	runtimeConfig runtimeconfig.Interface
 
-	// autoApproveNonSpiffe enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
+	// autoApproveNonSPIFFE enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows
 	// csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.
-	autoApproveNonSpiffe bool
+	autoApproveNonSPIFFE bool
 }
 
 // AddApprover will register the approver controller.
@@ -87,7 +88,7 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 		lister:               opts.Manager.GetCache(),
 		evaluator:            opts.Evaluator,
 		runtimeConfig:        opts.RuntimeConfig,
-		autoApproveNonSpiffe: opts.AutoApproveNonSpiffe,
+		autoApproveNonSPIFFE: opts.AutoApproveNonSPIFFE,
 	}
 
 	return ctrl.NewControllerManagedBy(opts.Manager).
@@ -120,7 +121,7 @@ func AddApprover(ctx context.Context, log logr.Logger, opts Options) error {
 
 			// When auto-approval is enabled, also process annotation-absent requests
 			// so they can be approved or denied based on their issuerRef.
-			return annotationExists || a.autoApproveNonSpiffe
+			return annotationExists || a.autoApproveNonSPIFFE
 		})).
 		Complete(a)
 }
@@ -148,6 +149,18 @@ func (a *approver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result
 		log.Info("approving request")
 		apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionApproved, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Approved request")
 		return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
+	}
+
+	// Deny unannotated requests that contain SPIFFE URI SANs to prevent
+	// impersonating a SPIFFE identity via a non-SPIFFE issuer.
+	if csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request); err == nil {
+		for _, uri := range csr.URIs {
+			if uri.Scheme == "spiffe" {
+				log.Info("denying request")
+				apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: non-SPIFFE certificate request contains SPIFFE URI SAN")
+				return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
+			}
+		}
 	}
 
 	// Deny unannotated requests that target the SPIFFE issuer to prevent
