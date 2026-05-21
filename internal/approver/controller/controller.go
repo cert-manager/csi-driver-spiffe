@@ -156,7 +156,7 @@ func (a *approver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result
 	if csr, err := utilpki.DecodeX509CertificateRequestBytes(cr.Spec.Request); err == nil {
 		for _, uri := range csr.URIs {
 			if uri.Scheme == "spiffe" {
-				log.Info("denying request")
+				log.Info("denying request: non-SPIFFE certificate request contains SPIFFE URI SAN")
 				apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: non-SPIFFE certificate request contains SPIFFE URI SAN")
 				return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
 			}
@@ -166,7 +166,7 @@ func (a *approver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result
 	// Deny unannotated requests that target the SPIFFE issuer to prevent
 	// obtaining a SPIFFE certificate outside of the normal validation path.
 	if cr.Spec.IssuerRef == a.runtimeConfig.Config().IssuerRef {
-		log.Info("denying request")
+		log.Info("denying request: non-SPIFFE certificate targeting configured SPIFFE issuer")
 		apiutil.SetCertificateRequestCondition(&cr, cmapi.CertificateRequestConditionDenied, cmmeta.ConditionTrue, "spiffe.csi.cert-manager.io", "Denied request: non-SPIFFE certificate targeting configured SPIFFE issuer")
 		return ctrl.Result{}, a.client.Status().Update(ctx, &cr)
 	}
