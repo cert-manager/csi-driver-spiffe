@@ -79,8 +79,9 @@ func NewCommand(ctx context.Context) *cobra.Command {
 				CertificateFileName: opts.Volume.CertificateFileName,
 				KeyFileName:         opts.Volume.KeyFileName,
 
-				CAFileName: opts.Volume.CAFileName,
-				RootCAs:    rootCA,
+				CAFileName:           opts.Volume.CAFileName,
+				RootCAs:              rootCA,
+				UseOwnServiceAccount: opts.Driver.UseOwnServiceAccount,
 			})
 			if err != nil {
 				return err

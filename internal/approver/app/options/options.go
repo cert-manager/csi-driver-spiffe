@@ -62,6 +62,17 @@ type OptionsCertManager struct {
 	// CertificateRequestDuration is the duration the evaluator will enforce
 	// CertificateRequest request for.
 	CertificateRequestDuration time.Duration
+
+	// UseOwnServiceAccount, when true, changes the approval validation strategy.
+	// Instead of verifying that the SPIFFE identity in the CSR matches the
+	// requesting pod's ServiceAccount, the approver verifies that the requester
+	// is the driver's own ServiceAccount (DriverServiceAccount).
+	UseOwnServiceAccount bool
+
+	// DriverServiceAccount is the full Kubernetes username of the CSI driver's
+	// ServiceAccount (e.g. "system:serviceaccount:cert-manager:spiffe.csi.cert-manager.io").
+	// Only used when UseOwnServiceAccount is true.
+	DriverServiceAccount string
 }
 
 func New() *Options {
@@ -78,6 +89,16 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 
 	fs.DurationVar(&o.CertManager.CertificateRequestDuration, "certificate-request-duration", time.Hour,
 		"The duration which is enforced for requests to have.")
+
+	fs.BoolVar(&o.CertManager.UseOwnServiceAccount, "use-own-service-account", false,
+		"When true, the approver validates that CertificateRequests are made by the "+
+			"driver's own ServiceAccount (--driver-service-account) rather than by the "+
+			"mounting pod's ServiceAccount.")
+
+	fs.StringVar(&o.CertManager.DriverServiceAccount, "driver-service-account", "",
+		"Full Kubernetes username of the CSI driver's ServiceAccount "+
+			"(e.g. \"system:serviceaccount:cert-manager:spiffe.csi.cert-manager.io\"). "+
+			"Required when --use-own-service-account is true.")
 
 	// allow issuer-* args to still be passed to avoid a backwards incompatible change
 	var dummyIssuerRefName, dummyIssuerRefKind, dummyIssuerRefGroup string

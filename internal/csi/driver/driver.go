@@ -31,7 +31,7 @@ import (
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
+	cmversioned "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/cert-manager/csi-lib/driver"
 	"github.com/cert-manager/csi-lib/manager"
 	"github.com/cert-manager/csi-lib/manager/util"
@@ -110,6 +110,11 @@ type Options struct {
 
 	// IssuanceConfigMapNamespace is the namespace of the ConfigMap to watch for issuance configuration
 	IssuanceConfigMapNamespace string
+
+	// UseOwnServiceAccount, when true, causes the driver to create
+	// CertificateRequests using its own ServiceAccount credentials rather than
+	// impersonating the mounting pod's ServiceAccount.
+	UseOwnServiceAccount bool
 }
 
 // Driver is used for running the actual CSI driver. Driver will respond to
@@ -246,9 +251,17 @@ func New(ctx context.Context, log logr.Logger, opts Options) (*Driver, error) {
 	d.camanager = newCAManager(log, store, opts.RootCAs,
 		opts.CertificateFileName, opts.KeyFileName, opts.CAFileName)
 
-	cmclient, err := cmclient.NewForConfig(opts.RestConfig)
+	cmclient, err := cmversioned.NewForConfig(opts.RestConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build cert-manager client: %w", err)
+	}
+
+	// In own-service-account mode, ClientForMetadata is left nil so the
+	// manager falls back to Client (the driver's own SA). In the default mode,
+	// we supply a per-pod impersonation client derived from the pod's token.
+	var clientForMeta manager.ClientForMetadataFunc
+	if !opts.UseOwnServiceAccount {
+		clientForMeta = util.ClientForMetadataTokenRequestEmptyAud(opts.RestConfig)
 	}
 
 	k8sClient, err := client.NewWithWatch(opts.RestConfig, client.Options{})
@@ -265,9 +278,8 @@ func New(ctx context.Context, log logr.Logger, opts Options) (*Driver, error) {
 		NodeID:        opts.NodeID,
 		Store:         d.store,
 		Manager: manager.NewManagerOrDie(manager.Options{
-			Client: cmclient,
-			// Use Pod's service account to request CertificateRequests.
-			ClientForMetadata:    util.ClientForMetadataTokenRequestEmptyAud(opts.RestConfig),
+			Client:               cmclient,
+			ClientForMetadata:    clientForMeta,
 			MaxRequestsPerVolume: 1,
 			MetadataReader:       d.store,
 			Clock:                clock.RealClock{},

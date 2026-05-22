@@ -100,6 +100,9 @@ spec:
           {{- if .Values.app.extraCertificateRequestAnnotations }}
             - --extra-certificate-request-annotations={{ .Values.app.extraCertificateRequestAnnotations }}
           {{- end }}
+          {{- if .Values.app.driver.useOwnServiceAccount }}
+            - --use-own-service-account=true
+          {{- end }}
           env:
             - name: NODE_ID
               valueFrom:

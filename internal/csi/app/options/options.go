@@ -52,6 +52,13 @@ type OptionsDriver struct {
 
 	// Endpoint is the endpoint which is used to listen for gRPC requests.
 	Endpoint string
+
+	// UseOwnServiceAccount, when true, causes the driver to create
+	// CertificateRequests using its own ServiceAccount credentials rather than
+	// impersonating the mounting pod's ServiceAccount. When enabled, the
+	// approver is not required; a ValidatingAdmissionPolicy should be deployed
+	// instead.
+	UseOwnServiceAccount bool
 }
 
 // OptionsCertManager is options specific to cert-manager CertificateRequests.
@@ -116,6 +123,11 @@ func (o *Options) addDriverFlags(fs *pflag.FlagSet) {
 		"Path to the in-memory data directory used to store data.")
 	fs.StringVar(&o.Driver.Endpoint, "endpoint", "",
 		"Path to the unix socket used to listen for gRPC requests.")
+	fs.BoolVar(&o.Driver.UseOwnServiceAccount, "use-own-service-account", false,
+		"When true, the driver creates CertificateRequests using its own "+
+			"ServiceAccount credentials rather than impersonating the mounting pod's "+
+			"ServiceAccount. When enabled, the approver is not required; a "+
+			"ValidatingAdmissionPolicy should be deployed instead.")
 }
 
 func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {

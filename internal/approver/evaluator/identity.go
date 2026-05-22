@@ -22,6 +22,33 @@ import (
 	"strings"
 )
 
+// validateDriverServiceAccount validates that:
+//   - the CSR contains exactly one URI SAN with the spiffe:// scheme and the
+//     correct trust domain, and
+//   - the CertificateRequest was made by the driver's own ServiceAccount.
+//
+// Used when UseOwnServiceAccount is true.
+func (i *internal) validateDriverServiceAccount(csr *x509.CertificateRequest, username string) error {
+	if len(csr.URIs) != 1 {
+		return fmt.Errorf("expected exactly 1 SPIFFE URI present on request, got=%d", len(csr.URIs))
+	}
+
+	if csr.URIs[0].Scheme != "spiffe" {
+		return fmt.Errorf("URI scheme is not spiffe: %s", csr.URIs[0].Scheme)
+	}
+
+	if csr.URIs[0].Host != i.trustDomain {
+		return fmt.Errorf("unexpected trust domain, exp=%q got=%q", i.trustDomain, csr.URIs[0].Host)
+	}
+
+	if username != i.driverServiceAccount {
+		return fmt.Errorf("request must be made by the csi-driver-spiffe ServiceAccount, exp=%q got=%q",
+			i.driverServiceAccount, username)
+	}
+
+	return nil
+}
+
 // validateIdentity validates that the SPIFFE ID contained in the X.509
 // certificate request matches that in the username.
 // The username should be the Username as it appears on the CertificateRequest.

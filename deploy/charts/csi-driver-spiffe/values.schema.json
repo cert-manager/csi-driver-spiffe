@@ -253,6 +253,9 @@
         "sourceCABundle": {
           "$ref": "#/$defs/helm-values.app.driver.sourceCABundle"
         },
+        "useOwnServiceAccount": {
+          "$ref": "#/$defs/helm-values.app.driver.useOwnServiceAccount"
+        },
         "volumeFileName": {
           "$ref": "#/$defs/helm-values.app.driver.volumeFileName"
         },
@@ -409,6 +412,11 @@
     },
     "helm-values.app.driver.sourceCABundle": {
       "description": "Optional file containing a CA bundle that will be propagated to managed volumes."
+    },
+    "helm-values.app.driver.useOwnServiceAccount": {
+      "default": false,
+      "description": "When set to true, the CSI driver will use its own ServiceAccount credentials when creating CertificateRequests, rather than impersonating the mounting pod's ServiceAccount.\n\nWhen enabled, the Approver changes its validation strategy: instead of verifying the SPIFFE identity matches the requesting pod's ServiceAccount, it verifies that the requester is the driver's own ServiceAccount.",
+      "type": "boolean"
     },
     "helm-values.app.driver.volumeFileName": {
       "additionalProperties": false,

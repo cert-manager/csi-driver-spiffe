@@ -83,6 +83,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			evaluator := evaluator.New(evaluator.Options{
 				TrustDomain:                opts.CertManager.TrustDomain,
 				CertificateRequestDuration: opts.CertManager.CertificateRequestDuration,
+				UseOwnServiceAccount:       opts.CertManager.UseOwnServiceAccount,
+				DriverServiceAccount:       opts.CertManager.DriverServiceAccount,
 			})
 
 			if err := controller.AddApprover(ctx, opts.Logr, controller.Options{
