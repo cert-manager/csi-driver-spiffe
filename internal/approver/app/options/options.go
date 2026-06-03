@@ -99,7 +99,7 @@ func New() *Options {
 
 func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CertManager.IssuanceConfigMapName, "runtime-issuance-config-map-name", "",
-		"Name of a ConfigMap to watch at runtime for issuer details. If such a ConfigMap is found, overrides issuer-name, issuer-kind and issuer-group")
+		"Name of a ConfigMap to watch at runtime for issuer details. If such a ConfigMap is found, it overrides issuer-name, issuer-kind and issuer-group")
 
 	fs.StringVar(&o.CertManager.IssuanceConfigMapNamespace, "runtime-issuance-config-map-namespace", "",
 		"Namespace for ConfigMap to be watched at runtime for issuer details")
@@ -121,13 +121,13 @@ func (o *Options) addCertManagerFlags(fs *pflag.FlagSet) {
 			"Required when --use-own-service-account is true.")
 
 	fs.StringVar(&o.CertManager.IssuerRef.Name, "issuer-name", "my-spiffe-ca",
-		"Name of the issuer that CertificateRequests will be created for.")
+		"Name of the issuer for which CertificateRequests will be created.")
 
 	fs.StringVar(&o.CertManager.IssuerRef.Kind, "issuer-kind", "ClusterIssuer",
-		"Kind of the issuer that CertificateRequests will be created for.")
+		"Kind of the issuer for which CertificateRequests will be created.")
 
 	fs.StringVar(&o.CertManager.IssuerRef.Group, "issuer-group", "cert-manager.io",
-		"Group of the issuer that CertificateRequests will be created for.")
+		"Group of the issuer for which CertificateRequests will be created.")
 
 	fs.BoolVar(&o.CertManager.AutoApproveNonSPIFFE, "auto-approve-non-spiffe", false,
 		"Enables the auto approval of non csi-driver-spiffe CertificateRequest resources. This allows csi-driver-spiffe to act as a drop in replacement for the cert-manager approval controller.")

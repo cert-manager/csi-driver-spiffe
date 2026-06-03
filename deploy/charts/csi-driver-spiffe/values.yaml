@@ -306,8 +306,8 @@ app:
     # act as a drop-in replacement for cert-manager's default approval
     # controller, removing the need for approver-policy in simple deployments.
     #
-    # WARNING: Enabling this grants the approver authority to approve all
-    # CertificateRequests cluster-wide that do not target the SPIFFE issuer.
+    # WARNING: Enabling this grants the approver authority to approve
+    # all CertificateRequests cluster-wide that do not target the SPIFFE issuer.
     autoApproveNonSPIFFE: false
 
     readinessProbe:
