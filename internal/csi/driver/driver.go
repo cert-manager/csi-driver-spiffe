@@ -211,7 +211,6 @@ func New(ctx context.Context, log logr.Logger, opts Options) (*Driver, error) {
 		clientForMeta = util.ClientForMetadataTokenRequestEmptyAud(opts.RestConfig)
 	}
 
-
 	mngrLog := d.log.WithName("manager")
 	d.driver, err = driver.New(ctx, opts.Endpoint, d.log.WithName("driver"), driver.Options{
 		DriverName:    opts.DriverName,
