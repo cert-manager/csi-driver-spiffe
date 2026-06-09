@@ -18,7 +18,6 @@ package controller
 
 import (
 	"bytes"
-	"context"
 	"encoding/pem"
 	"errors"
 	"testing"
@@ -66,7 +65,7 @@ func Test_Reconcile(t *testing.T) {
 		Kind:  "ClusterIssuer",
 		Group: "cert-manager.io",
 	}
-	spiffeRuntimeConfig := runtimeconfig.NewMemory(context.Background(),
+	spiffeRuntimeConfig := runtimeconfig.NewMemory(t.Context(),
 		runtimeconfig.Config{IssuerRef: spiffeIssuerRef}, nil)
 
 	pk, err := utilpki.GenerateECPrivateKey(utilpki.ECCurve521)
