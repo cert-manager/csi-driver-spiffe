@@ -328,6 +328,15 @@ volumeMounts:
 > ```
 
 Configures the hostPath directory that the driver will write and mount volumes from.
+#### **app.driver.useOwnServiceAccount** ~ `bool`
+> Default value:
+> ```yaml
+> false
+> ```
+
+When set to true, the CSI driver will use its own ServiceAccount credentials when creating CertificateRequests, rather than impersonating the mounting pod's ServiceAccount.  
+  
+When enabled, the Approver changes its validation strategy: instead of verifying the SPIFFE identity matches the requesting pod's ServiceAccount, it verifies that the requester is the driver's own ServiceAccount.
 #### **app.driver.resources** ~ `object`
 > Default value:
 > ```yaml

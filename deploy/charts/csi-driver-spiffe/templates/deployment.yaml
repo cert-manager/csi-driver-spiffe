@@ -44,6 +44,10 @@ spec:
           - --leader-election-namespace=$(POD_NAMESPACE)
           - "--metrics-bind-address=:{{.Values.app.approver.metrics.port}}"
           - "--readiness-probe-bind-address=:{{.Values.app.approver.readinessProbe.port}}"
+          {{- if .Values.app.driver.useOwnServiceAccount }}
+          - --use-own-service-account=true
+          - "--driver-service-account=system:serviceaccount:{{ .Release.Namespace }}:{{ include "cert-manager-csi-driver-spiffe.name" . }}"
+          {{- end }}
         env:
         - name: POD_NAMESPACE
           valueFrom:

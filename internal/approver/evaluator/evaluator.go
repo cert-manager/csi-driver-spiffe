@@ -49,6 +49,16 @@ type Options struct {
 	// CertificateRequestDuration is the duration that users _must_ request for,
 	// else the request will be denied.
 	CertificateRequestDuration time.Duration
+
+	// UseOwnServiceAccount, when true, changes the identity validation strategy.
+	// Instead of verifying that the SPIFFE identity in the CSR matches the
+	// requesting pod's ServiceAccount, the approver verifies that the requester
+	// is the driver's own ServiceAccount (DriverServiceAccount).
+	UseOwnServiceAccount bool
+
+	// DriverServiceAccount is the full Kubernetes username of the CSI driver's
+	// ServiceAccount. Only used when UseOwnServiceAccount is true.
+	DriverServiceAccount string
 }
 
 // internal is the internal implementation of the evaluator that should be used
@@ -61,6 +71,13 @@ type internal struct {
 	// certificateRequestDuration is the duration that users _must_ request for,
 	// else the request will be denied.
 	certificateRequestDuration time.Duration
+
+	// useOwnServiceAccount controls which identity validation strategy is used.
+	useOwnServiceAccount bool
+
+	// driverServiceAccount is the full Kubernetes username of the CSI driver's
+	// ServiceAccount. Only used when useOwnServiceAccount is true.
+	driverServiceAccount string
 }
 
 // New constructs a new evaluator.
@@ -68,6 +85,8 @@ func New(opts Options) Interface {
 	return &internal{
 		trustDomain:                opts.TrustDomain,
 		certificateRequestDuration: opts.CertificateRequestDuration,
+		useOwnServiceAccount:       opts.UseOwnServiceAccount,
+		driverServiceAccount:       opts.DriverServiceAccount,
 	}
 }
 
@@ -108,8 +127,14 @@ func (i *internal) Evaluate(req *cmapi.CertificateRequest) error {
 		return fmt.Errorf("request contains wrong usages, exp=%v got=%v", requiredUsages, req.Spec.Usages)
 	}
 
-	if err := i.validateIdentity(csr, req.Spec.Username); err != nil {
-		return err
+	if i.useOwnServiceAccount {
+		if err := i.validateDriverServiceAccount(csr, req.Spec.Username); err != nil {
+			return err
+		}
+	} else {
+		if err := i.validateIdentity(csr, req.Spec.Username); err != nil {
+			return err
+		}
 	}
 
 	return nil
