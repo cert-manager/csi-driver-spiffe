@@ -39,8 +39,17 @@ spec:
           - --csi-driver-name={{ .Values.app.name }}
 
           - --certificate-request-duration={{ .Values.app.certificateRequestDuration }}
+          - --issuer-name={{ .Values.app.issuer.name }}
+          - --issuer-kind={{ .Values.app.issuer.kind }}
+          - --issuer-group={{ .Values.app.issuer.group }}
           - --trust-domain={{ .Values.app.trustDomain }}
 
+          - "--runtime-issuance-config-map-name={{.Values.app.runtimeIssuanceConfigMap}}"
+          - "--runtime-issuance-config-map-namespace={{.Release.Namespace}}"
+
+          {{- if .Values.app.approver.autoApproveNonSPIFFE }}
+          - --auto-approve-non-spiffe
+          {{- end }}
           - --leader-election-namespace=$(POD_NAMESPACE)
           - "--metrics-bind-address=:{{.Values.app.approver.metrics.port}}"
           - "--readiness-probe-bind-address=:{{.Values.app.approver.readinessProbe.port}}"

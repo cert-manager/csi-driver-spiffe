@@ -1,0 +1,56 @@
+suite: test approver non-SPIFFE auto-approval args
+templates:
+  - deployment.yaml
+tests:
+  - it: should inject --auto-approve-non-spiffe when autoApproveNonSPIFFE is true
+    template: deployment.yaml
+    set:
+      app.approver.autoApproveNonSPIFFE: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --auto-approve-non-spiffe
+
+  - it: should not inject --auto-approve-non-spiffe when autoApproveNonSPIFFE is false (default)
+    template: deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --auto-approve-non-spiffe
+
+  - it: should always inject issuer flags in approver deployment
+    template: deployment.yaml
+    set:
+      app.issuer.name: spiffe-ca
+      app.issuer.kind: ClusterIssuer
+      app.issuer.group: cert-manager.io
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --issuer-name=spiffe-ca
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --issuer-kind=ClusterIssuer
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --issuer-group=cert-manager.io
+
+  - it: should inject runtime configmap flags when runtimeIssuanceConfigMap is set
+    template: deployment.yaml
+    set:
+      app.runtimeIssuanceConfigMap: my-runtime-config
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --runtime-issuance-config-map-name=my-runtime-config
+
+  - it: should use release namespace for runtime configmap namespace flag
+    template: deployment.yaml
+    set:
+      app.runtimeIssuanceConfigMap: my-runtime-config
+    release:
+      namespace: cert-manager
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --runtime-issuance-config-map-namespace=cert-manager

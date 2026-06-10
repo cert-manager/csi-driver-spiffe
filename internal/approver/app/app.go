@@ -21,17 +21,20 @@ import (
 	"fmt"
 
 	"github.com/cert-manager/cert-manager/pkg/api"
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/scale/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/app/options"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/controller"
 	"github.com/cert-manager/csi-driver-spiffe/internal/approver/evaluator"
+	"github.com/cert-manager/csi-driver-spiffe/internal/csi/runtimeconfig"
 )
 
 const (
@@ -58,6 +61,34 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log := opts.Logr.WithName("main")
+
+			// Store the logger in the context so that packages using
+			// logr.FromContext can retrieve it.
+			ctx = logr.NewContext(ctx, opts.Logr)
+
+			var k8sClient client.WithWatch
+			if opts.CertManager.IssuanceConfigMapName != "" {
+				var err error
+				k8sClient, err = client.NewWithWatch(opts.RestConfig, client.Options{})
+				if err != nil {
+					return fmt.Errorf("failed to build kubernetes watcher client: %w", err)
+				}
+			}
+
+			rtConfig, err := runtimeconfig.New(ctx, k8sClient, runtimeconfig.Options{
+				StaticConfig: runtimeconfig.Config{IssuerRef: opts.CertManager.IssuerRef},
+				DynamicConfig: runtimeconfig.DynamicConfig{
+					ConfigMapName:      opts.CertManager.IssuanceConfigMapName,
+					ConfigMapNamespace: opts.CertManager.IssuanceConfigMapNamespace,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			if opts.CertManager.AutoApproveNonSPIFFE {
+				log.Info("auto-approval of non-SPIFFE CertificateRequests enabled: this approver will approve all CertificateRequests not targeting the configured SPIFFE issuer")
+			}
 
 			mgr, err := ctrl.NewManager(opts.RestConfig, ctrl.Options{
 				Scheme:                        intscheme,
@@ -88,8 +119,10 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			})
 
 			if err := controller.AddApprover(ctx, opts.Logr, controller.Options{
-				Evaluator: evaluator,
-				Manager:   mgr,
+				Evaluator:            evaluator,
+				Manager:              mgr,
+				RuntimeConfig:        rtConfig,
+				AutoApproveNonSPIFFE: opts.CertManager.AutoApproveNonSPIFFE,
 			}); err != nil {
 				return fmt.Errorf("failed to register approver controller: %w", err)
 			}

@@ -301,6 +301,15 @@ app:
     # Defaults to empty which allows approval for all signers
     signerName: ""
 
+    # When enabled, the approver will approve all CertificateRequests that do
+    # not target the configured SPIFFE issuer. This allows csi-driver-spiffe to
+    # act as a drop-in replacement for cert-manager's default approval
+    # controller, removing the need for approver-policy in simple deployments.
+    #
+    # WARNING: Enabling this grants the approver authority to approve
+    # all CertificateRequests cluster-wide that do not target the SPIFFE issuer.
+    autoApproveNonSPIFFE: false
+
     readinessProbe:
       # Container port to expose csi-driver-spiffe-approver HTTP readiness
       # probe on default network interface.
