@@ -22,13 +22,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"time"
 
-	"github.com/cert-manager/csi-lib/metadata"
-
 	cmpki "github.com/cert-manager/cert-manager/pkg/util/pki"
+	"github.com/cert-manager/csi-lib/metadata"
 )
 
 // generatePrivateKey generates an ECDSA private key, which is the only currently supported type
@@ -36,19 +36,25 @@ func generatePrivateKey(_ metadata.Metadata) (crypto.PrivateKey, error) {
 	return ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 }
 
-// signRequest will sign a given X.509 certificate signing request with the given key.
-// When URI SANs are present and the subject is empty (as with SPIFFE SVIDs),
-// RFC 5280 §4.2.1.6 requires the SAN extension to be marked critical.
-// Go's x509.CreateCertificateRequest does not do this, so we marshal the
-// SAN extension ourselves via cert-manager's MarshalSANs helper.
+// signRequest signs the given X.509 certificate request with the given key.
+// RFC 5280 §4.2.1.6 requires the SAN extension to be critical when the subject
+// is empty (as with SPIFFE SVIDs), but x509.CreateCertificateRequest never marks
+// it so; we therefore marshal a critical SAN ourselves via cert-manager's
+// MarshalSANs. A CSR carrying a subject is left to the stdlib (non-critical SAN),
+// though SPIFFE SVIDs should never carry one.
 func signRequest(_ metadata.Metadata, key crypto.PrivateKey, request *x509.CertificateRequest) ([]byte, error) {
-	if len(request.URIs) > 0 {
+	asn1Subject, err := asn1.Marshal(request.Subject.ToRDNSequence())
+	if err != nil {
+		return nil, err
+	}
+
+	if len(request.URIs) > 0 && cmpki.IsASN1SubjectEmpty(asn1Subject) {
 		uriStrings := make([]string, len(request.URIs))
 		for i, u := range request.URIs {
 			uriStrings[i] = u.String()
 		}
 		sans := cmpki.GeneralNames{UniformResourceIdentifiers: uriStrings}
-		// hasSubject=false → Critical=true
+		// no subject, so MarshalSANs marks the SAN critical
 		sanExt, err := cmpki.MarshalSANs(sans, false)
 		if err != nil {
 			return nil, err
