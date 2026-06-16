@@ -20,6 +20,11 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/pem"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -126,6 +131,67 @@ func Test_DriverAnnotationSanitization(t *testing.T) {
 			if !reflect.DeepEqual(out, test.expectedOut) {
 				t.Errorf("wanted out=%v but got %v", test.expectedOut, out)
 			}
+		})
+	}
+}
+
+// Test_signRequest_SAN_criticality checks that signRequest marks the SAN
+// extension (OID 2.5.29.17) critical only when the subject is empty (the
+// SPIFFE SVID case), and leaves it non-critical otherwise — guarding against
+// a regression into unconditionally marking SAN critical.
+func Test_signRequest_SAN_criticality(t *testing.T) {
+	const spiffeID = "spiffe://example.org/ns/default/sa/workload"
+
+	spiffeURI, err := url.Parse(spiffeID)
+	require.NoError(t, err)
+
+	tests := map[string]struct {
+		subject         pkix.Name
+		wantSANCritical bool
+	}{
+		"empty subject (SPIFFE SVID) marks SAN critical": {
+			subject:         pkix.Name{},
+			wantSANCritical: true,
+		},
+		"non-empty subject leaves SAN non-critical": {
+			subject:         pkix.Name{CommonName: "example-workload"},
+			wantSANCritical: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+			require.NoError(t, err)
+
+			csrTemplate := &x509.CertificateRequest{
+				Subject: test.subject,
+				URIs:    []*url.URL{spiffeURI},
+			}
+
+			csrPEM, err := signRequest(metadata.Metadata{}, key, csrTemplate)
+			require.NoError(t, err)
+
+			block, _ := pem.Decode(csrPEM)
+			require.NotNil(t, block, "PEM decode must succeed")
+
+			csr, err := x509.ParseCertificateRequest(block.Bytes)
+			require.NoError(t, err)
+
+			sanOID := asn1.ObjectIdentifier{2, 5, 29, 17}
+
+			var sanExt *pkix.Extension
+			for i := range csr.Extensions {
+				if csr.Extensions[i].Id.Equal(sanOID) {
+					sanExt = &csr.Extensions[i]
+					break
+				}
+			}
+			require.NotNil(t, sanExt, "CSR must contain the SAN extension (OID 2.5.29.17)")
+			require.Equal(t, test.wantSANCritical, sanExt.Critical)
+
+			require.Len(t, csr.URIs, 1)
+			require.Equal(t, spiffeID, csr.URIs[0].String())
 		})
 	}
 }
