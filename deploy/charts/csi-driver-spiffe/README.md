@@ -580,6 +580,56 @@ resources:
     cpu: 100m
     memory: 128Mi
 ```
+#### **podSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> seccompProfile:
+>   type: RuntimeDefault
+> ```
+
+Pod-level security context for the csi-driver-spiffe DaemonSet pods. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+#### **securityContext** ~ `object`
+> Default value:
+> ```yaml
+> capabilities:
+>   drop:
+>     - ALL
+> privileged: true
+> readOnlyRootFilesystem: true
+> runAsUser: 0
+> ```
+
+Container security context for the cert-manager-csi-driver-spiffe container.  
+  
+NOTE: privileged is required by default because this container mounts pods-mount-dir with mountPropagation: Bidirectional, which Kubernetes only permits for privileged containers. Setting privileged: false without also changing the mount propagation will prevent the driver pods from starting. See https://kubernetes.io/docs/concepts/storage/volumes/#mount-propagation
+
+#### **nodeDriverRegistrarSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
+> runAsUser: 0
+> ```
+
+Container security context for the node-driver-registrar container.
+
+#### **livenessProbeSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
+> runAsUser: 0
+> ```
+
+Container security context for the liveness-probe container.
+
 #### **priorityClassName** ~ `string`
 > Default value:
 > ```yaml
