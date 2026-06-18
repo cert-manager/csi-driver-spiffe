@@ -51,9 +51,6 @@
         "priorityClassName": {
           "$ref": "#/$defs/helm-values.priorityClassName"
         },
-        "securityContext": {
-          "$ref": "#/$defs/helm-values.securityContext"
-        },
         "tolerations": {
           "$ref": "#/$defs/helm-values.tolerations"
         },
@@ -813,20 +810,6 @@
       "default": "",
       "description": "Optional priority class to be used for the csi-driver pods.",
       "type": "string"
-    },
-    "helm-values.securityContext": {
-      "default": {
-        "capabilities": {
-          "drop": [
-            "ALL"
-          ]
-        },
-        "privileged": true,
-        "readOnlyRootFilesystem": true,
-        "runAsUser": 0
-      },
-      "description": "Container security context for the cert-manager-csi-driver-spiffe container.\n\nNOTE: privileged is required by default because this container mounts pods-mount-dir with mountPropagation: Bidirectional, which Kubernetes only permits for privileged containers. Setting privileged: false without also changing the mount propagation will prevent the driver pods from starting. See https://kubernetes.io/docs/concepts/storage/volumes/#mount-propagation",
-      "type": "object"
     },
     "helm-values.tolerations": {
       "default": [],
