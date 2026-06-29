@@ -350,6 +350,33 @@ app:
     #      memory: 128Mi
     resources: {}
 
+# Pod-level security context for the csi-driver-spiffe DaemonSet pods.
+# For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+# +docs:property
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context for the node-driver-registrar container.
+# +docs:property
+nodeDriverRegistrarSecurityContext:
+  runAsUser: 0
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Container security context for the liveness-probe container.
+# +docs:property
+livenessProbeSecurityContext:
+  runAsUser: 0
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
 # Optional priority class to be used for the csi-driver pods.
 priorityClassName: ""
 
