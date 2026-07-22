@@ -33,11 +33,20 @@
         "imageRegistry": {
           "$ref": "#/$defs/helm-values.imageRegistry"
         },
+        "livenessProbeSecurityContext": {
+          "$ref": "#/$defs/helm-values.livenessProbeSecurityContext"
+        },
+        "nodeDriverRegistrarSecurityContext": {
+          "$ref": "#/$defs/helm-values.nodeDriverRegistrarSecurityContext"
+        },
         "nodeSelector": {
           "$ref": "#/$defs/helm-values.nodeSelector"
         },
         "openshift": {
           "$ref": "#/$defs/helm-values.openshift"
+        },
+        "podSecurityContext": {
+          "$ref": "#/$defs/helm-values.podSecurityContext"
         },
         "priorityClassName": {
           "$ref": "#/$defs/helm-values.priorityClassName"
@@ -723,6 +732,34 @@
       "description": "The container registry used for csi-driver-spiffe images by default. This can include path prefixes (e.g. \"artifactory.example.com/docker\").",
       "type": "string"
     },
+    "helm-values.livenessProbeSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true,
+        "runAsUser": 0
+      },
+      "description": "Container security context for the liveness-probe container.",
+      "type": "object"
+    },
+    "helm-values.nodeDriverRegistrarSecurityContext": {
+      "default": {
+        "allowPrivilegeEscalation": false,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        },
+        "readOnlyRootFilesystem": true,
+        "runAsUser": 0
+      },
+      "description": "Container security context for the node-driver-registrar container.",
+      "type": "object"
+    },
     "helm-values.nodeSelector": {
       "default": {
         "kubernetes.io/os": "linux"
@@ -759,6 +796,15 @@
       "default": "privileged",
       "description": "Name of the SecurityContextConstraints to create RBAC for.",
       "type": "string"
+    },
+    "helm-values.podSecurityContext": {
+      "default": {
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "description": "Pod-level security context for the csi-driver-spiffe DaemonSet pods. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).",
+      "type": "object"
     },
     "helm-values.priorityClassName": {
       "default": "",
