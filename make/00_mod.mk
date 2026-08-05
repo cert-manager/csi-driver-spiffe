@@ -59,6 +59,12 @@ nodedriverregistrar_image_name_source := registry.k8s.io/sig-storage/csi-node-dr
 nodedriverregistrar_image_name := quay.io/jetstack/csi-node-driver-registrar
 nodedriverregistrar_image_tag := v2.17.0
 
+# Scan the third party sidecar images which are deployed alongside the
+# csi-driver-spiffe images.
+oci_scan_extra_images := \
+	$(livenessprobe_image_name_source):$(livenessprobe_image_tag) \
+	$(nodedriverregistrar_image_name_source):$(nodedriverregistrar_image_tag)
+
 define helm_values_mutation_function
 $(YQ) \
 	'( .app.driver.livenessProbeImage._defaultReference = ":$(livenessprobe_image_tag)" ) | \

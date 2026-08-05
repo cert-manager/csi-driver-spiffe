@@ -81,3 +81,32 @@ endif
 .PHONY: $(docker_tarball_targets)
 $(docker_tarball_targets): docker-tarball-%: oci-build-%__local | $(NEEDS_GO) $(NEEDS_IMAGE-TOOL)
 	$(IMAGE-TOOL) convert-to-docker-tar $(CURDIR)/$(oci_layout_path_$*).local $(docker_tarball_path_$*) $(oci_$*_image_name_development):$(oci_$*_image_tag)
+
+.PHONY: $(oci_scan_targets)
+## Scan the OCI image (local architecture) for OS and library
+## vulnerabilities which have a known fix and a severity of
+## MEDIUM, HIGH or CRITICAL, using trivy
+## (https://github.com/aquasecurity/trivy).
+## @category [shared] Build
+$(oci_scan_targets): oci-scan-%: docker-tarball-% | $(NEEDS_TRIVY)
+	$(TRIVY) image \
+		--input $(docker_tarball_path_$*) \
+		$(trivy_scan_flags)
+
+.PHONY: oci-scan-extra-images
+## Scan the images listed in oci_scan_extra_images (e.g. third party sidecar
+## images which are deployed alongside the images built by this repository)
+## for known vulnerabilities, using trivy.
+## @category [shared] Build
+oci-scan-extra-images: | $(NEEDS_TRIVY)
+	@for image in $(oci_scan_extra_images); do \
+		echo "Scanning $$image"; \
+		$(TRIVY) image $$image $(trivy_scan_flags) || exit 1; \
+	done
+
+.PHONY: oci-security-scan
+## Scan all the OCI images built by this repository, and any extra images
+## listed in oci_scan_extra_images, for known vulnerabilities; failing if any
+## fixable vulnerabilities of severity MEDIUM, HIGH or CRITICAL are found.
+## @category [shared] Build
+oci-security-scan: $(oci_scan_targets) oci-scan-extra-images
