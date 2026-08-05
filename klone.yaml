@@ -28,9 +28,9 @@ targets:
       repo_hash: e0878ff3ab29a9d2af7b7eae8a98356ad388c931
       repo_path: modules/generate-verify
     - folder_name: go
-      repo_url: https://github.com/cert-manager/makefile-modules.git
-      repo_ref: main
-      repo_hash: e0878ff3ab29a9d2af7b7eae8a98356ad388c931
+      repo_url: https://github.com/wallrj/makefile-modules.git
+      repo_ref: oci-security-scan
+      repo_hash: 4564294457c235cd1acc5ec25e2e1c12ddaa6b87
       repo_path: modules/go
     - folder_name: helm
       repo_url: https://github.com/cert-manager/makefile-modules.git
@@ -58,9 +58,9 @@ targets:
       repo_hash: e0878ff3ab29a9d2af7b7eae8a98356ad388c931
       repo_path: modules/licenses
     - folder_name: oci-build
-      repo_url: https://github.com/cert-manager/makefile-modules.git
-      repo_ref: main
-      repo_hash: e0878ff3ab29a9d2af7b7eae8a98356ad388c931
+      repo_url: https://github.com/wallrj/makefile-modules.git
+      repo_ref: oci-security-scan
+      repo_hash: 4564294457c235cd1acc5ec25e2e1c12ddaa6b87
       repo_path: modules/oci-build
     - folder_name: oci-publish
       repo_url: https://github.com/cert-manager/makefile-modules.git
