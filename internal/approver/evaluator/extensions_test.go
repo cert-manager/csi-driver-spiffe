@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The cert-manager Authors.
+Copyright 2026 The cert-manager Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,308 +20,217 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
-	"fmt"
 	"testing"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	pkiutil "github.com/cert-manager/cert-manager/pkg/util/pki"
-	"github.com/stretchr/testify/assert"
+
+	"hegel.dev/go/hegel"
 )
 
-var (
-	disallowedX509KeyUsages = []any{
-		x509.KeyUsageContentCommitment,
-		x509.KeyUsageDataEncipherment,
-		x509.KeyUsageKeyAgreement,
-		x509.KeyUsageCertSign,
-		x509.KeyUsageCRLSign,
-		x509.KeyUsageEncipherOnly,
-		x509.KeyUsageDecipherOnly,
-	}
+// The complete x509.KeyUsage space is 9 bits, KeyUsageDigitalSignature (1<<0)
+// through KeyUsageDecipherOnly (1<<8).
+const maxKeyUsage = int(x509.KeyUsageDecipherOnly)<<1 - 1
 
-	allowedX509KeyUsages = []any{
-		x509.KeyUsageDigitalSignature,
-		x509.KeyUsageKeyEncipherment,
-	}
+// TestValidateKeyUsageExtensionProperty: for every possible key usage bit
+// combination, encoded exactly as crypto/x509 encodes it in a CSR, the
+// extension is accepted iff it contains no bits beyond digitalSignature and
+// keyEncipherment. Replaces the powerset-enumeration table, which covered the
+// same space.
+//
+// The implementation never decodes the BIT STRING: it masks the allowed
+// usages' full DER encodings out of the raw 4-byte value and requires the
+// result to be zero. For values produced by crypto/x509 that is equivalent to
+// the bitwise rule, because usages beyond the low byte encode to 5 bytes and
+// fail the length check.
+func TestValidateKeyUsageExtensionProperty(t *testing.T) {
+	allowed := x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
 
-	disallowedX509ExtKeyUsages = []any{
-		x509.ExtKeyUsageAny,
-		x509.ExtKeyUsageCodeSigning,
-		x509.ExtKeyUsageEmailProtection,
-		x509.ExtKeyUsageIPSECEndSystem,
-		x509.ExtKeyUsageIPSECTunnel,
-		x509.ExtKeyUsageIPSECUser,
-		x509.ExtKeyUsageTimeStamping,
-		x509.ExtKeyUsageOCSPSigning,
-		x509.ExtKeyUsageMicrosoftServerGatedCrypto,
-		x509.ExtKeyUsageNetscapeServerGatedCrypto,
-		x509.ExtKeyUsageMicrosoftCommercialCodeSigning,
-		x509.ExtKeyUsageMicrosoftKernelCodeSigning,
-	}
+	hegel.Test(t, func(ht *hegel.T) {
+		usage := x509.KeyUsage(hegel.Draw(ht, hegel.Integers(0, maxKeyUsage)))
 
-	allowedX509ExtKeyUsages = []any{
-		x509.ExtKeyUsageServerAuth,
-		x509.ExtKeyUsageClientAuth,
-	}
-)
+		ext, err := buildASN1KeyUsageRequest(usage)
+		if err != nil {
+			ht.Fatalf("failed to encode key usage %v: %v", usage, err)
+		}
 
-func Test_validateCSRExtentions(t *testing.T) {
-	sk, err := pkiutil.GenerateRSAPrivateKey(2048)
-	assert.NoError(t, err)
-
-	tests := map[string]struct {
-		emails []string
-		dns    []string
-		uris   []string
-		ips    []string
-		usages []cmapi.KeyUsage
-		expErr bool
-	}{
-		"if single URI name exists, shouldn't error": {
-			uris:   []string{"spiffe://foo.bar"},
-			expErr: false,
-		},
-		"if single URI name exist with allowed usages, shouldn't error": {
-			uris: []string{"spiffe://foo.bar"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: false,
-		},
-		"if multiple URI names exist with allowed usages, shouldn't error": {
-			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: false,
-		},
-		"if multiple URI names exist, dns name, and allowed usages, should error": {
-			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			dns:  []string{"foo.bar"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: true,
-		},
-		"if multiple URI names exist, ips, and allowed usages, should error": {
-			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			ips:  []string{"1.2.3.4"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: true,
-		},
-		"if multiple URI names exist, emails, and allowed usages, should error": {
-			uris:   []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			emails: []string{"hello@example.com"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: true,
-		},
-		"if multiple URI names exist, emails, dns, ips, and allowed usages, should error": {
-			uris:   []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			dns:    []string{"foo.bar"},
-			ips:    []string{"1.2.3.4"},
-			emails: []string{"hello@example.com"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-			},
-			expErr: true,
-		},
-		"if multiple URI names exist, and subset allowed usages, shouldn't error": {
-			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageServerAuth,
-			},
-			expErr: false,
-		},
-		"if multiple URI names exist, with disallowed usages, should error": {
-			uris: []string{"spiffe://foo.bar", "spiffe://bar.foo"},
-			usages: []cmapi.KeyUsage{
-				cmapi.UsageDigitalSignature,
-				cmapi.UsageKeyEncipherment,
-				cmapi.UsageClientAuth,
-				cmapi.UsageServerAuth,
-				cmapi.UsageCertSign,
-			},
-			expErr: true,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			csr, err := pkiutil.GenerateCSR(&cmapi.Certificate{
-				Spec: cmapi.CertificateSpec{
-					EmailAddresses: test.emails,
-					DNSNames:       test.dns,
-					IPAddresses:    test.ips,
-					Usages:         test.usages,
-					URIs:           test.uris,
-				},
-			})
-			assert.NoError(t, err)
-
-			// Re encode/parse csr to simulate real x509 csr parsing
-			csrDER, err := pkiutil.EncodeCSR(csr, sk)
-			assert.NoError(t, err)
-
-			csr, err = x509.ParseCertificateRequest(csrDER)
-			assert.NoError(t, err)
-
-			err = validateCSRExtentions(csr)
-			assert.Equal(t, test.expErr, err != nil, "%v", err)
-		})
-	}
+		err = validateKeyUsageExtension(ext.Value)
+		if wantErr := usage&^allowed != 0; (err != nil) != wantErr {
+			ht.Fatalf("usage %b: error = %v, want error %t", usage, err, wantErr)
+		}
+	}, hegel.WithTestCases(1000))
 }
 
-func Test_validateExtendedKeyUsageExtension(t *testing.T) {
-	type testcase struct {
-		usages []x509.ExtKeyUsage
-		expErr bool
-	}
-
-	var (
-		tests []testcase
-		// Generate powerset of both disallowed and allowed usages
-		disallowedExtUsagesPowerset = powerset(disallowedX509ExtKeyUsages)
-		allowedExtUsagesPowerset    = append(powerset(allowedX509ExtKeyUsages), nil)
-	)
-
-	// Expect all sets with any disallowed usages to always fail
-	for _, disallowed := range disallowedExtUsagesPowerset {
-		for _, allowed := range allowedExtUsagesPowerset {
-			var extUsages []x509.ExtKeyUsage
-			for _, usage := range append(disallowed, allowed...) {
-				extUsages = append(extUsages, usage.(x509.ExtKeyUsage))
-			}
-
-			tests = append(tests, testcase{extUsages, true})
-		}
-	}
-
-	for _, allowed := range allowedExtUsagesPowerset {
-		var extUsages []x509.ExtKeyUsage
-		for _, usage := range allowed {
-			extUsages = append(extUsages, usage.(x509.ExtKeyUsage))
-		}
-
-		tests = append(tests, testcase{extUsages, true})
-	}
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("ext usages [%v] expErr=%t", test.usages, test.expErr), func(t *testing.T) {
-			var ids []asn1.ObjectIdentifier
-			for _, usage := range test.usages {
-				id, ok := pkiutil.OIDFromExtKeyUsage(usage)
-				assert.True(t, ok, "%v", usage)
-
-				ids = append(ids, id)
-			}
-
-			val, err := asn1.Marshal(ids)
-			assert.NoError(t, err)
-
-			extension := pkix.Extension{
-				Id:    oidExtensionKeyUsage,
-				Value: val,
-			}
-
-			err = validateExtendedKeyUsageExtension(extension)
-			assert.Equal(t, test.expErr, err != nil, "%v", err)
-		})
-	}
+// extKeyUsages is the draw pool for extended key usages: the two allowed ones
+// followed by a sample of forbidden ones. Order matters for deterministic
+// draws.
+var extKeyUsages = []struct {
+	usage   x509.ExtKeyUsage
+	allowed bool
+}{
+	{x509.ExtKeyUsageServerAuth, true},
+	{x509.ExtKeyUsageClientAuth, true},
+	{x509.ExtKeyUsageAny, false},
+	{x509.ExtKeyUsageCodeSigning, false},
+	{x509.ExtKeyUsageEmailProtection, false},
+	{x509.ExtKeyUsageIPSECEndSystem, false},
+	{x509.ExtKeyUsageIPSECTunnel, false},
+	{x509.ExtKeyUsageIPSECUser, false},
+	{x509.ExtKeyUsageTimeStamping, false},
+	{x509.ExtKeyUsageOCSPSigning, false},
+	{x509.ExtKeyUsageMicrosoftServerGatedCrypto, false},
+	{x509.ExtKeyUsageNetscapeServerGatedCrypto, false},
+	{x509.ExtKeyUsageMicrosoftCommercialCodeSigning, false},
+	{x509.ExtKeyUsageMicrosoftKernelCodeSigning, false},
 }
 
-func Test_validateKeyUsageExtension(t *testing.T) {
-	type testcase struct {
-		usage  x509.KeyUsage
-		expErr bool
-	}
-
-	var (
-		tests []testcase
-		// Generate powerset of both disallowed and allowed usages
-		disallowedUsagesPowerset = powerset(disallowedX509KeyUsages)
-		allowedUsagesPowerset    = append(powerset(allowedX509KeyUsages), nil)
-	)
-
-	// Expect all sets with any disallowed usages to always fail
-	for _, disallowed := range disallowedUsagesPowerset {
-		for _, allowed := range allowedUsagesPowerset {
-			var ku x509.KeyUsage
-			for _, use := range append(disallowed, allowed...) {
-				ku |= use.(x509.KeyUsage)
+// TestValidateExtendedKeyUsageExtensionProperty: an extended key usage
+// extension is accepted iff every OID in it is serverAuth or clientAuth, and
+// an extension with any other OID as its extension ID is always rejected.
+//
+// The table test this replaces built every extension with the plain key usage
+// OID as the extension ID, so validateExtendedKeyUsageExtension rejected all
+// of its cases at the ID check and the usage loop was never reached; that is
+// why even its allowed-only rows asserted an error.
+func TestValidateExtendedKeyUsageExtensionProperty(t *testing.T) {
+	hegel.Test(t, func(ht *hegel.T) {
+		var ids []asn1.ObjectIdentifier
+		anyForbidden := false
+		for _, i := range hegel.Draw(ht, hegel.Lists(hegel.Integers(0, len(extKeyUsages)-1)).MaxSize(5)) {
+			id, ok := pkiutil.OIDFromExtKeyUsage(extKeyUsages[i].usage)
+			if !ok {
+				ht.Fatalf("no OID for %v", extKeyUsages[i].usage)
 			}
-
-			tests = append(tests, testcase{ku, true})
-		}
-	}
-
-	// Expect all sets with only allowed or empty usages to always pass
-	for _, allowed := range allowedUsagesPowerset {
-		var ku x509.KeyUsage
-		for _, use := range allowed {
-			ku |= use.(x509.KeyUsage)
+			ids = append(ids, id)
+			anyForbidden = anyForbidden || !extKeyUsages[i].allowed
 		}
 
-		tests = append(tests, testcase{ku, false})
-	}
+		val, err := asn1.Marshal(ids)
+		if err != nil {
+			ht.Fatalf("failed to marshal OIDs: %v", err)
+		}
 
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("usage [%v] expErr=%t", test.usage, test.expErr), func(t *testing.T) {
-			ext, err := buildASN1KeyUsageRequest(test.usage)
-			if err != nil {
-				t.Fatal(err)
-			}
+		err = validateExtendedKeyUsageExtension(pkix.Extension{Id: oidExtensionExtendedKeyUsage, Value: val})
+		if (err != nil) != anyForbidden {
+			ht.Fatalf("usages %v: error = %v, want error %t", ids, err, anyForbidden)
+		}
 
-			err = validateKeyUsageExtension(ext.Value)
-			assert.Equal(t, test.expErr, err != nil, "%v", err)
-		})
-	}
+		// The same value under a different extension ID is never an extended
+		// key usage extension.
+		if err := validateExtendedKeyUsageExtension(pkix.Extension{Id: oidExtensionKeyUsage, Value: val}); err == nil {
+			ht.Fatalf("extension with non-EKU ID accepted")
+		}
+	}, hegel.WithTestCases(1000))
 }
 
-// Adapted from https://github.com/mxschmitt/golang-combinations
-func powerset(set []any) (subsets [][]any) {
-	length := uint(len(set))
+// csrKeyUsages is the draw pool for cert-manager key usages requested in a
+// CSR: the four allowed ones followed by a sample of forbidden ones.
+var csrKeyUsages = []struct {
+	usage   cmapi.KeyUsage
+	allowed bool
+}{
+	{cmapi.UsageDigitalSignature, true},
+	{cmapi.UsageKeyEncipherment, true},
+	{cmapi.UsageClientAuth, true},
+	{cmapi.UsageServerAuth, true},
+	{cmapi.UsageAny, false},
+	{cmapi.UsageContentCommitment, false},
+	{cmapi.UsageDataEncipherment, false},
+	{cmapi.UsageKeyAgreement, false},
+	{cmapi.UsageCertSign, false},
+	{cmapi.UsageCRLSign, false},
+	{cmapi.UsageCodeSigning, false},
+	{cmapi.UsageEmailProtection, false},
+	{cmapi.UsageTimestamping, false},
+	{cmapi.UsageOCSPSigning, false},
+}
 
-	// Go through all possible combinations of objects
-	// from 1 (only first object in subset) to 2^length (all objects in subset)
-	for subsetBits := 1; subsetBits < (1 << length); subsetBits++ {
-		var subset []any
-
-		for object := range length {
-			// checks if object is contained in subset
-			// by checking if bit 'object' is set in subsetBits
-			if (subsetBits>>object)&1 == 1 {
-				// add object to subset
-				subset = append(subset, set[object])
-			}
-		}
-		// add subset to subsets
-		subsets = append(subsets, subset)
+// TestValidateCSRExtentionsProperties: a real CSR, generated and encoded with
+// the same cert-manager helpers used to build SPIFFE SVID requests, passes
+// validation iff it carries only URI SANs and only allowed (extended) key
+// usages. Any DNS name, IP address or email SAN, or any forbidden usage,
+// rejects the CSR. Replaces the example table, whose rows instantiated the
+// same rule.
+func TestValidateCSRExtentionsProperties(t *testing.T) {
+	sk, err := pkiutil.GenerateECPrivateKey(256)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	return subsets
+	uriPool := []string{"spiffe://foo.bar", "spiffe://bar.foo", "spiffe://cluster.local/ns/a/sa/b"}
+	dnsPool := []string{"example.com", "foo.bar"}
+	ipPool := []string{"1.2.3.4", "2001:db8::1"}
+	emailPool := []string{"hello@example.com"}
+
+	drawSubset := func(ht *hegel.T, pool []string, maxSize int) []string {
+		var out []string
+		for _, i := range hegel.Draw(ht, hegel.Lists(hegel.Integers(0, len(pool)-1)).MaxSize(maxSize)) {
+			out = append(out, pool[i])
+		}
+		return out
+	}
+
+	hegel.Test(t, func(ht *hegel.T) {
+		spec := cmapi.CertificateSpec{
+			PrivateKey:     &cmapi.CertificatePrivateKey{Algorithm: cmapi.ECDSAKeyAlgorithm},
+			DNSNames:       drawSubset(ht, dnsPool, 2),
+			IPAddresses:    drawSubset(ht, ipPool, 2),
+			EmailAddresses: drawSubset(ht, emailPool, 1),
+		}
+		// Always include at least one URI, as every SPIFFE SVID CSR does.
+		spec.URIs = append([]string{uriPool[hegel.Draw(ht, hegel.Integers(0, len(uriPool)-1))]}, drawSubset(ht, uriPool, 2)...)
+
+		anyForbiddenUsage := false
+		for _, i := range hegel.Draw(ht, hegel.Lists(hegel.Integers(0, len(csrKeyUsages)-1)).MaxSize(5)) {
+			spec.Usages = append(spec.Usages, csrKeyUsages[i].usage)
+			anyForbiddenUsage = anyForbiddenUsage || !csrKeyUsages[i].allowed
+		}
+
+		csr, err := pkiutil.GenerateCSR(&cmapi.Certificate{Spec: spec})
+		if err != nil {
+			ht.Fatalf("failed to generate CSR: %v", err)
+		}
+		csrDER, err := pkiutil.EncodeCSR(csr, sk)
+		if err != nil {
+			ht.Fatalf("failed to encode CSR: %v", err)
+		}
+		csr, err = x509.ParseCertificateRequest(csrDER)
+		if err != nil {
+			ht.Fatalf("failed to parse CSR: %v", err)
+		}
+
+		wantErr := len(spec.DNSNames) > 0 || len(spec.IPAddresses) > 0 || len(spec.EmailAddresses) > 0 || anyForbiddenUsage
+		if err := validateCSRExtentions(csr); (err != nil) != wantErr {
+			ht.Fatalf("spec %+v: error = %v, want error %t", spec, err, wantErr)
+		}
+	}, hegel.WithTestCases(250))
+}
+
+// TestValidateCSRExtentionsArbitraryBytes: validation must never panic, and
+// never accept, a SAN extension carrying arbitrary bytes, an unknown
+// extension, or a CSR with ExtraExtensions set.
+func TestValidateCSRExtentionsArbitraryBytes(t *testing.T) {
+	hegel.Test(t, func(ht *hegel.T) {
+		ext := pkix.Extension{Value: hegel.Draw(ht, hegel.Binary(0, 100))}
+		field := &x509.CertificateRequest{}
+		switch hegel.Draw(ht, hegel.Integers(0, 2)) {
+		case 0:
+			// Arbitrary bytes are never a valid URI-SAN-only extension: a
+			// valid one is a compound ASN.1 sequence of tagged general names,
+			// which these draw sizes cannot produce by chance.
+			ext.Id = oidExtensionSubjectAltName
+			field.Extensions = []pkix.Extension{ext}
+		case 1:
+			ext.Id = asn1.ObjectIdentifier{1, 2, 3, 4}
+			field.Extensions = []pkix.Extension{ext}
+		case 2:
+			ext.Id = oidExtensionSubjectAltName
+			field.ExtraExtensions = []pkix.Extension{ext}
+		}
+		if err := validateCSRExtentions(field); err == nil {
+			ht.Fatalf("invalid extension accepted: %+v", field)
+		}
+	}, hegel.WithTestCases(1000))
 }
 
 // Copied from x509.go
