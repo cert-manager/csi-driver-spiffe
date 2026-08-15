@@ -24,9 +24,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
+	"math/big"
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	cmapi "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	utilpki "github.com/cert-manager/cert-manager/pkg/util/pki"
@@ -35,9 +37,64 @@ import (
 	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
 	"github.com/stretchr/testify/require"
 
+	"hegel.dev/go/hegel"
+
 	"github.com/cert-manager/csi-driver-spiffe/internal/annotations"
 	"github.com/cert-manager/csi-driver-spiffe/internal/csi/rootca"
 )
+
+// TestCalculateNextIssuanceTimeProperty: for any leaf certificate, the next
+// issuance time is exactly 2/3 of the way through the certificate's actual
+// lifetime, recomputed here from the drawn validity period independently of
+// the PEM decode / X.509 parse pipeline. Only the first PEM block (the leaf)
+// governs, so appending further chain blocks changes nothing. Previously
+// calculateNextIssuanceTime was only executed incidentally via
+// Test_writeKeyPair; its result was never asserted.
+//
+// Only PEM inputs are drawn: for input with no PEM block at all,
+// calculateNextIssuanceTime dereferences the nil block returned by
+// pem.Decode and panics — a production fix candidate, not exercisable here.
+func TestCalculateNextIssuanceTimeProperty(t *testing.T) {
+	pk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+
+	// notBefore is drawn from 1970 to 2100, lifetimes from zero to a century.
+	// X.509 stores validity at second precision, so times and lifetimes are
+	// drawn in whole seconds.
+	const (
+		maxUnix     = 4102444800
+		maxLifetime = 100 * 365 * 24 * 3600
+	)
+
+	hegel.Test(t, func(ht *hegel.T) {
+		notBefore := time.Unix(int64(hegel.Draw(ht, hegel.Integers(0, maxUnix))), 0).UTC()
+		lifetime := time.Duration(hegel.Draw(ht, hegel.Integers(0, maxLifetime))) * time.Second
+		notAfter := notBefore.Add(lifetime)
+
+		tmpl := &x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			NotBefore:    notBefore,
+			NotAfter:     notAfter,
+		}
+		der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, pk.Public(), pk)
+		if err != nil {
+			ht.Fatalf("failed to create certificate: %v", err)
+		}
+		chain := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+		if hegel.Draw(ht, hegel.Booleans()) {
+			chain = append(chain, chain...)
+		}
+
+		got, err := calculateNextIssuanceTime(chain)
+		if err != nil {
+			ht.Fatalf("notBefore %v lifetime %v: %v", notBefore, lifetime, err)
+		}
+		want := notAfter.Add(-lifetime / 3)
+		if !got.Equal(want) {
+			ht.Fatalf("notBefore %v lifetime %v: got %v, want %v", notBefore, lifetime, got, want)
+		}
+	}, hegel.WithTestCases(250))
+}
 
 // Ensure writeKeyPair is compatible with go-spiffe/v2 x509svid.Parse.
 func Test_writeKeyPair(t *testing.T) {
