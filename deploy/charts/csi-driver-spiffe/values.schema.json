@@ -12,6 +12,9 @@
         "approverImage": {
           "$ref": "#/$defs/helm-values.approverImage"
         },
+        "automountServiceAccountToken": {
+          "$ref": "#/$defs/helm-values.automountServiceAccountToken"
+        },
         "commonLabels": {
           "$ref": "#/$defs/helm-values.commonLabels"
         },
@@ -571,6 +574,11 @@
     "helm-values.approverImage.tag": {
       "description": "Override the image tag to deploy by setting this variable. If no value is set, the chart's appVersion is used.",
       "type": "string"
+    },
+    "helm-values.automountServiceAccountToken": {
+      "default": true,
+      "description": "Automounting API credentials for the csi-driver-spiffe pods.",
+      "type": "boolean"
     },
     "helm-values.commonLabels": {
       "default": {},
