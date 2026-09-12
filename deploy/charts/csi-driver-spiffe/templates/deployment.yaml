@@ -21,6 +21,9 @@ spec:
         seccompProfile: { type: RuntimeDefault }
 
       serviceAccountName: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
+      {{- if hasKey .Values "automountServiceAccountToken" }}
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- end }}
       containers:
       - name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
         {{- $approverImageConfig := include "approver-image-config" . | fromJson }}
