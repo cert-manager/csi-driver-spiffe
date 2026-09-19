@@ -587,6 +587,14 @@ resources:
 > ```
 
 Optional priority class to be used for the csi-driver pods.
+#### **automountServiceAccountToken** ~ `bool`
+> Default value:
+> ```yaml
+> true
+> ```
+
+Automounting API credentials for the csi-driver-spiffe pods.
+
 #### **commonLabels** ~ `object`
 > Default value:
 > ```yaml
