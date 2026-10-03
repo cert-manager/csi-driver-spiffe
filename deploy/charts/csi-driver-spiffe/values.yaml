@@ -353,6 +353,10 @@ app:
 # Optional priority class to be used for the csi-driver pods.
 priorityClassName: ""
 
+# Automounting API credentials for the csi-driver-spiffe pods.
+# +docs:property
+automountServiceAccountToken: true
+
 # Labels to apply to all resources
 commonLabels: {}
 
