@@ -91,6 +91,33 @@ func Test_writeKeyPair(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// writeKeypair computes the next issuance time before writing anything, so a
+// chain it cannot parse must surface as an error and leave the volume empty.
+func Test_writeKeypair_nonPEMChain(t *testing.T) {
+	leafpk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+
+	store := storage.NewMemoryFS()
+	d := &Driver{
+		certFileName: "crt.pem",
+		keyFileName:  "key.pem",
+		store:        store,
+	}
+
+	meta := metadata.Metadata{VolumeID: "vol-id"}
+
+	_, err = store.RegisterMetadata(meta)
+	require.NoError(t, err)
+
+	err = d.writeKeypair(meta, leafpk, []byte("not a PEM encoded certificate"), nil)
+	require.Error(t, err)
+
+	files, err := store.ReadFiles("vol-id")
+	require.NoError(t, err)
+	require.NotContains(t, files, "crt.pem")
+	require.NotContains(t, files, "key.pem")
+}
+
 func Test_DriverAnnotationSanitization(t *testing.T) {
 	badAnnotation := annotations.Prefix + "/customannotation"
 

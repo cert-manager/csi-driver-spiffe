@@ -24,6 +24,7 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"time"
 
@@ -79,6 +80,9 @@ func signRequest(_ metadata.Metadata, key crypto.PrivateKey, request *x509.Certi
 // renewed. This will be 2/3rds the duration of the leaf certificate's validity period.
 func calculateNextIssuanceTime(chain []byte) (time.Time, error) {
 	block, _ := pem.Decode(chain)
+	if block == nil {
+		return time.Time{}, errors.New("parsing issued certificate: no PEM data found in the issued chain")
+	}
 
 	crt, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
