@@ -12,8 +12,17 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ include "cert-manager-csi-driver-spiffe.name" . }}
-        {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 8 }}
+        {{- /*
+          Merged as one map so no key can be emitted twice. "app" is merged in
+          last so .Values.commonLabels cannot override it: this DaemonSet's own
+          selector matches on it, and a pod template that does not match is
+          rejected by the API server.
+        */}}
+        {{- $podLabels := mergeOverwrite
+              (include "cert-manager-csi-driver-spiffe.labels" . | fromYaml)
+              (dict "app" (include "cert-manager-csi-driver-spiffe.name" .))
+        -}}
+        {{- toYaml $podLabels | nindent 8 }}
       annotations:
         kubectl.kubernetes.io/default-container: cert-manager-csi-driver-spiffe
     spec:
