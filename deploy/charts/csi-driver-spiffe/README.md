@@ -593,7 +593,8 @@ Optional priority class to be used for the csi-driver pods.
 > {}
 > ```
 
-Labels to apply to all resources
+Labels to apply to all resources.  
+On a key collision these win over the chart's own labels, with one exception: the "app" label on the driver Pods, the approver Pods and the approver metrics Service is matched by selectors, so it cannot be overridden there. It is still applied to every other resource.
 #### **nodeSelector** ~ `object`
 > Default value:
 > ```yaml
