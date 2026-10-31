@@ -13,8 +13,18 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-        {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 8 }}
+        {{- /*
+          Merged as one map so no key can be emitted twice. "app" is merged in
+          last so .Values.commonLabels cannot override it: this Deployment's
+          own selector and the approver metrics Service both match on it, and a
+          pod template that does not match the Deployment's selector is
+          rejected by the API server.
+        */}}
+        {{- $podLabels := mergeOverwrite
+              (include "cert-manager-csi-driver-spiffe.labels" . | fromYaml)
+              (dict "app" (printf "%s-approver" (include "cert-manager-csi-driver-spiffe.name" .)))
+        -}}
+        {{- toYaml $podLabels | nindent 8 }}
     spec:
       securityContext:
         runAsNonRoot: true

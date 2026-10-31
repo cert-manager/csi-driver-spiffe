@@ -5,8 +5,16 @@ metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver-metrics
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
+    {{- /*
+      "app" is merged in last so .Values.commonLabels cannot override it: the
+      ServiceMonitor selects this Service on it, and overriding it would
+      silently stop metrics being scraped.
+    */}}
+    {{- $labels := mergeOverwrite
+          (include "cert-manager-csi-driver-spiffe.labels" . | fromYaml)
+          (dict "app" (printf "%s-approver" (include "cert-manager-csi-driver-spiffe.name" .)))
+    -}}
+    {{- toYaml $labels | nindent 4 }}
 spec:
   type: {{ .Values.app.approver.metrics.service.type }}
   ports:

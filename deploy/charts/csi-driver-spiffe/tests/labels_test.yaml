@@ -1,0 +1,128 @@
+suite: Labels merge as a map without duplicate keys
+templates:
+  - templates/daemonset.yaml
+  - templates/deployment.yaml
+  - templates/serviceaccount.yaml
+  - templates/metrics-service.yaml
+  - templates/metrics-servicemonitor.yaml
+release:
+  name: rel
+  namespace: cert-manager
+set:
+  app:
+    trustDomain: example.org
+    issuer:
+      name: spiffe-ca
+tests:
+  - it: commonLabels wins over a chart-owned label
+    set:
+      commonLabels:
+        app.kubernetes.io/managed-by: argocd
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: argocd
+        template: templates/serviceaccount.yaml
+        documentIndex: 0
+
+  - it: label keys that YAML 1.1 would read as booleans stay strings
+    set:
+      commonLabels:
+        "on": alpha
+        "no": beta
+    asserts:
+      - equal:
+          path: metadata.labels["on"]
+          value: alpha
+        template: templates/serviceaccount.yaml
+        documentIndex: 0
+      - equal:
+          path: metadata.labels["no"]
+          value: beta
+        template: templates/serviceaccount.yaml
+        documentIndex: 0
+
+  - it: the driver DaemonSet pods keep their selector's app label
+    set:
+      commonLabels:
+        app: from-common
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cert-manager-csi-driver-spiffe
+        template: templates/daemonset.yaml
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: cert-manager-csi-driver-spiffe
+        template: templates/daemonset.yaml
+
+  - it: the approver Deployment pods keep their own suffixed app label
+    set:
+      commonLabels:
+        app: from-common
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cert-manager-csi-driver-spiffe-approver
+        template: templates/deployment.yaml
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: cert-manager-csi-driver-spiffe-approver
+        template: templates/deployment.yaml
+
+  - it: the metrics Service keeps the app label the ServiceMonitor selects on
+    set:
+      commonLabels:
+        app: from-common
+      app:
+        trustDomain: example.org
+        issuer:
+          name: spiffe-ca
+        approver:
+          metrics:
+            service:
+              enabled: true
+              servicemonitor:
+                enabled: true
+                prometheusInstance: default
+    asserts:
+      - equal:
+          path: metadata.labels.app
+          value: cert-manager-csi-driver-spiffe-approver
+        template: templates/metrics-service.yaml
+      - equal:
+          path: spec.selector.app
+          value: cert-manager-csi-driver-spiffe-approver
+        template: templates/metrics-service.yaml
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cert-manager-csi-driver-spiffe-approver
+        template: templates/metrics-servicemonitor.yaml
+
+  - it: servicemonitor.labels and the prometheus label still win over commonLabels
+    set:
+      commonLabels:
+        team: from-common
+        prometheus: from-common
+      app:
+        trustDomain: example.org
+        issuer:
+          name: spiffe-ca
+        approver:
+          metrics:
+            service:
+              enabled: true
+              servicemonitor:
+                enabled: true
+                prometheusInstance: default
+                labels:
+                  team: from-servicemonitor
+    asserts:
+      - equal:
+          path: metadata.labels.team
+          value: from-servicemonitor
+        template: templates/metrics-servicemonitor.yaml
+      - equal:
+          path: metadata.labels.prometheus
+          value: default
+        template: templates/metrics-servicemonitor.yaml
