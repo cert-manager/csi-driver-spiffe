@@ -4,12 +4,19 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   labels:
-    app: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
-    {{- include "cert-manager-csi-driver-spiffe.labels" . | nindent 4 }}
-    prometheus: {{ .Values.app.approver.metrics.service.servicemonitor.prometheusInstance }}
-{{- if .Values.app.approver.metrics.service.servicemonitor.labels }}
-{{ toYaml .Values.app.approver.metrics.service.servicemonitor.labels | indent 4}}
-{{- end }}
+    {{- /*
+      Merged as one map so no key can be emitted twice, keeping the precedence
+      the concatenated form had: "app" stays overridable, while the prometheus
+      instance label and the servicemonitor.labels values still win over
+      .Values.commonLabels.
+    */}}
+    {{- $labels := mergeOverwrite
+          (dict "app" (printf "%s-approver" (include "cert-manager-csi-driver-spiffe.name" .)))
+          (include "cert-manager-csi-driver-spiffe.labels" . | fromYaml)
+          (dict "prometheus" .Values.app.approver.metrics.service.servicemonitor.prometheusInstance)
+          (.Values.app.approver.metrics.service.servicemonitor.labels | default dict)
+    -}}
+    {{- toYaml $labels | nindent 4 }}
 spec:
   jobLabel: {{ include "cert-manager-csi-driver-spiffe.name" . }}-approver
   selector:
