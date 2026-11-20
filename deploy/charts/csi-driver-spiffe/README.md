@@ -580,6 +580,41 @@ resources:
     cpu: 100m
     memory: 128Mi
 ```
+#### **podSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> seccompProfile:
+>   type: RuntimeDefault
+> ```
+
+Pod-level security context for the csi-driver-spiffe DaemonSet pods. For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+#### **nodeDriverRegistrarSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
+> runAsUser: 0
+> ```
+
+Container security context for the node-driver-registrar container.
+
+#### **livenessProbeSecurityContext** ~ `object`
+> Default value:
+> ```yaml
+> allowPrivilegeEscalation: false
+> capabilities:
+>   drop:
+>     - ALL
+> readOnlyRootFilesystem: true
+> runAsUser: 0
+> ```
+
+Container security context for the liveness-probe container.
+
 #### **priorityClassName** ~ `string`
 > Default value:
 > ```yaml
